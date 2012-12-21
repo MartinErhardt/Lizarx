@@ -1,0 +1,14 @@
+# don't version backups
+*.bak
+*~
+*.kate-swp
+*.kate.swp
+
+# or binaries
+*.elf
+*.o
+*.S
+/bin
+
+# or ISOs
+*.iso
