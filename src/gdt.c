@@ -29,7 +29,10 @@
 #define GDT_FLAG_4KUNIT      0x08
 #define GDT_FLAG_32_BIT  0x04
 
+static uint32_t tss[32] = { 0, 0, 0x10 };
+
 struct gdt_entry gdtable[GDT_SIZE];//gdt entries
+
 void gdt_set_entry(uint8_t i,uint32_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags){ // fill in entry i in gdtable
 	gdtable[i].limit=limit& 0xffffLL;//
 	gdtable[i].base=base & 0xffffffLL;
@@ -57,6 +60,8 @@ void init_gdt(void)
     gdt_set_entry(3, 0xfffff,0,  GDT_ACCESS_SEGMENT |
         GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
     gdt_set_entry(4, 0xfffff,0,  GDT_ACCESS_SEGMENT |
+        GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
+    gdt_set_entry(4,sizeof(tss),(uint32_t) tss,  GDT_ACCESS_SEGMENT |
         GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
 
     // reload GDT

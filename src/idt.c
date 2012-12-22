@@ -2,7 +2,7 @@
 #include "idt.h"
 #include "console.h"
 #include "intr/irq.h"
-#include "intr/redscreen.h"
+#include "intr/err.h"
 #include "intr/syscall.h"
 #include"cpustate.h"
 
