@@ -1,5 +1,5 @@
-#include "zygote.h"
-#include <console.h>
+#include <mt/zygote.h>
+#include <dbg/console.h>
 
 void task_a(void)
 {
@@ -16,6 +16,5 @@ void task_b(void)
     for (i =0;i<30;i++) {
         kprintf("B");
     }
-    asm volatile ("hlt");
     asm volatile ("1: jmp 1b");
 }

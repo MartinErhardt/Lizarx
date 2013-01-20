@@ -1,7 +1,7 @@
-#include <cpustate.h>
+#include <mt/cpustate.h>
+#include <mt/ts.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "ts.h"
 
 static int current_task = -1;
 static int num_tasks=0;

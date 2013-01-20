@@ -1,11 +1,10 @@
-#include <console.h>
-#include <cpustate.h>
-#include<ioport.h>
-
-#include "../driver/keyboard/keyboard.h"
-#include "../driver/timer/timer.h"
-#include "irq.h"
-#include"../mt/ts.h"
+#include <dbg/console.h>
+#include <mt/cpustate.h>
+#include<drv/io/ioport.h>
+#include <drv/keyboard/keyboard.h>
+#include <drv/timer/timer.h>
+#include <intr/irq.h>
+#include <mt/ts.h>
 
 cpu_state* handle_irq(cpu_state* cpu)
 {       cpu_state* new_cpu = cpu;
