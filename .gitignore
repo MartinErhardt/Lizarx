@@ -7,7 +7,6 @@
 # or binaries
 *.elf
 *.o
-*.S
 /bin
 
 # or ISOs

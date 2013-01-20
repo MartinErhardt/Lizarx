@@ -3,7 +3,7 @@
 
 #include<stdint.h>
 
-struct cpu_state {
+typedef struct {
     // manually secured registers
     uint32_t   eax;
     uint32_t   ebx;
@@ -22,6 +22,6 @@ struct cpu_state {
     uint32_t   eflags;
     uint32_t   esp;
     uint32_t   ss;
-};
+} cpu_state;
 
 #endif

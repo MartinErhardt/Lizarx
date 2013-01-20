@@ -40,35 +40,40 @@ void kput(uint8_t chr, atrbyt font)
     return;
   } 
   // berechnen der Adresse
-  figure* adr = (uint16_t*) (video+(cury * 80) + curx);  // eine Multiplikation mit 2 darf hier nicht erfolgen, da off vom type uint16_tist
+  uint16_t* adr = (uint16_t*) (video+(cury * 80) + curx);  // eine Multiplikation mit 2 darf hier nicht erfolgen, da off vom type uint16_t ist
   
   // setzen des zeichens
-  memcpy(adr,&fig,2);
+  memmove(adr,&fig,sizeof(fig));
   //*adr = fig;
   curx++;
 }
-uint8_t getcurs(){
-  uint8_t pos[]={curx,cury};
-  return pos;
+
+uint8_t getcurx(){
+  return curx;
 }
+uint8_t getcury(){
+  return cury;
+}
+
 void setcurs(uint8_t xp,uint8_t yp){
   curx = xp;
   cury = yp;
 }
+
 void drawcurs(){
   uint32_t tmp;
   tmp= cury*80+curx+1;
-  outb(0x3D4,14);
-  outb(0x3D5,tmp >> 8);
-  outb(0x3D4,15);
-  outb(0x3D5,tmp);
+  outb(0x3d4,14);
+  outb(0x3d5,tmp >> 8);
+  outb(0x3d4,15);
+  outb(0x3d5,tmp);
 }
 void rmvcurs()
 {
-  outb(0x3D4,14);
-  outb(0x3D5,0x07);
-  outb(0x3D4,15);
-  outb(0x3D5,0xD0);
+  outb(0x3d4,14);
+  outb(0x3d5,0x07);
+  outb(0x3d4,15);
+  outb(0x3d5,0xd0);
 }
  
 static void newline(){

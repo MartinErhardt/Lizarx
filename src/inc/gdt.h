@@ -9,6 +9,9 @@ struct gdt_entry{
 	uint32_t flags :4;
 	uint8_t base2;
 }__attribute__((packed));
+
+uint32_t tss[32];
+
 void gdt_set_entry(uint8_t i,uint32_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags);
 void init_gdt(void);
 #endif

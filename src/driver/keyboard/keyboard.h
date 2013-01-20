@@ -8,6 +8,6 @@
  */
 void send_command(uint8_t command);
 void init_keyboard(void);
-void irq_handler(uint8_t irq);
+void kbc_handler(uint8_t irq);
 #endif
 

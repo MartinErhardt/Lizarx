@@ -1,8 +1,8 @@
-#include"redscreen.h"
+#include"err.h"
 #include"cpustate.h"
 #include"console.h"
-void handle_exception(struct cpu_state* cpu){
-	kprintf("Exception: %d"+ cpu->intr,0x04,0x0);
+void handle_exception(cpu_state* cpu){
+	kprintf("Error: %d", cpu->intr);
 
 	while(1) {
 	   // Prozessor anhalten

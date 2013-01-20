@@ -17,10 +17,11 @@ void kprintn(unsigned long x, int base, atrbyt font)
 int kprintf(const char* fmt, ...)
 {
     va_list ap;
-    atrbyt font={0xF,FALSE,0x0,FALSE};
+    atrbyt font={0xF,0x0};
     
-    CALL_VA_FUNC(kprintfstrcol,font,fmt);
-    
+    va_start(ap,fmt);
+    kprintfstrcol(font,fmt,ap);
+    va_end(ap);
     //va_list ap;
     return kprintf_res;//kprintfcol(0xF,0,0x0,0,*fmt, va_list);
 }
@@ -28,40 +29,41 @@ int kprintf(const char* fmt, ...)
 
 //Kernel printcolor prints a colored string
 
-int kprintfcol(uint8_t forgcol, bool bold, uint8_t backcol, bool blink, const char* fmt, ...){
+int kprintfcol(uint8_t forgcol, uint8_t backcol, bool blink, const char* fmt, ...){
     va_list ap;
-    atrbyt font={forgcol,bold,backcol,blink};
+    atrbyt font={forgcol|(blink<<3),backcol};
+    //CALL_VA_FUNC(kprintfstrcol,font,fmt);
     
-    CALL_VA_FUNC(kprintfstrcol,font,fmt);
-    
-    return kprintfstrcol(font, ap);
+    va_start(ap,fmt);
+    kprintfstrcol(font,fmt,ap);
+    va_end(ap);
+
+    return kprintf_res;
 }
 
 //Kernel print string colored prints a colored string
 
-int kprintfstrcol(atrbyt font, const char* fmt, ...){
-    va_list ap;
+int kprintfstrcol(atrbyt font, const char* fmt, va_list appar){
     const char* s;
     unsigned long n;
 
-    va_start(ap, fmt);
     kprintf_res = 0;
     while (*fmt) {
         if (*fmt == '%') {
             fmt++;
             switch (*fmt) {
                 case 's':
-                    s = va_arg(ap, char*);
-                    kputs(*s,font);
+                    s = va_arg(appar, char*);
+                    kputs(s,font);
                     break;
                 case 'd':
                 case 'u':
-                    n = va_arg(ap, unsigned long int);
+                    n = va_arg(appar, unsigned long int);
                     kprintn(n, 10,font);
                     break;
                 case 'x':
                 case 'p':
-                    n = va_arg(ap, unsigned long int);
+                    n = va_arg(appar, unsigned long int);
                     kprintn(n, 16,font);
                     break;
                 case '%':
@@ -83,7 +85,7 @@ int kprintfstrcol(atrbyt font, const char* fmt, ...){
     }
 
 out:
-    va_end(ap);
+    va_end(appar);
     
     return kprintf_res;
 }

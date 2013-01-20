@@ -22,5 +22,5 @@ extern void intr_stub_16(void);
 extern void intr_stub_17(void);
 extern void intr_stub_18(void);
 
-void handle_exception(struct cpu_state* cpu);
+void handle_exception(cpu_state* cpu);
 #endif

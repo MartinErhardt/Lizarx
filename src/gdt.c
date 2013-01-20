@@ -1,8 +1,10 @@
 /* We need 8 segments */
 #include <stdint.h>
 #include <console.h>
-#include "gdt.h"
-#define GDT_SIZE 5
+#include <gdt.h>
+#include <string.h>
+
+#define GDT_SIZE 6
 /*Accessbyte
 7	 0x80	 Present bit
 6 u. 5	 0x60	 Privilege
@@ -14,7 +16,7 @@
 */
 #define GDT_ACCESS_DATASEG 0x02
 #define GDT_ACCESS_CODESEG 0x0a
-#define GDT_ACCESS_TSS     0x09
+#define GDT_ACCESS_TSS     0x09// 0x08
 
 #define GDT_ACCESS_SEGMENT 0x10
 #define GDT_ACCESS_RING0   0x00
@@ -28,8 +30,6 @@
 */
 #define GDT_FLAG_4KUNIT      0x08
 #define GDT_FLAG_32_BIT  0x04
-
-static uint32_t tss[32] = { 0, 0, 0x10 };
 
 struct gdt_entry gdtable[GDT_SIZE];//gdt entries
 
@@ -50,7 +50,10 @@ void init_gdt(void)
         .limit = GDT_SIZE * 8 - 1,
         .pointer = gdtable,
     };
-
+    uint32_t tssloc[32] = { 0, 0, 0x10 };
+    
+    memmove(&tss,&tssloc,sizeof(tssloc));
+    
     // We are going to fill in the structs in gdtable
     gdt_set_entry(0, 0, 0, 0,0);
     gdt_set_entry(1, 0xfffff,0, GDT_ACCESS_SEGMENT |
@@ -75,5 +78,7 @@ void init_gdt(void)
         "ljmp $0x8, $.1;"
         ".1:"
     );
-    kprintf("gdtsuccessfullyinitialized\n",0xA,0x0);
+    kprintf("[GDT SUCCESSFULLY INITIALIZED]\n");
+    // Taskregister neu laden
+    asm volatile("ltr %%ax" : : "a" (5 << 3));
 }
