@@ -17,11 +17,21 @@ rm *.o
 cd ../boot
 rm *.o
 
+cd ../mm
+rm *.o
+
+cd ../dbg
+rm *.o
+
 cd ../drv/keyboard
 rm *.o
 
 cd ../timer
 rm *.o
+
+cd ../io
+rm *.o
+
 echo "deleted .o files"
 
 cd ../../..
