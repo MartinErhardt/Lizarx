@@ -4,9 +4,18 @@
 #include <drv/keyboard/keyboard.h>
 #include <mt/ts.h>
 #include <mt/zygote.h>
+#include <mm/pmm.h>
+#include <boot/multiboot.h>
 
-void init(void)
+void init(multiboot_info *mb_info)
 {
+    /*
+     * Nachdem die physische Speicherverwaltung initialisiert ist, duerfen wir
+     * die Multiboot-Infostruktur nicht mehr benutzen, weil sie bei der
+     * Initialisierung nicht reserviert wurde und daher nach dem ersten
+     * pmm_alloc() ueberschrieben werden koennte.
+     */
+    pmm_init(mb_info);
     clrscr();
     //kprintf("Hello World!\n",0x0A,0x00);
     

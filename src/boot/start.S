@@ -22,7 +22,8 @@ _start:
     // Stack initialisieren
     mov $kernel_stack, %esp
 
-    // C-Code aufrufen
+    // C-Code aufrufen und Multiboot-Infostruktur als Parameter uebergeben
+    push %ebx
     call init
 
     // Falls wir jemals aus init zurueckkommen sollten, gehen wir in eine

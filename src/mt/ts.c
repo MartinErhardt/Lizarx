@@ -1,16 +1,13 @@
 #include <mt/cpustate.h>
 #include <mt/ts.h>
+#include <mm/pmm.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 static int current_task = -1;
 static int num_tasks=0;
-static task tasks[MAX_CPUSTATE];
-/*
- * Stack erstellen
- */
-uint8_t stacks[MAX_CPUSTATE][STDRD_STACKSIZE];
-uint8_t user_stacks[MAX_CPUSTATE][STDRD_STACKSIZE];
+static task tasks[MAX_TASKS];
 
 /*
  * Jeder Task braucht seinen eigenen Stack, auf dem er beliebig arbeiten kann,
@@ -19,6 +16,9 @@ uint8_t user_stacks[MAX_CPUSTATE][STDRD_STACKSIZE];
  */
 task* init_task(void* entry)
 {
+    uint8_t* stack = pmm_alloc();
+    uint8_t* user_stack = pmm_alloc();
+
     /*
      * CPU-Zustand fuer den neuen Task festlegen
      */
@@ -30,7 +30,7 @@ task* init_task(void* entry)
         .esi = 0,
         .edi = 0,
         .ebp = 0,
-        .esp = (uint32_t) user_stacks[num_tasks]+STDRD_STACKSIZE,
+        .esp = (uint32_t) user_stack+STDRD_STACKSIZE,
         .eip = (uint32_t) entry,
  
         /* Ring-0-Segmentregister nicht mehr benutzt*/
@@ -47,13 +47,16 @@ task* init_task(void* entry)
      * worden. So kann man dem Interrupthandler den neuen Task unterschieben
      * und er stellt einfach den neuen Prozessorzustand "wieder her".
      */
-    cpu_state* state = (void*) (&(stacks[num_tasks][0]) + STDRD_STACKSIZE - sizeof(new_state));
+    cpu_state* state = (void*) (stack + STDRD_STACKSIZE - sizeof(new_state));
     *state = new_state;
     
     /*
      * neuen Task struct erstellen, in die Liste eintragen und zurückgeben
      */
-    task new_task ={state,num_tasks};
+    task new_task ={state,num_tasks,stack,user_stack};
+    if(num_tasks >= MAX_TASKS){
+	return NULL;
+    }
     tasks[num_tasks]=new_task;
  
     /* damit der index passt darf num_tasks erst ganz am ende erhöht werden */

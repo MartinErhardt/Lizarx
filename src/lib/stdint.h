@@ -11,4 +11,12 @@ typedef signed int int32_t;
 typedef signed short int16_t;
 typedef signed char int8_t;
 
+// size 
+typedef unsigned int size_t;
+
+// Signed pointer-sized integer 
+typedef long intptr_t;
+// Unsigned pointer-sized integer
+typedef unsigned long uintptr_t;
+
 #endif

@@ -1,5 +1,5 @@
 #include "string.h"
-
+#include <stdint.h>
 void * memcpy(void *dst, const void *src, size_t len){
 	size_t i;
 
