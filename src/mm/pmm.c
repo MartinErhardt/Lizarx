@@ -1,8 +1,10 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include <mm/pmm.h>
 #include <boot/multiboot.h>
-
+#include <dbg/console.h>
+#include <drv/vga-txt_graphics/vram.h>
 /*
  * Der Einfachheit halber deklarieren wir die maximal benoetige Bitmapgroesse
  * statisch (Wir brauchen 4 GB / 4 kB = 1M Bits; 1M Bits sind 1M/32 = 32k
@@ -11,17 +13,42 @@
  * Willkuerliche Festlegung: 1 = Speicher frei, 0 = Speicher belegt
  */
 #define BITMAP_SIZE 32768
+#define PAGE_SIZE 4096 // page size in bytes
+#define WORDWITH 32
 static uint32_t bitmap[BITMAP_SIZE];
 
 static void pmm_mark_used(void* page);
+static bool pmm_is_alloced(uint32_t page);
 
 extern const void kernel_start;
 extern const void kernel_end;
 
-void pmm_init(multiboot_info* mb_info)
+void kpmm_test(){
+      uint32_t i, j;
+      size_t vlarge_puffer_size =PAGE_SIZE*20000;
+      uint8_t vlarge_puffer_src[PAGE_SIZE];
+      void * vlarge_puffer_ptr = kmalloc(vlarge_puffer_size);
+      atrbyt font={0xF,0x0};
+      
+      if(vlarge_puffer_ptr==NULL){
+	  kprintf("[PMM TEST]FAILED: No memory found\n");
+	  return;
+      }
+      
+      for(i=0;i<PAGE_SIZE;i++){
+	  vlarge_puffer_src[i] = 0xFF;
+      }
+      kprintf("[PMM TEST]STARTED ...\nPAGE: ");
+      for(j=0;j<vlarge_puffer_size/PAGE_SIZE;j++){
+	  memcpy((void*)((uintptr_t) (vlarge_puffer_ptr)+j*PAGE_SIZE),&vlarge_puffer_src, vlarge_puffer_size);
+	  kprintn(j,10,font);
+	  setcurs(5,1);
+      }
+}
+void kpmm_init(multiboot_info* mb_info)
 {
-    struct multiboot_mmap* mmap = mb_info->mbs_mmap_addr;
-    struct multiboot_mmap* mmap_end = (void*)
+    multiboot_mmap* mmap = mb_info->mbs_mmap_addr;
+    multiboot_mmap* mmap_end = (void*)
         ((uintptr_t) mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length);
 
     /* Per Default ist erst einmal alles reserviert */
@@ -38,7 +65,7 @@ void pmm_init(multiboot_info* mb_info)
             uintptr_t end_addr = addr + mmap->length;
 
             while (addr < end_addr) {
-                pmm_free((void*) addr);
+                kfree((void*) addr);
                 addr += 0x1000;
             }
         }
@@ -54,49 +81,71 @@ void pmm_init(multiboot_info* mb_info)
     
 }
 
-void* pmm_alloc(void)
+void* kmalloc_4k(void)
 {
-    int i, j;
+    int i;
 
-    /*
-     * Zunaechst suchen wir komplette Eintraege ab. Wenn der Eintrag nicht null
-     * ist, ist mindestens ein Bit gesetzt, d.h. hier ist ein Stueck Speicher
-     * frei
-     */
-    for (i = 0; i < BITMAP_SIZE; i++) {
-        if (bitmap[i] != 0) {
-
-            /* Jetzt muessen wir nur noch das gesetzte Bit finden */
-            for (j = 0; j < 32; j++) {
-	      /*
-		for(k = 0;k<4096%(size*(sizeof(size)/4));k++){
-		    if (bitmap[i] & (1 << j)) {
-			bitmap[i] &= ~(1 << j);
-		    }
-		    else{
-			contin
-		    }
-		}*/
-                if (bitmap[i] & (1 << j)) {
-                    bitmap[i] &= ~(1 << j);
-                    return (void*)( (i * 32 + j) * 4096);
-                }
-            }
-        }
+    for (i = 0; i < BITMAP_SIZE*32; i++) {
+      
+	if (pmm_is_alloced(i)==TRUE) {
+	    continue;
+	} else {
+	    pmm_mark_used((void*) (i*PAGE_SIZE));
+	    return (void*)(i * PAGE_SIZE);
+	}
+	
     }
 
     /* Scheint wohl nichts frei zu sein... */
     return NULL;
 }
+void* kmalloc(size_t size)
+{
+    int i, j,k;
+     /* size in 4kb(pages) we are adding one page coz we have to allocate pages which have been written on to 1% also*/
+    size=size/PAGE_SIZE+1;
+    
+    for (i = 0; i < BITMAP_SIZE*32-size; i++) {
+      
+mark:
+	
+	for(j=0;j<size;j++){
+	    if (pmm_is_alloced(i+j)==TRUE) {
+		i++;
+		goto mark;
+	    } else if(j==size-1){
+		for(k =0;k<size;k++){
+		    pmm_mark_used((void*) ((i+k) * PAGE_SIZE));
+		}
+		return (void*)(i * PAGE_SIZE);
+	    }
+	}
+    }
+
+    /* Scheint wohl nichts frei zu sein... */
+    return NULL;
+}
+bool krealloc(void* ptr)
+{
+    uintptr_t page =(uintptr_t) ptr/PAGE_SIZE;
+    return pmm_is_alloced((uint32_t )page);
+}
+static bool pmm_is_alloced(uint32_t page)
+{
+    if(bitmap[page/32] & (1<<(page%32))){
+	return FALSE;
+    }
+    return TRUE;
+}
 
 static void pmm_mark_used(void* page)
 {
-    uintptr_t index = (uintptr_t) page / 4096;
+    uintptr_t index = (uintptr_t) page / PAGE_SIZE;
     bitmap[index / 32] &= ~(1 << (index % 32));
 }
 
-void pmm_free(void* page)
+void kfree(void* page)
 {
-    uintptr_t index = (uintptr_t) page / 4096;
+    uintptr_t index = (uintptr_t) page / PAGE_SIZE;
     bitmap[index / 32] |= (1 << (index % 32));
 }

@@ -4,21 +4,25 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+static uint32_t num_tasks = 0;
 
-static int current_task = -1;
-static int num_tasks=0;
-static task tasks[MAX_TASKS];
+static struct task* first_task = NULL;
+static struct task* current_task = NULL;
 
+void init_mt(){
+  
+}
 /*
  * Jeder Task braucht seinen eigenen Stack, auf dem er beliebig arbeiten kann,
  * ohne dass ihm andere Tasks Dinge ueberschreiben. Ausserdem braucht ein Task
  * einen Einsprungspunkt.
  */
-task* init_task(void* entry)
+struct task* init_task(void* entry)
 {
-    uint8_t* stack = pmm_alloc();
-    uint8_t* user_stack = pmm_alloc();
-
+    uint8_t* stack = kmalloc_4k();
+    uint8_t* user_stack = kmalloc_4k();
+    
+    num_tasks++;
     /*
      * CPU-Zustand fuer den neuen Task festlegen
      */
@@ -51,16 +55,17 @@ task* init_task(void* entry)
     *state = new_state;
     
     /*
-     * neuen Task struct erstellen, in die Liste eintragen und zurückgeben
+     * neuen Task erstellen
      */
-    task new_task ={state,num_tasks,stack,user_stack};
-    if(num_tasks >= MAX_TASKS){
-	return NULL;
-    }
-    tasks[num_tasks]=new_task;
- 
-    /* damit der index passt darf num_tasks erst ganz am ende erhöht werden */
-    return &tasks[num_tasks++];
+    struct task* task = kmalloc_4k();
+    task->state = state;
+    task->pid = num_tasks;
+    task->stack = stack;
+    task->user_stack = user_stack;
+    task->next = first_task;
+    first_task = task;
+    
+    return task;
 }
 /*
  * Gibt den Prozessorzustand des naechsten Tasks zurueck. Der aktuelle
@@ -74,21 +79,24 @@ cpu_state* schedule(cpu_state* cpu)
      * gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
      * wir spaeter nicht wieder.
      */
-    if (current_task >= 0) {
-        tasks[current_task].state = cpu;
-    } 
-
-    if (num_tasks == 0) {
-        return cpu;
+    if (current_task != NULL) {
+        current_task->state = cpu;
     }
+
     /*
      * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
      */
-    current_task++;
-    current_task %= num_tasks;
- 
+    if (current_task == NULL) {
+        current_task = first_task;
+    } else {
+        current_task = current_task->next;
+        if (current_task == NULL) {
+            current_task = first_task;
+        }
+    }
+
     /* Prozessorzustand des neuen Tasks aktivieren */
-    cpu = tasks[current_task].state;
- 
+    cpu = current_task->state;
+
     return cpu;
 }

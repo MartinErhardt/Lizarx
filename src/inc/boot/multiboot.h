@@ -16,11 +16,11 @@ typedef struct  {
     void*       mbs_mmap_addr;
 } __attribute__((packed)) multiboot_info;
 
-struct multiboot_mmap {
+typedef struct{
     uint32_t    entry_size;
     uint64_t    base;
     uint64_t    length;
     uint32_t    type;
-} __attribute__((packed));
+} __attribute__((packed)) multiboot_mmap;
 
 #endif

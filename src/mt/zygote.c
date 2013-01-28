@@ -18,3 +18,11 @@ void task_b(void)
     }
     asm volatile ("1: jmp 1b");
 }
+void task_c(void)
+{
+    int i;
+    for (i =0;i<30;i++) {
+        kprintf("C");
+    }
+    asm volatile ("1: jmp 1b");
+}
