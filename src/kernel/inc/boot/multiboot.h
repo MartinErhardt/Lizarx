@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct  {
+typedef struct {
     uint32_t    mbs_flags;
     uint32_t    mbs_mem_lower;
     uint32_t    mbs_mem_upper;
@@ -21,6 +21,12 @@ typedef struct{
     uint64_t    base;
     uint64_t    length;
     uint32_t    type;
-} __attribute__((packed)) multiboot_mmap;
+} __attribute__((packed)) multiboot_mmap ;
 
+typedef struct {
+    uint32_t    mod_start;
+    uint32_t    mod_end;
+    char*       cmdline;
+    uint32_t    reserved;
+} __attribute__((packed)) multiboot_module ;
 #endif
