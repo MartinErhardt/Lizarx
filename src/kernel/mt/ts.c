@@ -10,7 +10,7 @@ static struct task* first_task = NULL;
 static struct task* current_task = NULL;
 
 void init_mt(){
-  
+    
 }
 /*
  * Jeder Task braucht seinen eigenen Stack, auf dem er beliebig arbeiten kann,
@@ -19,8 +19,8 @@ void init_mt(){
  */
 struct task* init_task(void* entry)
 {
-    uint8_t* stack = kmalloc_4k();
-    uint8_t* user_stack = kmalloc_4k();
+    uint8_t* stack = kpmm_malloc_4k();
+    uint8_t* user_stack = kpmm_malloc_4k();
     
     num_tasks++;
     /*
@@ -57,7 +57,7 @@ struct task* init_task(void* entry)
     /*
      * neuen Task erstellen
      */
-    struct task* task = kmalloc_4k();
+    struct task* task = kpmm_malloc_4k();
     task->state = state;
     task->pid = num_tasks;
     task->stack = stack;

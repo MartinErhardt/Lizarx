@@ -10,4 +10,5 @@ struct idt_entry
     uint16_t isr_offset2;
 }__attribute__((packed));
 void init_idt(void);
+void enable_intr();
 #endif

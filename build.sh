@@ -37,10 +37,12 @@ rm *.o
 
 cd ../io
 rm *.o
+cd ../../../usr/tst
+rm *.o
 
 echo "deleted .o files"
 
-cd ../../../..
+cd ../../..
 cp src/kernel/kernel bin/boot/kernel
 rm src/kernel/kernel
 cp src/usr/tst/test.bin bin/boot/test.mod

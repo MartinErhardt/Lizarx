@@ -1,7 +1,7 @@
 /*  Bei _start soll die Ausfuehrung losgehen */
 ENTRY(_start)
 
-OUTPUT_FORMAT(binary)
+OUTPUT_FORMAT(elf32-i386)
 
 /*
  * Hier wird festgelegt, in welcher Reihenfolge welche Sektionen in die Binary

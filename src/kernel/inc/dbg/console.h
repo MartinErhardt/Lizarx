@@ -12,6 +12,4 @@
         va_end(ap);
 
 int kprintf(const char* fmt, ...);
-int kprintfcol(uint8_t forgcol, uint8_t backcol, bool blink, const char* fmt, ...);
-int kprintfstrcol(atrbyt font,const char* fmt, va_list appar);
 #endif

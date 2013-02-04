@@ -23,4 +23,5 @@ extern void intr_stub_17(void);
 extern void intr_stub_18(void);
 
 void handle_exception(cpu_state* cpu);
+void redscreen(cpu_state* cpu);
 #endif

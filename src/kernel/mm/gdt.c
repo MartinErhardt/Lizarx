@@ -77,7 +77,7 @@ void init_gdt(void)
         "ljmp $0x8, $.1;"
         ".1:"
     );
-    kprintf("[GDT SUCCESSFULLY INITIALIZED]\n");
+    kprintf("[INIT] GDT setup... SUCCESS\n");
     // Taskregister neu laden
     asm volatile("ltr %%ax" : : "a" (5 << 3));
 }

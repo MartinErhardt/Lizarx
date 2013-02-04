@@ -2,14 +2,14 @@
 #define VRAM_H
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <stdarg.h>
 
 // Aufschlüsselung des Attribut-Bytes vom Text Modus
 typedef struct 
 {
-    uint8_t frgrndnbld : 4;
     uint8_t bckgrndnblnk : 4;
-    
+    uint8_t frgrndnbld : 4;
+
 }__attribute__((packed)) atrbyt;
 // Ein Zeichen
 typedef struct{
@@ -19,8 +19,25 @@ typedef struct{
     
 }__attribute__((packed)) figure;
 
-void kprintn(unsigned long x, int base, atrbyt font);
-void clrscr(void);
+
+#define VGA_BLACK 0x0 
+#define VGA_BLUE 0x1
+#define VGA_GREEN 0x2
+#define VGA_CYAN 0x3
+#define VGA_RED 0x4
+#define VGA_MAGENTA 0x5
+#define VGA_BROWN 0x6
+#define VGA_LGREY 0x7
+#define VGA_GREY 0x8
+#define VGA_LBLUE 0x9
+#define VGA_LGREEN 0xa
+#define VGA_LCYAN 0xb
+#define VGA_LRED 0xc
+#define VGA_LMAGENTA 0xd
+#define VGA_YELLOW 0xe
+#define VGA_WHITE 0xf
+
+void clrscr(uint8_t forgcol, uint8_t backcol);
 void kputs(const char* s,atrbyt font);
 void kput(uint8_t chr, atrbyt font);
 
@@ -31,4 +48,8 @@ void setcurs(uint8_t xp,uint8_t yp);
 
 void rmvcurs();
 void drawcurs();
+
+uint32_t kprintfcol_scr(uint8_t forgcol, uint8_t backcol, const char* fmt, ...);
+uint32_t kprintfstrcol_scr(atrbyt font,const char* fmt, va_list appar);
+void kprintn_scr(unsigned long x, int base, atrbyt font);
 #endif

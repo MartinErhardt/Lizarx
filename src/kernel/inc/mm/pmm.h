@@ -7,9 +7,9 @@
 
 void kpmm_test(void);
 void kpmm_init(multiboot_info* mb_info);
-void* kmalloc_4k(void);
-void* kmalloc(size_t size);
-void kfree(void* page);
-bool krealloc(void* ptr);
+void* kpmm_malloc_4k(void);
+void* kpmm_malloc(size_t size);
+void kpmm_free(void* page);
+bool kpmm_realloc(void* ptr, size_t size);
 
 #endif

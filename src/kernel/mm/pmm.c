@@ -15,10 +15,11 @@
 #define BITMAP_SIZE 32768
 #define PAGE_SIZE 4096 // page size in bytes
 #define WORDWITH 32
+
 static uint32_t bitmap[BITMAP_SIZE];
 
-static void pmm_mark_used(void* page);
-static bool pmm_is_alloced(uint32_t page);
+static void kpmm_mark_used(void* page);
+static bool kpmm_is_alloced(uint32_t page);
 
 extern const void kernel_start;
 extern const void kernel_end;
@@ -27,7 +28,7 @@ void kpmm_test(){
       uint32_t i, j;
       size_t vlarge_puffer_size =PAGE_SIZE*20000;
       uint8_t vlarge_puffer_src[PAGE_SIZE];
-      void * vlarge_puffer_ptr = kmalloc(vlarge_puffer_size);
+      void * vlarge_puffer_ptr = kpmm_malloc(vlarge_puffer_size);
       atrbyt font={0xF,0x0};
       
       if(vlarge_puffer_ptr==NULL){
@@ -40,8 +41,8 @@ void kpmm_test(){
       }
       kprintf("[PMM TEST]STARTED ...\nPAGE: ");
       for(j=0;j<vlarge_puffer_size/PAGE_SIZE;j++){
-	  memcpy((void*)((uintptr_t) (vlarge_puffer_ptr)+j*PAGE_SIZE),&vlarge_puffer_src, vlarge_puffer_size);
-	  kprintn(j,10,font);
+	  memcpy((void*)((uintptr_t) (vlarge_puffer_ptr)+j*PAGE_SIZE),&vlarge_puffer_src, PAGE_SIZE);
+	  kprintn_scr(j,10,font);
 	  setcurs(5,1);
       }
 }
@@ -65,7 +66,7 @@ void kpmm_init(multiboot_info* mb_info)
             uintptr_t end_addr = addr + mmap->length;
 
             while (addr < end_addr) {
-                kfree((void*) addr);
+                kpmm_free((void*) addr);
                 addr += 0x1000;
             }
         }
@@ -75,7 +76,7 @@ void kpmm_init(multiboot_info* mb_info)
     /* Den Kernel wieder als belegt kennzeichnen */
     uintptr_t addr = (uintptr_t) &kernel_start;
     while (addr < (uintptr_t) &kernel_end) {
-        pmm_mark_used((void*) addr);
+        kpmm_mark_used((void*) addr);
         addr += 0x1000;
     }
         /*
@@ -84,30 +85,30 @@ void kpmm_init(multiboot_info* mb_info)
      */
     multiboot_module* modules = mb_info->mbs_mods_addr;
 
-    pmm_mark_used(mb_info);
-    pmm_mark_used(modules);
+    kpmm_mark_used(mb_info);
+    kpmm_mark_used(modules);
 
     /* Und die Multibootmodule selber sind auch belegt */
     int i;
     for (i = 0; i < mb_info->mbs_mods_count; i++) {
         addr = modules[i].mod_start;
         while (addr < modules[i].mod_end) {
-            pmm_mark_used((void*) addr);
+            kpmm_mark_used((void*) addr);
             addr += 0x1000;
         }
     }
 }
 
-void* kmalloc_4k(void)
+void* kpmm_malloc_4k(void)
 {
     int i;
 
     for (i = 0; i < BITMAP_SIZE*32; i++) {
       
-	if (pmm_is_alloced(i)==TRUE) {
+	if (kpmm_is_alloced(i)==TRUE) {
 	    continue;
 	} else {
-	    pmm_mark_used((void*) (i*PAGE_SIZE));
+	    kpmm_mark_used((void*) (i*PAGE_SIZE));
 	    return (void*)(i * PAGE_SIZE);
 	}
 	
@@ -116,7 +117,7 @@ void* kmalloc_4k(void)
     /* Scheint wohl nichts frei zu sein... */
     return NULL;
 }
-void* kmalloc(size_t size)
+void* kpmm_malloc(size_t size)
 {
     int i, j,k;
      /* size in 4kb(pages) we are adding one page coz we have to allocate pages which have been written on to 1% also*/
@@ -127,12 +128,12 @@ void* kmalloc(size_t size)
 mark:
 	
 	for(j=0;j<size;j++){
-	    if (pmm_is_alloced(i+j)==TRUE) {
+	    if (kpmm_is_alloced(i+j)==TRUE) {
 		i++;
 		goto mark;
 	    } else if(j==size-1){
 		for(k =0;k<size;k++){
-		    pmm_mark_used((void*) ((i+k) * PAGE_SIZE));
+		    kpmm_mark_used((void*) ((i+k) * PAGE_SIZE));
 		}
 		return (void*)(i * PAGE_SIZE);
 	    }
@@ -142,16 +143,26 @@ mark:
     /* Scheint wohl nichts frei zu sein... */
     return NULL;
 }
-bool krealloc(void* ptr)
+bool kpmm_realloc(void* ptr, size_t size)
 {
+    int j,k;
     uintptr_t page =(uintptr_t) ptr/PAGE_SIZE;
-    if(pmm_is_alloced((uint32_t )page)==FALSE){
-	pmm_mark_used(ptr);
-	return TRUE;
-    };
+    size=size/PAGE_SIZE+1;
+    
+    for(j=0;j<size;j++) {
+      
+	    if (kpmm_is_alloced((uint32_t )page+j*PAGE_SIZE)==TRUE) {
+		return FALSE;
+	    } else if(j==size-1){
+		for(k =0;k<size;k++){
+		    kpmm_mark_used((void*) ((k) * PAGE_SIZE));
+		}
+		return TRUE;
+	    }
+    }
     return FALSE;
 }
-static bool pmm_is_alloced(uint32_t page)
+static bool kpmm_is_alloced(uint32_t page)
 {
     if(bitmap[page/32] & (1<<(page%32))){
 	return FALSE;
@@ -159,13 +170,13 @@ static bool pmm_is_alloced(uint32_t page)
     return TRUE;
 }
 
-static void pmm_mark_used(void* page)
+static void kpmm_mark_used(void* page)
 {
     uintptr_t index = (uintptr_t) page / PAGE_SIZE;
     bitmap[index / 32] &= ~(1 << (index % 32));
 }
 
-void kfree(void* page)
+void kpmm_free(void* page)
 {
     uintptr_t index = (uintptr_t) page / PAGE_SIZE;
     bitmap[index / 32] |= (1 << (index % 32));

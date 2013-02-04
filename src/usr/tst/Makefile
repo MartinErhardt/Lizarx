@@ -5,7 +5,7 @@ CC = gcc
 LD = ld
 
 ASFLAGS = -m32
-CFLAGS = -m32 -Wall -g -fno-stack-protector -nostdinc -I lib
+CFLAGS = -m32 -Werror -Wall -g -fno-stack-protector -nostdinc -I lib -ffreestanding
 LDFLAGS = -melf_i386 -Ttst.ld
 
 test.bin: $(OBJS)

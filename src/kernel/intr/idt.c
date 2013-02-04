@@ -16,24 +16,7 @@
 #define ICW_4 0x01
 
 #define IRQ_BASE 0x20
-static void init_pic(void)
-{
-    // init master-PIC
-    outb(MASTER_PIC_COMMAND, PIC_INIT);
-    outb(MASTER_PiC_DATA, IRQ_BASE);
-    outb(MASTER_PiC_DATA, 0x04); // slave at IRQ 2
-    outb(MASTER_PiC_DATA, ICW_4);
 
-    // init slave-PIC
-    outb(SLAVE_PIC_COMMAND, PIC_INIT);
-    outb(SLAVE_PiC_DATA, 0x28); // interruptnumber for IRQ 8
-    outb(SLAVE_PiC_DATA, 0x02); // slave at IRQ 2
-    outb(SLAVE_PiC_DATA, ICW_4);
-
-    // activate all IRQs(demasc)
-    outb(MASTER_PIC_COMMAND, 0x0);
-    outb(SLAVE_PIC_COMMAND, 0x0);
-}
 /*----------------------------------------------------------------------------IDT-----------------------------------------------------------------------------------------*/
 #define IDT_SIZE 256
 #define GDT_KERNEL_CODE_SEGMENT 0x8
@@ -55,17 +38,24 @@ static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
 }
 void init_idt(void)
 {
-    struct {
-        unsigned short int limit;
-        void* pointer;
-    } __attribute__((packed)) idtp = {
-        .limit = IDT_SIZE * 8 - 1,
-        .pointer = idt,
-    };
-
     // Interruptnummern der IRQs umbiegen
-    init_pic();
+    
+    // init master-PIC
+    outb(MASTER_PIC_COMMAND, PIC_INIT);
+    outb(MASTER_PiC_DATA, IRQ_BASE);
+    outb(MASTER_PiC_DATA, 0x04); // slave at IRQ 2
+    outb(MASTER_PiC_DATA, ICW_4);
 
+    // init slave-PIC
+    outb(SLAVE_PIC_COMMAND, PIC_INIT);
+    outb(SLAVE_PiC_DATA, 0x28); // interruptnumber for IRQ 8
+    outb(SLAVE_PiC_DATA, 0x02); // slave at IRQ 2
+    outb(SLAVE_PiC_DATA, ICW_4);
+
+    // activate all IRQs(demasc)
+    outb(MASTER_PIC_COMMAND, 0x0);
+    outb(SLAVE_PIC_COMMAND, 0x0);
+    
     // Exception-Handler
     idt_set_entry(0, intr_stub_0, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     idt_set_entry(1, intr_stub_1, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
@@ -93,7 +83,18 @@ void init_idt(void)
 
     // Syscall
     idt_set_entry(48, intr_stub_48, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING3 | IDT_FLAG_PRESENT);
-
+    kprintf("[INIT] IDT setup... SUCCESS\n");
+}
+void enable_intr()
+{
+    struct {
+        unsigned short int limit;
+        void* pointer;
+    } __attribute__((packed)) idtp = {
+        .limit = IDT_SIZE * 8 - 1,
+        .pointer = idt,
+    };
     asm volatile("lidt %0" : : "m" (idtp));
     asm volatile("sti");
-}
+    kprintf("[INIT] Interrrupts enabled\n");
+};
