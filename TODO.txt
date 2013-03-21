@@ -1,0 +1,8 @@
+1. selfmade(and working) KBC Driver
+2. selfmade (and working)memcpy
+3. some refactoring
+4. HAL
+5. kernel mods
+6. vheap
+7. VFS
+8. IPC over pipes and VFS
