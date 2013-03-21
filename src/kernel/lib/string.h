@@ -7,6 +7,6 @@
 
 void *memcpy(void *dst, const void *src, size_t len);
 void *memmove ( void *dst, const void *src, size_t len );
-void *memset ( void *ptr, int val, size_t len );
+void *memset ( void *ptr, uint32_t val, size_t len );
 
 #endif

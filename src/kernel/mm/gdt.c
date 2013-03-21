@@ -50,7 +50,7 @@ void init_gdt(void)
         .pointer = gdtable,
     };
     uint32_t tssloc[32] = { 0, 0, 0x10 };
-    
+    kprintf("[GDT_INIT] I: GDT setup...");
     memmove(&tss,&tssloc,sizeof(tssloc));
     
     // We are going to fill in the structs in gdtable
@@ -77,7 +77,7 @@ void init_gdt(void)
         "ljmp $0x8, $.1;"
         ".1:"
     );
-    kprintf("[INIT] GDT setup... SUCCESS\n");
+    kprintf("SUCCESS\n");
     // Taskregister neu laden
     asm volatile("ltr %%ax" : : "a" (5 << 3));
 }

@@ -1,21 +1,31 @@
 #ifndef TS_H
 #define TS_H
 
-#include<mt/cpustate.h>
-#include<stdint.h>
+#include <mt/cpustate.h>
+#include <stdint.h>
 #include <stdbool.h>
+#include <mm/vmm.h>
 
-#define STDRD_STACKSIZE 4096 //Stack größe bei der Initialisierung
-//#define MAX_TASKS 32 // Maximal zahl an Tasks noch keine malloc() funktion implementiert
+#define STDRD_STACKSIZE 0x2000 //Stack größe bei der Initialisierung
 
+// FIXME Make different thread and Process
 struct task {
     cpu_state *	state;
     uint32_t 	pid;
     uint8_t* 	stack;
     uint8_t* 	user_stack;
-    struct task*next;
+    vmm_context*	context;
+    struct task*	next;
 } ;
 
 struct task* init_task(void* entry);
+//void init_mt();
+
+struct task* getldtasks();
+struct task* getcurtask();
+vmm_context* getcurcontext();
+
 cpu_state* schedule(cpu_state* cpu);
+
+
 #endif

@@ -8,6 +8,7 @@
 
 cpu_state* handle_irq(cpu_state* cpu)
 {       cpu_state* new_cpu = cpu;
+	//kprintf("intr end");
 	if (cpu->intr >= 0x28) {
 	            // EOI an Slave-PIC
 	            outb(0xa0, 0x20);
@@ -17,5 +18,6 @@ cpu_state* handle_irq(cpu_state* cpu)
 	}
 	// EOI an Master-PIC
 	outb(0x20, 0x20);
+	//kprintf("intr end");
 	return new_cpu;
 }

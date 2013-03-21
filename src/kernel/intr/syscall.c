@@ -1,5 +1,5 @@
 #include<mt/cpustate.h>
-//#include<dbg/console.h>
+#include<dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
 #include<intr/syscall.h>
 

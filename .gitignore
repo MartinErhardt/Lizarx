@@ -7,6 +7,8 @@
 # or binaries
 *.elf
 *.o
+*.bin
+*.mod
 /bin
 
 # or ISOs

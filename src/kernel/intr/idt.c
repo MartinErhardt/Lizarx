@@ -5,7 +5,8 @@
 #include <intr/err.h>
 #include <intr/syscall.h>
 #include <mt/cpustate.h>
-
+#include <mm/vmm.h>
+#include <stdbool.h>
 /*----------------------------------------------------------------------------PIC-----------------------------------------------------------------------------------------*/
 #define MASTER_PIC_COMMAND 0x20
 #define MASTER_PiC_DATA 0x21
@@ -26,6 +27,8 @@
 #define IDT_FLAG_RING3 0x60
 
 struct idt_entry idt[IDT_SIZE];
+
+bool intr_activated=FALSE;
 static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
     int flags)
 {
@@ -38,6 +41,13 @@ static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
 }
 void init_idt(void)
 {
+    struct {
+        unsigned short int limit;
+        void* pointer;
+    } __attribute__((packed)) idtp = {
+        .limit = IDT_SIZE * 8 - 1,
+        .pointer = idt,
+    };
     // Interruptnummern der IRQs umbiegen
     
     // init master-PIC
@@ -83,18 +93,16 @@ void init_idt(void)
 
     // Syscall
     idt_set_entry(48, intr_stub_48, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING3 | IDT_FLAG_PRESENT);
+    asm volatile("lidt %0" : : "m" (idtp));
     kprintf("[INIT] IDT setup... SUCCESS\n");
+}
+bool is_intrenabled(){
+	return intr_activated;
 }
 void enable_intr()
 {
-    struct {
-        unsigned short int limit;
-        void* pointer;
-    } __attribute__((packed)) idtp = {
-        .limit = IDT_SIZE * 8 - 1,
-        .pointer = idt,
-    };
-    asm volatile("lidt %0" : : "m" (idtp));
+    intr_activated=TRUE;
+    //while(1){}
     asm volatile("sti");
     kprintf("[INIT] Interrrupts enabled\n");
 };

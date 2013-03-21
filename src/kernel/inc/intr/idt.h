@@ -1,6 +1,7 @@
 #ifndef INTR_H
 #define INTR_H
 #include<stdint.h>
+#include <stdbool.h>
 struct idt_entry
 {
     uint16_t isr_offset;
@@ -11,4 +12,5 @@ struct idt_entry
 }__attribute__((packed));
 void init_idt(void);
 void enable_intr();
+bool is_intrenabled();
 #endif

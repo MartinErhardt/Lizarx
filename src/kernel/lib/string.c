@@ -1,5 +1,7 @@
 #include "string.h"
 #include <stdint.h>
+
+#include<dbg/console.h>
 void * memcpy(void *dst, const void *src, size_t len){
 	size_t i;
 
@@ -113,12 +115,12 @@ void * memmove(void *dst, const void *src, size_t len)
 
       return dst;
 }
-void *memset(void *ptr, int val, size_t len)
+void *memset(void *ptr, uint32_t val, size_t len)
 {
-      char *p = ptr;
+      uint32_t *p = ptr;
       size_t i;
-      
-      for (i=0; i<len; i++) {
+      //kprintf("[LIB] I: memset called");
+      for (i=0; i<len/4; i++) {
 	      p[i] = val;
       }
 

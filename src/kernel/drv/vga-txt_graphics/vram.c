@@ -60,6 +60,8 @@ void kput(uint8_t chr, atrbyt font)
   
   // setzen des zeichens
   memmove(adr,&fig,sizeof(fig));
+  // serial console(only QEMU)
+  outb(0x3f8, fig.literal);
   //*adr = fig;
   curx++;
 }

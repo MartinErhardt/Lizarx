@@ -21,11 +21,10 @@ void uprintfstrcol_scr(uint8_t font, const char* fmt);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
-
 void _start(void)
 {
-    uprintf("[TST] started\n");
-    uprintf("#>");
+    const char string[16] = "[TST] started\n#>";
+    uprintf(&string[0]);
     // Exception
     //asm ("movl $0, %ebx; div %ebx");
     while(1);
