@@ -21,7 +21,6 @@
 #include <mm/gdt.h>
 #include <drv/keyboard/keyboard.h>
 #include <mt/ts.h>
-#include <mt/zygote.h>
 #include <boot/multiboot.h>
 #include <string.h>
 #include <drv/vga-txt_graphics/vram.h>
