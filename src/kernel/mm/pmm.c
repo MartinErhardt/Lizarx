@@ -120,7 +120,7 @@ void pmm_init(multiboot_info* mb_info)
     pmm_mark_used((void*)0x0);//0x0000000 is reserved for NULL pointers
     memset(0x00000000,0x00000000,PAGE_SIZE);
     pmm_mark_used((void*)0x1000);//0x1000 is reserved,because that's,where we tmp map our pagetables to
-    
+    pmm_mark_used((void*)0xb8000);//mark video ram as used
     /*
     for(i=0;i<4096;i++){
 	kprintf("%x",pmm_is_alloced(i+50000));
