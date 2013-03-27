@@ -22,6 +22,7 @@
 #include<stdbool.h>
 #include<stdint.h>
 #include <string.h>
+#include <intr/idt.h>
 
 /*
  * Flags for the Page Table and Page Directory
@@ -42,13 +43,15 @@
 
 #define TMP_PAGEBUF 0x1000
 
-#define KERNEL_SPACE 	0x10000000 //=256 MB
+#define KERNEL_SPACE 	0x1000000 //=256 MB
 
 typedef struct {
     struct vmm_pagedir* pd;
     struct vmm_tree_master* tr;
 } vmm_context;
 
+vmm_context startup_context;
+    
 vmm_context vmm_init(void);
 vmm_context vmm_crcontext();
 void* kvmm_malloc(size_t size);
@@ -67,7 +70,4 @@ uintptr_t virt_to_phys(vmm_context* context,uintptr_t virt);
 uintptr_t phys_to_virt(vmm_context* context,uintptr_t phys);
 
 uintptr_t vmm_find_freemem(vmm_context* context,uint32_t size, uintptr_t from,uintptr_t to);
-
-vmm_context* get_startupcontext();
-void set_startupcontext(vmm_context* context);
 #endif

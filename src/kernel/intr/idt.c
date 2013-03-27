@@ -46,7 +46,7 @@
 
 struct idt_entry idt[IDT_SIZE];
 
-bool intr_activated=FALSE;
+
 static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
     int flags)
 {
@@ -113,9 +113,6 @@ void init_idt(void)
     idt_set_entry(48, intr_stub_48, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING3 | IDT_FLAG_PRESENT);
     asm volatile("lidt %0" : : "m" (idtp));
     kprintf("[INIT] IDT setup... SUCCESS\n");
-}
-bool is_intrenabled(){
-	return intr_activated;
 }
 void enable_intr()
 {

@@ -27,43 +27,39 @@
 #include <mt/elf.h>
 #include <mm/vmm.h>
 #include <mm/pmm.h>
+#include <mm/vheap.h>
 
 void init(multiboot_info *mb_info)
 {
+    // initialize global variables
     uint32_t i;
-    /*
-     * Nachdem die physische Speicherverwaltung initialisiert ist, duerfen wir
-     * die Multiboot-Infostruktur nicht mehr benutzen, weil sie bei der
-     * Initialisierung nicht reserviert wurde und daher nach dem ersten
-     * pmm_alloc() ueberschrieben werden koennte.
-     */
+    first_task = NULL;
+    current_task = NULL;
+    startup_context.pd=0x0;
+    startup_context.tr=0x0;
+    intr_activated=FALSE;
+    
     memset(0x0,0x0,4);
     clrscr(VGA_BLACK,VGA_WHITE);
     kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
+    
     pmm_init(mb_info);
-    
     vmm_init();
-//while(1){}
-    
-    //kpmm_test();
-    //init_mt();
-    //kprintf("Hello World \n Integer %s",0x20);
-    
-    
-    //init_keyboard();
+    vheap_init();
+
     init_gdt();
     init_idt();
     kprintf("[INIT] I: init loads Bootmods...");
     if(mb_info->mbs_mods_count ==0){
-	kprintf("FAILED No Programs found\n");
+	//kprintf("FAILED No Programs found\n");
     }else{
 	multiboot_module* modules = mb_info->mbs_mods_addr;
 	for(i=0;i<mb_info->mbs_mods_count;i++){
-	    //size_t length = modules[i].mod_end - modules[i].mod_start;
+	    
 	    if(init_elf((void*) modules[i].mod_start)==0){
-		kprintf("SUCCESS with mod: %d",i);
+		//kprintf("SUCCESS with mod: %d",i);
 	    }else{
-		kprintf("FAILED with mod: %d",i);
+		//kprintf("FAILED with mod: %d",i);
 	    }
 	}
     }

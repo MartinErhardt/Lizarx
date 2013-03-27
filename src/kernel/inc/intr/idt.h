@@ -12,5 +12,5 @@ struct idt_entry
 }__attribute__((packed));
 void init_idt(void);
 void enable_intr();
-bool is_intrenabled();
+bool intr_activated;
 #endif

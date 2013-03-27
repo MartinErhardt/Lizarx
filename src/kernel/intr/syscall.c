@@ -20,7 +20,8 @@
 #include<dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
 #include<intr/syscall.h>
-
+#include<mm/vmm.h>
+#include<mm/pmm.h>
 void handle_syscall(cpu_state* cpu){
         //kprintf("syscall: EAX: %p EBX: %p EDX %p",cpu->eax,cpu->ebx,cpu->edx);
 	char* copybuf_ptr;
@@ -31,7 +32,7 @@ void handle_syscall(cpu_state* cpu){
 		copybuf_ptr =(void*)cpu->ebx;
 		font = (uint8_t)cpu->edx;
 		kprintfcol_scr((font>>4),font,copybuf_ptr);
-		
+		//kprintf("free space at  0x%x",kvmm_malloc(PAGE_SIZE));
 		break;
 	    case(SYS_INFO): break;
 	    case(SYS_GETTID):break;

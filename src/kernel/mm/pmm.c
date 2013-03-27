@@ -41,30 +41,6 @@ static uint32_t physbitmap[BITMAP_SIZE];
 extern const void kernel_start;
 extern const void kernel_end;
 
-void pmm_test(){
-      uint32_t i, j;
-      size_t vlarge_puffer_size =PAGE_SIZE*20000;
-      uint8_t vlarge_puffer_src[PAGE_SIZE];
-      void * vlarge_puffer_ptr = pmm_malloc(vlarge_puffer_size);
-      atrbyt font={0xF,0x0};
-      kprintf("[PMM] I: test started ...");
-      if(vlarge_puffer_ptr==NULL){
-	  kprintf("FAILED: No memory found\n");
-	  return;
-      }
-      
-      for(i=0;i<PAGE_SIZE;i++){
-	  vlarge_puffer_src[i] = 0xFF;
-      }
-      kprintf("...\nPAGE: ");
-      for(j=0;j<vlarge_puffer_size/PAGE_SIZE;j++){
-	  memcpy((void*)((uintptr_t) (vlarge_puffer_ptr)+j*PAGE_SIZE),&vlarge_puffer_src, PAGE_SIZE);
-	  kprintn_scr(j,10,font);
-	  setcurs(5,1);
-      }
-      
-      kprintf("SUCCESS\n");
-}
 void pmm_init(multiboot_info* mb_info)
 {
     multiboot_mmap* mmap = mb_info->mbs_mmap_addr;
@@ -84,7 +60,7 @@ void pmm_init(multiboot_info* mb_info)
             uintptr_t end_addr = addr + mmap->length;
 	    
             while (addr < end_addr) {
-                pmm_free((void*) addr);
+                pmm_free(addr/PAGE_SIZE);
                 addr += 0x1000;
             }
         }
@@ -95,7 +71,7 @@ void pmm_init(multiboot_info* mb_info)
     /* Den Kernel wieder als belegt kennzeichnen */
     uintptr_t addr = (uintptr_t) &kernel_start;
     while (addr < (uintptr_t) &kernel_end) {
-        pmm_mark_used((void*) addr);
+        pmm_mark_used(addr/PAGE_SIZE);
         addr += 0x1000;
     }
         /*
@@ -104,23 +80,23 @@ void pmm_init(multiboot_info* mb_info)
      */
     multiboot_module* modules = mb_info->mbs_mods_addr;
 
-    pmm_mark_used(mb_info);
-    pmm_mark_used(modules);
+    pmm_mark_used((uintptr_t)(mb_info)/PAGE_SIZE);
+    pmm_mark_used((uintptr_t)(modules)/PAGE_SIZE);
 
     /* Und die Multibootmodule selber sind auch belegt */
     int i;
     for (i = 0; i < mb_info->mbs_mods_count; i++) {
         addr = modules[i].mod_start;
         while (addr < modules[i].mod_end) {
-            pmm_mark_used((void*) addr);
+            pmm_mark_used(addr/PAGE_SIZE);
             addr += 0x1000;
         }
     }
     
-    pmm_mark_used((void*)0x0);//0x0000000 is reserved for NULL pointers
+    pmm_mark_used(0x0);//0x0000000 is reserved for NULL pointers
     memset(0x00000000,0x00000000,PAGE_SIZE);
-    pmm_mark_used((void*)0x1000);//0x1000 is reserved,because that's,where we tmp map our pagetables to
-    pmm_mark_used((void*)0xb8000);//mark video ram as used
+    pmm_mark_used(0x1);//0x1000 is reserved,because that's,where we tmp map our pagetables to
+    pmm_mark_used(0xb8);//mark video ram as used
     /*
     for(i=0;i<4096;i++){
 	kprintf("%x",pmm_is_alloced(i+50000));
@@ -128,7 +104,7 @@ void pmm_init(multiboot_info* mb_info)
     kprintf("SUCCESS\n");
 }
 
-void* pmm_malloc_4k(void)
+uint32_t pmm_malloc_4k(void)
 {
     int i;
 
@@ -137,60 +113,49 @@ void* pmm_malloc_4k(void)
 	if (pmm_is_alloced(i)==TRUE) {
 	    continue;
 	} else {
-	    pmm_mark_used((void*) (i*PAGE_SIZE));
-	    return (void*)(i * PAGE_SIZE);
+	    pmm_mark_used(i);
+	    return i;
 	}
 	
     }
     kprintf("[PMM] E: pmm_malloc_4k found no free memory");
     /* Scheint wohl nichts frei zu sein... */
-    return NULL;
+    return 0x0;
 }
-void* pmm_malloc(size_t size)
+uint32_t pmm_malloc(uint32_t pages)
 {
     int i, j,k;
-     /* size in 4kb(pages) we are adding one page coz we have to allocate pages which have been written on to 1% also*/
-    if((size%PAGE_SIZE)==0){
-	size=size/PAGE_SIZE;
-    }else{
-	size=size/PAGE_SIZE+1;
-    }
-    for (i = 0; i < BITMAP_SIZE*32-size; i++) {
+    for (i = 0; i < BITMAP_SIZE*32-pages; i++) {
       
 mark:
 	
-	for(j=0;j<size;j++){
+	for(j=0;j<pages;j++){
 	    if (pmm_is_alloced(i+j)==TRUE) {
 		i++;
 		goto mark;
-	    } else if(j==size-1){
-		for(k =0;k<size;k++){
-		    pmm_mark_used((void*) ((i+k)*PAGE_SIZE));
+	    } else if(j==pages-1){
+		for(k =0;k<pages;k++){
+		    pmm_mark_used(i+k);
 		}
-		return (void*)(i * PAGE_SIZE);
+		return i;
 	    }
 	}
     }
-    kprintf("[PMM] E: pmm_malloc found no free memory size: %d",size);
+    kprintf("[PMM] E: pmm_malloc found no free memory size: %d",pages);
     /* Scheint wohl nichts frei zu sein... */
-    return NULL;
+    return 0x0;
 }
-bool pmm_realloc(void* ptr, size_t size)
+bool pmm_realloc(uint32_t index, uint32_t pages)
 {
     int j,k;
-    uintptr_t page =(uintptr_t) ptr/PAGE_SIZE;
-    if((size%PAGE_SIZE)==0){
-	size=size/PAGE_SIZE;
-    }else{
-	size=size/PAGE_SIZE+1;
-    }
-    for(j=0;j<size;j++) {
+    
+    for(j=0;j<pages;j++) {
 	    kprintf("loop");
-	    if (pmm_is_alloced((uint32_t )page+j)==TRUE) {
+	    if (pmm_is_alloced(index+j)==TRUE) {
 		return FALSE;
-	    } else if(j==size-1){
-		for(k =0;k<size;k++){
-		    pmm_mark_used((void*) (k*PAGE_SIZE));
+	    } else if(j==pages-1){
+		for(k =0;k<pages;k++){
+		    pmm_mark_used(k);
 		}
 		return TRUE;
 	    }
@@ -206,14 +171,12 @@ bool pmm_is_alloced(uint32_t page)
     return TRUE;
 }
 
-void pmm_mark_used(void* page)
+void pmm_mark_used(uint32_t page)
 {
-    uintptr_t index = (uintptr_t) page / PAGE_SIZE;
-    physbitmap[index / 32] &= ~(1 << (index % 32));
+    physbitmap[page / 32] &= ~(1 << (page % 32));
 }
 
-void pmm_free(void* page)
+void pmm_free(uint32_t page)
 {
-    uintptr_t index = (uintptr_t) page / PAGE_SIZE;
-    physbitmap[index / 32] |= (1 << (index % 32));
+    physbitmap[page / 32] |= (1 << (page % 32));
 }

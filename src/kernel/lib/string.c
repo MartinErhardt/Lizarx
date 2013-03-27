@@ -20,9 +20,11 @@
 #include <stdint.h>
 
 #include<dbg/console.h>
-void * memcpy(void *dst, const void *src, size_t len){
-	size_t i;
 
+void* memcpy(void* dest, const void* src, size_t n)
+{
+    unsigned char* d = dest;
+    const unsigned char* s = src;
       /*
 	* memcpy does not support overlapping buffers, so always do it
 	* forwards. (Don't change this without adjusting memmove.)
@@ -35,30 +37,12 @@ void * memcpy(void *dst, const void *src, size_t len){
 	* the compiler to be reasonably intelligent about optimizing
 	* the divides and modulos out. Fortunately, it is.
 	*/
+    while (n--) {
+        *d++ = *s++;
+    }
 
-      if ((uintptr_t)dst % sizeof(long) == 0 &&
-	  (uintptr_t)src % sizeof(long) == 0 &&
-	  len % sizeof(long) == 0) {
-
-	      long *d = dst;
-	      const long *s = src;
-
-	      for (i=0; i<len/sizeof(long); i++) {
-		      d[i] = s[i];
-	      }
-      }
-      else {
-	      char *d = dst;
-	      const char *s = src;
-
-	      for (i=0; i<len; i++) {
-		      d[i] = s[i];
-	      }
-      }
-
-      return dst;
+    return dest;
 }
-
 /*
  * copy a block of memory, handling overlapping
  * regions correctly.

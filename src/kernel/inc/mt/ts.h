@@ -35,13 +35,10 @@ struct task {
     vmm_context*	context;
     struct task*	next;
 } ;
+struct task* first_task;
+struct task* current_task;
 
 struct task* init_task(void* entry);
-//void init_mt();
-
-struct task* getldtasks();
-struct task* getcurtask();
-vmm_context* getcurcontext();
 
 cpu_state* schedule(cpu_state* cpu);
 

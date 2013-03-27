@@ -19,7 +19,7 @@
 #include <mt/cpustate.h>
 #include <mt/ts.h>
 #include <mm/pmm.h>
-#include <mm/vmm.h>
+#include <mm/vheap.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -28,10 +28,7 @@
 
 static uint32_t num_tasks = 0;
 
-void init_mt(){
-}
-static struct task* first_task = NULL;
-static struct task* current_task = NULL;
+
 /*
  * Jeder Task braucht seinen eigenen Stack, auf dem er beliebig arbeiten kann,
  * ohne dass ihm andere Tasks Dinge ueberschreiben. Ausserdem braucht ein Task
@@ -39,7 +36,7 @@ static struct task* current_task = NULL;
  */
 struct task* init_task(void* entry)
 {	
-    uint8_t* stack = kvmm_malloc(PAGE_SIZE);
+    uint8_t* stack = kmalloc(PAGE_SIZE);
 
     num_tasks++;
     /*
@@ -73,14 +70,9 @@ struct task* init_task(void* entry)
      */
     cpu_state* state = (void*) ((uintptr_t)stack + PAGE_SIZE - sizeof(new_state)-1);    
     *state = new_state;
-    //kprintf("hi");
-    //while(1){}
-    /*
-     * neuen Task erstellen
-     */
     
-    struct task* task = kvmm_malloc(PAGE_SIZE);
-    vmm_context *new_con = kvmm_malloc(PAGE_SIZE);
+    struct task* task = kmalloc(sizeof(struct task));
+    vmm_context *new_con = kmalloc(sizeof(vmm_context));
     *new_con =vmm_crcontext();
     //while(1){}
     task->state = state;
@@ -115,7 +107,7 @@ cpu_state* schedule(cpu_state* cpu)
     if (current_task != NULL) {
         current_task->state = cpu;
     }
-     //kprintf("switch");
+    
     /*
      * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
      */
@@ -127,27 +119,11 @@ cpu_state* schedule(cpu_state* cpu)
             current_task = first_task;
         }
     }
-
+    //kprintf("cur_task0x%x",(uintptr_t)current_task);
     /* Prozessorzustand des neuen Tasks aktivieren */
     cpu = current_task->state;
     
     vmm_set_context(current_task->context);
     
     return cpu;
-}
-struct task* getldtasks(){
-    return first_task;
-}
-struct task* getcurtask(){
-    return current_task;
-}
-vmm_context* getcurcontext(){
-    if(!is_intrenabled()){
-	return get_startupcontext();
-    }
-    if((current_task==NULL)){
-	return NULL;
-    }else{
-	return current_task->context;
-    }
 }

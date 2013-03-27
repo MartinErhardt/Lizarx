@@ -35,7 +35,14 @@ int32_t init_elf(void* image)
     int i;
     struct task* new_task=NULL; 
 
-    vmm_context* curcontext=getcurcontext();
+    vmm_context* curcontext=NULL;
+    if(!intr_activated){
+        curcontext= &startup_context;
+    }else if((current_task==NULL)){
+        
+    }else{
+        curcontext= current_task->context;
+    }
     
     /* Ist es ueberhaupt eine ELF-Datei? */
     //kprintf("0x%x",(uintptr_t)image);
@@ -78,7 +85,7 @@ int32_t init_elf(void* image)
 
         memset(dest, 0x00000000, ph->mem_size);
 	//kprintf("src=  0x%x dest= 0x%x size = 0x%x",(uintptr_t)src,(uintptr_t)dest,ph->file_size);
-        memmove(dest, src, ph->file_size);
+        memcpy(dest, src, ph->file_size);
 	//while(1){}
 	vmm_set_context(curcontext);
 	//while(1){}
