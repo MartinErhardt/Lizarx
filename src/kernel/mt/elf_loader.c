@@ -66,7 +66,7 @@ int32_t init_elf(void* image)
     for (i = 0; i < header->ph_entry_count; i++, ph++) {
         void* dest = (void*) ph->virt_addr;
         void* src = ((char*) image) + ph->offset;
-	//kprintf("header at %d ph is 0x%x",(uintptr_t)ph,ph->offset);
+
 	/* Nur Program Header vom Typ LOAD laden */
         if (ph->type != 1) {
             continue;

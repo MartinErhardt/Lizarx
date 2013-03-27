@@ -1,0 +1,11 @@
+default 0
+#timeout 30
+ 
+#title Boot from hard disk
+#chainloader (hd0)+1
+ 
+title lizarx86
+kernel /boot/kernel    # Edit it to the filename of your kernel.
+
+module /boot/test.mod
+boot

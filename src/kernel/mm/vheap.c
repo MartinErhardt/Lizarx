@@ -29,19 +29,24 @@ void* kmalloc(size_t size){
 		
 		if(cur->size-size>sizeof(struct heap_block))
 		{
-			struct heap_block *free=(struct heap_block *)((uintptr_t)(cur)+cur->size-size-sizeof(struct heap_block));
+			struct heap_block *free=(struct heap_block *)((uintptr_t)(cur)+cur->size-(size+sizeof(struct heap_block)));
+			
 			free->free=0;
 			free->prev=cur;
 			free->next=cur->next;
 			free->size=size+sizeof(struct heap_block);
+			
+			cur->next=free;
+			cur->next->prev=free;
 			cur->size-=(size+sizeof(struct heap_block));
+			
+			return (void*)((uintptr_t)(free)+sizeof(struct heap_block));
 		}
 		else
 		{
 			cur->free=0;
+			return (void*)((uintptr_t)cur + sizeof(struct heap_block));
 		}
-		
-		return (void*)((uintptr_t)(cur)+cur->size+sizeof(struct heap_block));
 	}
 	else
 	{
@@ -50,10 +55,10 @@ void* kmalloc(size_t size){
     }while(cur!=first);
     return NULL;
 }
-void free(void*ptr){
+void kfree(void*ptr){
     struct heap_block* cur =first ;
     do{
-	if((cur==ptr)&&(!cur->free))
+	if(((uintptr_t)cur+sizeof(struct heap_block)==(uintptr_t)ptr)&&(!cur->free))
 	{
 		cur->free=1;
 	}
@@ -62,6 +67,7 @@ void free(void*ptr){
 		cur=cur->next;
 	}
     }while(cur!=first);
+    
     return;
 }
 void* krealloc(){
@@ -69,19 +75,15 @@ void* krealloc(){
 }
 static void vheap_enlarge(size_t size){
     //kprintf("hi");
-    struct heap_block *new_heap_sp=(struct heap_block *)kvmm_malloc(size);
+    struct heap_block *new_heap_sp=(struct heap_block *)kvmm_malloc(size+PAGE_SIZE);
     
-    new_heap_sp->next=first->next;
+    size=size/PAGE_SIZE+1;
+    
+    first->prev->next=new_heap_sp;
+    first->prev=new_heap_sp;
+    
+    new_heap_sp->next=first;
     new_heap_sp->prev=first->prev;
     new_heap_sp->free=1;
-    new_heap_sp->size=size;
-    /*
-    if((size%PAGE_SIZE)==0){
-	size=size/PAGE_SIZE;
-    }else{
-	size=size/PAGE_SIZE+1;
-    }
-    
-    if(size==0){return;}
-    */
+    new_heap_sp->size=size*PAGE_SIZE;
 }

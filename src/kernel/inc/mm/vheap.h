@@ -5,7 +5,7 @@
 
 void vheap_init();
 void* kmalloc(size_t size);
-void free(void* ptr);
+void kfree(void* ptr);
 void* krealloc();
 
 #endif

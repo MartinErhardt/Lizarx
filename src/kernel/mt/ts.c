@@ -74,7 +74,7 @@ struct task* init_task(void* entry)
     struct task* task = kmalloc(sizeof(struct task));
     vmm_context *new_con = kmalloc(sizeof(vmm_context));
     *new_con =vmm_crcontext();
-    //while(1){}
+    
     task->state = state;
     task->pid = num_tasks;
     task->stack = stack;

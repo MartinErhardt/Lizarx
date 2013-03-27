@@ -9,7 +9,10 @@
 *.o
 *.bin
 *.mod
-/bin
+kernel
+stage2_eltorito
 
 # or ISOs
 *.iso
+
+snippets.txt

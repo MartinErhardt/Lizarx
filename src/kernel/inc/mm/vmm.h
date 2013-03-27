@@ -54,13 +54,17 @@ vmm_context startup_context;
     
 vmm_context vmm_init(void);
 vmm_context vmm_crcontext();
+
 void* kvmm_malloc(size_t size);
 void* uvmm_malloc(vmm_context* context,size_t size);
 void* vmm_malloc(vmm_context* context,size_t size, uintptr_t from,uintptr_t to,uint8_t flgs);
 int32_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs);
-int vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs);
+void vmm_free(vmm_context* context,void* page);
+void kvmm_free(void* page);
 
-int32_t vmm_free(vmm_context* context,void* page);
+int vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs);
+void vmm_unmap(vmm_context*context,uintptr_t virt);
+
 void vmm_set_context(vmm_context* context);
 
 void* cpyin(void* src,size_t siz);
