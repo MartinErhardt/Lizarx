@@ -9,7 +9,7 @@
 *.o
 *.bin
 *.mod
-kernel
+bin/boot/kernel
 stage2_eltorito
 
 # or ISOs
