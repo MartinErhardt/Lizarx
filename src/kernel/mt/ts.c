@@ -16,9 +16,8 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include <mt/cpustate.h>
+#include <hal.h>
 #include <mt/ts.h>
-#include <mm/pmm.h>
 #include <mm/vheap.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -42,37 +41,23 @@ struct task* init_task(void* entry)
     /*
      * CPU-Zustand fuer den neuen Task festlegen
      */
-    cpu_state new_state = {
-        .eax = 0,
-        .ebx = 0,
-        .ecx = 0,
-        .edx = 0,
-        .esi = 0,
-        .edi = 0,
-        .ebp = 0,
-        .esp = 0x0,
-        .eip = (uintptr_t) entry,
- 
-        /* Ring-0-Segmentregister nicht mehr benutzt*/
-        //.cs  = 0x08,
-	/* Ring-3-Segmentregister */
-        .cs  = 0x18 | 0x03,
-        .ss  = 0x20 | 0x03,
-        /* IRQs einschalten (IF = 1) */
-        .eflags = 0x202,
-    };
-    
+    NEW_STATE
+    new_state.REG_IP = (uintptr_t) entry;
+#ifdef ARCH_X86
+    new_state.cs = 0x18 | 0x03;
+    new_state.ss = 0x20 | 0x03;
+#endif
     /*
      * Den angelegten CPU-Zustand auf den Stack des Tasks kopieren, damit es am
      * Ende so aussieht als waere der Task durch einen Interrupt unterbrochen
      * worden. So kann man dem Interrupthandler den neuen Task unterschieben
      * und er stellt einfach den neuen Prozessorzustand "wieder her".
      */
-    cpu_state* state = (void*) ((uintptr_t)stack + PAGE_SIZE - sizeof(new_state)-1);    
+    CPU_STATE* state 		= (void*) ((uintptr_t)stack + PAGE_SIZE - sizeof(new_state)-1);    
     *state = new_state;
     
-    struct task* task = kmalloc(sizeof(struct task));
-    vmm_context *new_con = kmalloc(sizeof(vmm_context));
+    struct task* task 			= kmalloc(sizeof(struct task));
+    vmm_context *new_con 		= kmalloc(sizeof(vmm_context));
     *new_con =vmm_crcontext();
     
     task->state = state;
@@ -85,9 +70,9 @@ struct task* init_task(void* entry)
     
     first_task = task;
     
-    uint8_t* user_stack = uvmm_malloc(first_task->context, STDRD_STACKSIZE);
-    first_task->user_stack 	= user_stack;
-    first_task->state->esp	= (uintptr_t) user_stack+STDRD_STACKSIZE-4;
+    uint8_t* user_stack 			= uvmm_malloc(first_task->context, STDRD_STACKSIZE);
+    first_task->user_stack 		= user_stack;
+    first_task->state->REG_STACKPTR	= (uintptr_t) user_stack+STDRD_STACKSIZE-4;
     
     return task;
 }
@@ -97,7 +82,7 @@ struct task* init_task(void* entry)
  * Prozessorzustand wird als Parameter uebergeben und gespeichert, damit er
  * beim naechsten Aufruf des Tasks wiederhergestellt werden kann
  */
-cpu_state* schedule(cpu_state* cpu)
+CPU_STATE* schedule(CPU_STATE* cpu)
 {
     /*
      * Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
@@ -123,7 +108,7 @@ cpu_state* schedule(cpu_state* cpu)
     /* Prozessorzustand des neuen Tasks aktivieren */
     cpu = current_task->state;
     
-    vmm_set_context(current_task->context);
+    SET_CONTEXT(current_task->context);
     
     return cpu;
 }

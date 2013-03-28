@@ -19,7 +19,7 @@
 #ifndef TS_H
 #define TS_H
 
-#include <mt/cpustate.h>
+#include <hal.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <mm/vmm.h>
@@ -28,7 +28,7 @@
 
 // FIXME Make different thread and Process
 struct task {
-    cpu_state *	state;
+    CPU_STATE *	state;
     uint32_t 	pid;
     uint8_t* 	stack;
     uint8_t* 	user_stack;
@@ -40,7 +40,7 @@ struct task* current_task;
 
 struct task* init_task(void* entry);
 
-cpu_state* schedule(cpu_state* cpu);
+CPU_STATE* schedule(CPU_STATE* cpu);
 
 
 #endif

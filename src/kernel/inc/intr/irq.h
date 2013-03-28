@@ -1,10 +1,10 @@
 #ifndef IRQ_H
 #define IRQ_H
-#include<mt/cpustate.h>
+#include<hal.h>
 
 extern void intr_stub_32(void);
 extern void intr_stub_33(void);
 
 
-cpu_state* handle_irq(cpu_state* cpu);
+CPU_STATE* handle_irq(CPU_STATE* cpu);
 #endif

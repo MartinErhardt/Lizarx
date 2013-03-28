@@ -18,6 +18,9 @@
  */
 /*
  * INFO: Here a Lower-Half Kernel is setup
+ *
+ * INFO: In this File macros from HAL/x86/macros.h and hw_structs from HAL/x86/hw_structs.h are used
+ * 
  */
 #include <mm/vmm.h>
 #include <mm/pmm.h>
@@ -26,47 +29,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-
-
-/*inline-ASM
- *FIXME move into HAL
- */
-#define INVALIDATE_TLB(ADDR) asm volatile("invlpg %0" : : "m" (*(char*)ADDR));
-
-#define ENABLE_PAGING 	uint32_t cr0;\
-			asm volatile("mov %%cr0, %0" : "=r" (cr0));\
-			cr0 |= (1 << 31);\
-			asm volatile("mov %0, %%cr0" : : "r" (cr0));
-
-#define LAST_ADDR 0xffffffff
-
-struct vmm_pagedirentr{
-    uint8_t rw_flags; 
-    uint8_t reserved :4;
-    uintptr_t pagetbl_ptr :20;
-}__attribute__((packed));
-
-struct vmm_pagetblentr{
-    uint8_t rw_flags; 
-    uint8_t reserved :4;
-    uintptr_t page_ptr :20;
-}__attribute__((packed));
-
-struct vmm_nodepkg_ptr{
-    uintptr_t nodepkg_ptr :20;
-}__attribute__((packed));
-
+#include <hal.h>
 
 extern const void kernel_start;
 extern const void kernel_end;
 
-struct vmm_pagedir{
-    struct vmm_pagedirentr pgdir[1024];
-}__attribute__((packed, aligned(PAGE_SIZE)));
-
-struct vmm_pagetbl{
-    struct vmm_pagetblentr pgtbl[1024];
-}__attribute__((packed, aligned(PAGE_SIZE)));
+struct vmm_nodepkg_ptr{
+    uintptr_t nodepkg_ptr :20;
+}__attribute__((packed));
 
 struct vmm_tree_master{
     uint32_t used[32];
@@ -76,6 +46,7 @@ struct vmm_tree_master{
 struct vmm_tree_nodepkg{
     uint32_t nodepkgentr[1024];
 }__attribute__((packed));
+
 
 
 bool paging_activated=FALSE;
@@ -95,7 +66,7 @@ vmm_context vmm_init(void)
     /* Speicherkontext anlegen */
     startup_context = vmm_crcontext();
 
-    vmm_set_context(&startup_context);
+    SET_CONTEXT(&startup_context)
     
     //while(1){}
     ENABLE_PAGING 
@@ -495,10 +466,6 @@ static int32_t vmm_mark_used_inallcon(struct task*first,uint32_t page){
 	vmm_mark_used(&startup_context,page);
     }
     return 0;
-}
-void vmm_set_context(vmm_context* context)
-{
-    asm volatile("mov %0, %%cr3" : : "r" (context->pd));
 }
 
 static void vmm_map_kernel(vmm_context* context){

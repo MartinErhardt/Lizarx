@@ -19,23 +19,23 @@
 #include <stdint.h>
 #include <drv/keyboard/keyboard.h>
 #include <dbg/console.h>
-#include <drv/io/ioport.h>
+#include <hal.h>
 #include <stdbool.h>
 
 static void clearkbcbuffer();
 
 static bool init_done = FALSE;
 
-void init_keyboard(void){
-    
+void init_keyboard(void)
+{
     clearkbcbuffer();
     // Leds alle ausloeschen
     send_command(0xED);
-    outb(0x60, 0);
+    OUTB(0x60, 0);
 
     // Schnellste Wiederholrate
     send_command(0xF3);
-    outb(0x60, 0);
+    OUTB(0x60, 0);
 
     // Tastatur aktivieren
     send_command(0xF4);
@@ -50,10 +50,12 @@ void init_keyboard(void){
 // Befehl an die Tastatur senden 
 void send_command(uint8_t command)
 {
+    uint8_t kbc_buffer_state=0x0;
+    INB(kbc_buffer_state,0x64)
     // Warten bis die Tastatur bereit ist, und der Befehlspuffer leer ist
-    while ((inb(0x64) & 0x2)) {}
+    while (kbc_buffer_state & 0x2) {INB(kbc_buffer_state,0x64)}
 
-    outb(0x60, command);
+    OUTB(0x60, command);
 };
 void kbc_handler(uint8_t irq) {
     
@@ -65,15 +67,17 @@ void kbc_handler(uint8_t irq) {
         return;
     }
 
-    scancode = inb(0x60);
+    INB(scancode,0x60);
     // Zum Testen sollte folgendes verwendet werden:
     kprintf("0x%x", scancode);
     //Nach erfolgreichen Tests, könnte eine send_key_event Funtkion wie bei Týndur verwendet werden
 };
-static void clearkbcbuffer(){
-    // Tastaturpuffer leeren
-    while (inb(0x64) & 0x1) {
-        inb(0x60);
+static void clearkbcbuffer()
+{
+    uint8_t kbc_buffer_state=0x0;
+    INB(kbc_buffer_state,0x64)
+    while (kbc_buffer_state & 0x1) {
+        INB(kbc_buffer_state,0x64)
     }
     return;
 }

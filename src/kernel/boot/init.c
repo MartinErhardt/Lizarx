@@ -46,9 +46,10 @@ void init(multiboot_info *mb_info)
     pmm_init(mb_info);
     vmm_init();
     vheap_init();
-
+#ifdef ARCH_X86
     init_gdt();
     init_idt();
+#endif
     kprintf("[INIT] I: init loads Bootmods...");
     if(mb_info->mbs_mods_count ==0){
 	//kprintf("FAILED No Programs found\n");

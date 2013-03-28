@@ -16,7 +16,7 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include<mt/cpustate.h>
+#include<hal.h>
 #include<mt/ts.h>
 #include<dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
@@ -25,17 +25,17 @@
 #include<mm/pmm.h>
 #include<mm/vheap.h>
 
-void handle_syscall(cpu_state* cpu){
+CPU_STATE* handle_syscall(CPU_STATE* cpu){
         //kprintf("syscall: EAX: %p EBX: %p EDX %p",cpu->eax,cpu->ebx,cpu->edx);
 	char* copybuf_ptr;
 	uint8_t font;
-	switch(cpu->eax){
+	switch(cpu->REG_FUNCRET){
 	    case(SYS_DRAW):
 	        
-		copybuf_ptr =(void*)cpu->ebx;
-		font = (uint8_t)cpu->edx;
+		copybuf_ptr =(void*)cpu->REG_DATA1;
+		font = (uint8_t)cpu->REG_DATA0;
 		kprintfcol_scr((font>>4),font,copybuf_ptr);
-		//kprintf("free space at  0x%x",free);
+		
 		break;
 	    case(SYS_INFO): break;
 	    case(SYS_GETTID):break;
@@ -46,4 +46,5 @@ void handle_syscall(cpu_state* cpu){
 	    case(SYS_FORKPID):break;
 	    default:break;
 	}
+	return cpu;
 }

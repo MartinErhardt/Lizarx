@@ -16,7 +16,7 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include<mt/cpustate.h>
+#include<hal.h>
 #include<mm/gdt.h>
 #include<drv/timer/timer.h>
 #include<mt/ts.h>
@@ -25,7 +25,7 @@
 #include <drv/vga-txt_graphics/vram.h>
 
 uint32_t time=0;
-void timer_handler(cpu_state** new_cpu){
+void timer_handler(CPU_STATE** new_cpu){
     time++;
     drawcurs();
     *new_cpu=schedule(*new_cpu);

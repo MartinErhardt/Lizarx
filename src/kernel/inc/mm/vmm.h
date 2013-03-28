@@ -23,19 +23,8 @@
 #include<stdint.h>
 #include <string.h>
 #include <intr/idt.h>
-
-/*
- * Flags for the Page Table and Page Directory
- */
-#define FLG_IN_MEM 	0x01
-#define FLG_WRITABLE 	0x02
-#define FLG_USERACCESS	0x04
-#define FLG_WRITECACHING	0x08
-#define FLG_NOCACHE	0x10
-//dirty access bits automatically set by CPU
-#define FLG_USED		0x20
-#define FLG_WRITTEN	0x40 // ignored in Page Directory Entry, if 4K Page
-#define FLGPD_NOT4K	0x80 // only in Page Directory Entry
+#include <hal.h>
+#include "pmm.h"
 
 #define FLGCOMBAT_KERNEL	FLG_IN_MEM  | FLG_WRITABLE | FLG_WRITECACHING
 
@@ -64,8 +53,6 @@ void kvmm_free(void* page);
 
 int vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs);
 void vmm_unmap(vmm_context*context,uintptr_t virt);
-
-void vmm_set_context(vmm_context* context);
 
 void* cpyin(void* src,size_t siz);
 void* cpyout(vmm_context* context,void* src,size_t siz);

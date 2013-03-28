@@ -16,36 +16,19 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include <drv/io/ioport.h>
 #include <intr/idt.h>
 #include <dbg/console.h>
 #include <intr/irq.h>
 #include <intr/err.h>
 #include <intr/syscall.h>
-#include <mt/cpustate.h>
 #include <mm/vmm.h>
 #include <stdbool.h>
-/*----------------------------------------------------------------------------PIC-----------------------------------------------------------------------------------------*/
-#define MASTER_PIC_COMMAND 0x20
-#define MASTER_PiC_DATA 0x21
-#define SLAVE_PIC_COMMAND 0xa0
-#define SLAVE_PiC_DATA 0xa1
-
-#define PIC_INIT 0x11
-#define ICW_4 0x01
-
-#define IRQ_BASE 0x20
-
-/*----------------------------------------------------------------------------IDT-----------------------------------------------------------------------------------------*/
-#define IDT_SIZE 256
-#define GDT_KERNEL_CODE_SEGMENT 0x8
-#define IDT_FLAG_INTERRUPT_GATE 0xe
-#define IDT_FLAG_PRESENT 0x80
-#define IDT_FLAG_RING0 0x00
-#define IDT_FLAG_RING3 0x60
+#include <hal.h>
+/*
+ * INFO: In this File macros from HAL/x86/macros.h and hw_structs from HAL/x86/hw_structs.h are used
+ */
 
 struct idt_entry idt[IDT_SIZE];
-
 
 static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
     int flags)
@@ -69,20 +52,20 @@ void init_idt(void)
     // Interruptnummern der IRQs umbiegen
     
     // init master-PIC
-    outb(MASTER_PIC_COMMAND, PIC_INIT);
-    outb(MASTER_PiC_DATA, IRQ_BASE);
-    outb(MASTER_PiC_DATA, 0x04); // slave at IRQ 2
-    outb(MASTER_PiC_DATA, ICW_4);
+    OUTB(MASTER_PIC_COMMAND, PIC_INIT);
+    OUTB(MASTER_PiC_DATA, IRQ_BASE);
+    OUTB(MASTER_PiC_DATA, 0x04); // slave at IRQ 2
+    OUTB(MASTER_PiC_DATA, ICW_4);
 
     // init slave-PIC
-    outb(SLAVE_PIC_COMMAND, PIC_INIT);
-    outb(SLAVE_PiC_DATA, 0x28); // interruptnumber for IRQ 8
-    outb(SLAVE_PiC_DATA, 0x02); // slave at IRQ 2
-    outb(SLAVE_PiC_DATA, ICW_4);
+    OUTB(SLAVE_PIC_COMMAND, PIC_INIT);
+    OUTB(SLAVE_PiC_DATA, 0x28); // interruptnumber for IRQ 8
+    OUTB(SLAVE_PiC_DATA, 0x02); // slave at IRQ 2
+    OUTB(SLAVE_PiC_DATA, ICW_4);
 
     // activate all IRQs(demasc)
-    outb(MASTER_PIC_COMMAND, 0x0);
-    outb(SLAVE_PIC_COMMAND, 0x0);
+    OUTB(MASTER_PIC_COMMAND, 0x0);
+    OUTB(SLAVE_PIC_COMMAND, 0x0);
     
     // Exception-Handler
     idt_set_entry(0, intr_stub_0, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
@@ -117,7 +100,7 @@ void init_idt(void)
 void enable_intr()
 {
     intr_activated=TRUE;
-    //while(1){}
-    asm volatile("sti");
+
+    ENABLE_INTR
     kprintf("[INIT] Interrrupts enabled\n");
 };

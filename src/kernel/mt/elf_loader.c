@@ -21,8 +21,7 @@
 #include<dbg/console.h>
 #include<string.h>
 #include<mm/vmm.h>
-#include<mm/pmm.h>
-
+#include<hal.h>
 int32_t init_elf(void* image)
 {
     /*
@@ -81,13 +80,13 @@ int32_t init_elf(void* image)
 	    kprintf("[ELF_LOADER] W: init_elf couldn't realloc for PH!\n");//it is only a warning yet ,coz the header could be in the same Page and that's not tested yet
 	}
 	//vmm_map_page(curcontext,vmm_find_freemem(ph->file_size/PAGE_SIZE,0x0,KERNEL_SPACE),pmm_malloc());
-	vmm_set_context(new_task->context);
+	SET_CONTEXT(new_task->context);
 
         memset(dest, 0x00000000, ph->mem_size);
 	//kprintf("src=  0x%x dest= 0x%x size = 0x%x",(uintptr_t)src,(uintptr_t)dest,ph->file_size);
         memcpy(dest, src, ph->file_size);
 	//while(1){}
-	vmm_set_context(curcontext);
+	SET_CONTEXT(curcontext);
 	//while(1){}
 	//kprintf("hello");
     }

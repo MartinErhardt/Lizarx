@@ -1,6 +1,6 @@
 #ifndef SYSCALL_H
 #define SYSCALL_H
-#include<mt/cpustate.h>
+#include<hal.h>
 
 typedef enum {
     SYS_DRAW,
@@ -14,5 +14,7 @@ typedef enum {
 } syscalls;
 
 extern void intr_stub_48(void);
-void handle_syscall(cpu_state* cpu);
+
+CPU_STATE* handle_syscall(CPU_STATE* cpu);
+
 #endif

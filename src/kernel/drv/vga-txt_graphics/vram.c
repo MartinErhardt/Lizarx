@@ -22,7 +22,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <drv/vga-txt_graphics/vram.h>
-#include <drv/io/ioport.h>
+#include <hal.h>
 
 #define VIDEO_X 80
 #define VIDEO_Y 25
@@ -65,6 +65,7 @@ void kput(uint8_t chr, atrbyt font)
   if((scr_enb==TRUE)&&(cury==VIDEO_Y)){
       scroll(1);
   }
+  OUTB(0x3f8, fig.literal)
   if((curx>=VIDEO_X)||(chr =='\n')){// Test
     newline();
     return;
@@ -79,7 +80,7 @@ void kput(uint8_t chr, atrbyt font)
   // setzen des zeichens
   memmove(adr,&fig,sizeof(fig));
   // serial console(only QEMU)
-  outb(0x3f8, fig.literal);
+
   //*adr = fig;
   curx++;
 }
@@ -98,17 +99,17 @@ void setcurs(uint8_t xp,uint8_t yp){
 
 void drawcurs(){
   uint16_t tmp= (cury*VIDEO_X+curx)-1;
-  outb(0x3d4,14);
-  outb(0x3d5,tmp >> 8);
-  outb(0x3d4,15);
-  outb(0x3d5,tmp);
+  OUTB(0x3d4,14);
+  OUTB(0x3d5,(uint8_t)tmp >> 8);
+  OUTB(0x3d4,15);
+  OUTB(0x3d5,tmp);
 }
 void rmvcurs()
 {
-  outb(0x3d4,14);
-  outb(0x3d5,0x07);
-  outb(0x3d4,15);
-  outb(0x3d5,0xd0);
+  OUTB(0x3d4,14);
+  OUTB(0x3d5,0x07);
+  OUTB(0x3d4,15);
+  OUTB(0x3d5,0xd0);
 }
  
 static void newline(){

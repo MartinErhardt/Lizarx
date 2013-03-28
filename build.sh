@@ -1,4 +1,7 @@
 #build shell skript
+echo "This is the build-script for lizarx86"
+echo "It's required ro run in the root folder of the project"
+
 rm bootable.iso
 
 cd src
@@ -26,7 +29,10 @@ rm *.o
 cd ../dbg
 rm *.o
 
-cd ../drv/keyboard
+cd ../HAL/x86/asm
+rm *.o
+
+cd ../../../drv/keyboard
 rm *.o
 
 cd ../vga-txt_graphics
@@ -35,8 +41,6 @@ rm *.o
 cd ../timer
 rm *.o
 
-cd ../io
-rm *.o
 cd ../../../usr/tst
 rm *.o
 
