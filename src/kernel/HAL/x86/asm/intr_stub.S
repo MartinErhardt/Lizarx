@@ -120,7 +120,7 @@ intr_stub_\nr:
     // call handler
     push %esp
     call handle_syscall
-    add $4, %esp
+    mov %eax, %esp
     RESTORE_CPU
 
     // Fehlercode und Interruptnummer vom Stack nehmen

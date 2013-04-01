@@ -33,7 +33,7 @@
 				asm volatile("mov %%cr0, %0" : "=r" (cr0));\
 				cr0 |= (1 << 31);\
 				asm volatile("mov %0, %%cr0" : : "r" (cr0));
-#define SET_CONTEXT(CONTEXT)	asm volatile("mov %0, %%cr3" : : "r" ((*CONTEXT).pd));
+#define SET_CONTEXT(PAGEDIR)	asm volatile("mov %0, %%cr3" : : "r" (PAGEDIR));
 
 #define LAST_ADDR 0xffffffff
 

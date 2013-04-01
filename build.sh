@@ -41,14 +41,19 @@ rm *.o
 cd ../timer
 rm *.o
 
-cd ../../../usr/tst
+cd ../../../usr/tst1
+rm *.o
+
+cd ../tst2
 rm *.o
 
 echo "deleted .o files"
 
 cd ../../..
+pwd
 cp src/kernel/kernel bin/boot/kernel
 rm src/kernel/kernel
-cp src/usr/tst/test.bin bin/boot/test.mod
+cp src/usr/tst1/tst1.elf bin/boot/test1.mod
+cp src/usr/tst2/tst2.elf bin/boot/test2.mod
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx86.iso bin
 /usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int -no-kvm -d int

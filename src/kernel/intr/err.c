@@ -22,8 +22,8 @@
 #include<drv/vga-txt_graphics/vram.h>
 
 void handle_exception(CPU_STATE* cpu){
-	redscreen(cpu);
-	//kprintf("err");
+	//redscreen(cpu);
+	kprintf("err");
 	while(1) {
 	   // Prozessor anhalten
 	   asm volatile("cli; hlt");

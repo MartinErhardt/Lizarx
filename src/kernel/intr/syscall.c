@@ -17,7 +17,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include<hal.h>
-#include<mt/ts.h>
 #include<dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
 #include<intr/syscall.h>
@@ -26,7 +25,6 @@
 #include<mm/vheap.h>
 
 CPU_STATE* handle_syscall(CPU_STATE* cpu){
-        //kprintf("syscall: EAX: %p EBX: %p EDX %p",cpu->eax,cpu->ebx,cpu->edx);
 	char* copybuf_ptr;
 	uint8_t font;
 	switch(cpu->REG_FUNCRET){

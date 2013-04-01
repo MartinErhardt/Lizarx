@@ -6,9 +6,9 @@ LD = ld
 
 ASFLAGS = -m32
 CFLAGS = -m32 -Werror -Wall -g -fno-stack-protector -nostdinc -I lib -ffreestanding
-LDFLAGS = -melf_i386 -Ttst.ld
+LDFLAGS = -melf_i386 -Ttst1.ld
 
-test.bin: $(OBJS)
+tst1.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
 %.o: %.c

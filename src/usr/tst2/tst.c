@@ -21,13 +21,14 @@ void uprintfstrcol_scr(uint8_t font, const char* fmt);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
+
 void _start(void)
 {
-    const char string[16] = "[TST] started\n#>";
-    uprintf(&string[0]);
+    //const char stringa[13] ="this is proc2";
+    
     // Exception
     //asm ("movl $0, %ebx; div %ebx");
-    while(1);
+    while(1){}
 }
 void uprintf(const char* fmt, ...){
     uprintfstrcol_scr(VGA_WHITE,fmt);

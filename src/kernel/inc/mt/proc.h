@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/inc/mm/ts.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/mt/inc/proc.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,31 +16,24 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef TS_H
-#define TS_H
+#ifndef PROC_H
+#define PROC_H
 
-#include <hal.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <mm/vmm.h>
+#include<mm/vmm.h>
+#include<stdint.h>
+#include"user.h"
 
-#define STDRD_STACKSIZE 0x2000 //Stack größe bei der Initialisierung
-
-// FIXME Make different thread and Process
-struct task {
-    CPU_STATE *	state;
-    uint32_t 	pid;
-    uint8_t* 	stack;
-    uint8_t* 	user_stack;
+struct proc {
+    uint32_t 	p_id;
+    struct user*user;
+//    char[10]	desc;
     vmm_context*	context;
-    struct task*	next;
-} ;
-struct task* first_task;
-struct task* current_task;
+    struct proc*next;
+};
+struct proc* first_proc;
+struct proc* cur_proc;
 
-struct task* init_task(void* entry);
-
-CPU_STATE* schedule(CPU_STATE* cpu);
-
+struct proc* create_proc();
+struct proc* get_proc(uint32_t p_id);
 
 #endif

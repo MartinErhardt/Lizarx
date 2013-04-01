@@ -67,7 +67,7 @@ typedef struct {
         .eflags = 0,\
     };
     
-#define SET_IRQ(FLAGS) FLAGS=0x202
+#define SET_IRQ(FLAGS) FLAGS=0x202;
          /* Ring-0-Segmentregister nicht mehr benutzt*/
         //.cs  = 0x08,
 	/* Ring-3-Segmentregister */   

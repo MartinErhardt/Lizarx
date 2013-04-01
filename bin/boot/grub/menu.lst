@@ -7,5 +7,6 @@ default 0
 title lizarx86
 kernel /boot/kernel    # Edit it to the filename of your kernel.
 
-module /boot/test.mod
+module /boot/test1.mod
+module /boot/test2.mod
 boot

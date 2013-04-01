@@ -17,12 +17,14 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include<mt/elf.h>
-#include<mt/ts.h>
 #include<dbg/console.h>
 #include<string.h>
 #include<mm/vmm.h>
 #include<hal.h>
-int32_t init_elf(void* image)
+#include<mt/proc.h>
+#include<mt/threads.h>
+
+int32_t init_elf(void* image,int snd)
 {
     /*
      * FIXME Wir muessen eigentlich die Laenge vom Image pruefen, damit wir bei
@@ -32,17 +34,15 @@ int32_t init_elf(void* image)
     struct elf_header* header = image;
     struct elf_program_header* ph;
     int i;
-    struct task* new_task=NULL; 
+    struct proc* new_proc=NULL; 
 
     vmm_context* curcontext=NULL;
     if(!intr_activated){
         curcontext= &startup_context;
-    }else if((current_task==NULL)){
-        
     }else{
-        curcontext= current_task->context;
+        curcontext= current_thread->proc->context;
     }
-    
+    uintptr_t curpd_phys= virt_to_phys(curcontext, (uintptr_t)curcontext->pd);
     /* Ist es ueberhaupt eine ELF-Datei? */
     //kprintf("0x%x",(uintptr_t)image);
     if (header->magic != ELF_MAGIC) {
@@ -50,8 +50,14 @@ int32_t init_elf(void* image)
         return -1;
     }
     //asm volatile("int $0xe");
-    new_task=init_task((void*) header->entry);
+
+    new_proc=create_proc();
+    //kprintf("crthread pid= 0x%x",new_proc->p_id);
+    //if(snd){while(1){};}
+    create_thread((void*) header->entry,new_proc->p_id);
     
+    //kprintf("virt at 0x%x phys at 0x%x",virt_to_phys(curcontext, (uintptr_t)new_proc->context->pd),new_proc->context->pd);
+    //if(snd){while(1);}
     /*
      * Alle Program Header durchgehen und den Speicher an die passende Stelle
      * kopieren.
@@ -76,21 +82,19 @@ int32_t init_elf(void* image)
 	}
 	
 	//kprintf("[ELF_LOADER] E: init_elf an elf want to be loaded at %x ; That's not in Kernelspace!\n",ph->virt_addr);
-	if(vmm_realloc(new_task->context,(void*)ph->virt_addr,ph->mem_size,FLGCOMBAT_USER)<0){
+	if(vmm_realloc(new_proc->context,(void*)ph->virt_addr,ph->mem_size,FLGCOMBAT_USER)<0){
 	    kprintf("[ELF_LOADER] W: init_elf couldn't realloc for PH!\n");//it is only a warning yet ,coz the header could be in the same Page and that's not tested yet
 	}
-	//vmm_map_page(curcontext,vmm_find_freemem(ph->file_size/PAGE_SIZE,0x0,KERNEL_SPACE),pmm_malloc());
-	SET_CONTEXT(new_task->context);
+	
+	
+	SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->pd));
 
         memset(dest, 0x00000000, ph->mem_size);
 	//kprintf("src=  0x%x dest= 0x%x size = 0x%x",(uintptr_t)src,(uintptr_t)dest,ph->file_size);
         memcpy(dest, src, ph->file_size);
-	//while(1){}
-	SET_CONTEXT(curcontext);
-	//while(1){}
-	//kprintf("hello");
+	
+	SET_CONTEXT(curpd_phys);
     }
-    //while(1){}
-//kprintf("hello");
+
     return 0;
 }

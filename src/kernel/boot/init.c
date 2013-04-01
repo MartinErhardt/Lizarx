@@ -20,7 +20,6 @@
 #include <intr/idt.h>
 #include <mm/gdt.h>
 #include <drv/keyboard/keyboard.h>
-#include <mt/ts.h>
 #include <boot/multiboot.h>
 #include <string.h>
 #include <drv/vga-txt_graphics/vram.h>
@@ -28,13 +27,17 @@
 #include <mm/vmm.h>
 #include <mm/pmm.h>
 #include <mm/vheap.h>
+#include <mt/threads.h>
+#include <mt/proc.h>
 
 void init(multiboot_info *mb_info)
 {
     // initialize global variables
     uint32_t i;
-    first_task = NULL;
-    current_task = NULL;
+    first_thread = NULL;
+    current_thread = NULL;
+    first_proc = NULL;
+    cur_proc = NULL;
     startup_context.pd=0x0;
     startup_context.tr=0x0;
     intr_activated=FALSE;
@@ -42,22 +45,24 @@ void init(multiboot_info *mb_info)
     memset(0x0,0x0,4);
     clrscr(VGA_BLACK,VGA_WHITE);
     kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
-    
+
     pmm_init(mb_info);
+    //
     vmm_init();
+    
     vheap_init();
 #ifdef ARCH_X86
     init_gdt();
     init_idt();
 #endif
-    kprintf("[INIT] I: init loads Bootmods...");
+        
+    kprintf("[INIT] I: init loads Bootmods...0x%x",mb_info->mbs_mods_count);
     if(mb_info->mbs_mods_count ==0){
 	//kprintf("FAILED No Programs found\n");
     }else{
 	multiboot_module* modules = mb_info->mbs_mods_addr;
 	for(i=0;i<mb_info->mbs_mods_count;i++){
-	    
-	    if(init_elf((void*) modules[i].mod_start)==0){
+	    if(init_elf((void*) modules[i].mod_start,i)==0){
 		//kprintf("SUCCESS with mod: %d",i);
 	    }else{
 		//kprintf("FAILED with mod: %d",i);

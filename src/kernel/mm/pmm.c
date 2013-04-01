@@ -130,18 +130,23 @@ uint32_t pmm_malloc(uint32_t pages)
 mark:
 	
 	for(j=0;j<pages;j++){
+
 	    if (pmm_is_alloced(i+j)==TRUE) {
+		//if(i+j==0x4d){
+		//	kprintf("i+j is alloced 0x%x",i+j);
+		//}
 		i++;
 		goto mark;
-	    } else if(j==pages-1){
+	    } else if(j+1==pages){
 		for(k =0;k<pages;k++){
+		    //kprintf("mark 0x%x",i+k);
 		    pmm_mark_used(i+k);
 		}
 		return i;
 	    }
 	}
     }
-    kprintf("[PMM] E: pmm_malloc found no free memory size: %d",pages);
+    kprintf("[PMM] found no free memory at: %x");
     /* Scheint wohl nichts frei zu sein... */
     return 0x0;
 }
@@ -150,7 +155,7 @@ bool pmm_realloc(uint32_t index, uint32_t pages)
     int j,k;
     
     for(j=0;j<pages;j++) {
-	    kprintf("loop");
+	    //kprintf("loop");
 	    if (pmm_is_alloced(index+j)==TRUE) {
 		return FALSE;
 	    } else if(j==pages-1){

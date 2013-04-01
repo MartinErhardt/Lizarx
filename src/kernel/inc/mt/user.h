@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/drv/timer/timer.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/mt/inc/user.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,22 +16,11 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include<hal.h>
-#include<mm/gdt.h>
-#include<drv/timer/timer.h>
-#include<mt/sched.h>
-#include<stdbool.h>
+#ifndef USER_H
+#define USER_H
+
 #include<stdint.h>
-#include <dbg/console.h>
-
-uint32_t time=0;
-CPU_STATE* timer_handler(CPU_STATE* new_cpu){
-    time++;
-    //kprintf("hi1");
-    //drawcurs();
-    CPU_STATE* state = schedule(new_cpu);
-
-    tss[1] = (uint32_t) (new_cpu + 1);
-
-    return state;
-}
+struct user {
+    uint32_t 	u_id;
+};
+#endif

@@ -21,20 +21,22 @@
 #include <drv/keyboard/keyboard.h>
 #include <drv/timer/timer.h>
 #include <intr/irq.h>
-#include <mt/ts.h>
 
 CPU_STATE* handle_irq(CPU_STATE* cpu)
-{       CPU_STATE* new_cpu = cpu;
-
+{
+	CPU_STATE* new_cpu = cpu;
+	//kprintf("switch");
 	if (cpu->INFO_INTR >= 0x28) {
 	            // EOI an Slave-PIC
 	            OUTB(0xa0, 0x20)
 	}else if(cpu->INFO_INTR==0x21){kbc_handler(0x21);}
 	 else if (cpu->INFO_INTR == 0x20) {
-	    timer_handler(&new_cpu);
+	    new_cpu = timer_handler(cpu);
+	    //kprintf("esp= 0x%x",new_cpu->esp);
 	}
+
 	// EOI an Master-PIC
 	OUTB(0x20, 0x20)
-	//kprintf("intr end");
+	//kprintf("irq 0x%x",new_cpu->esp);
 	return new_cpu;
 }
