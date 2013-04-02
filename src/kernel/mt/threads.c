@@ -50,7 +50,6 @@ int32_t create_thread(void* entry,uint32_t p_id)
 #endif
 	new_t->t_id=num_threads;
 	new_t->state = new_st_;
-	new_t->stack=kvmm_malloc(PAGE_SIZE);
 	new_t->user_stack 	= user_stack;
 	new_t->proc=in_proc;
 	new_t->state->esp= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
@@ -71,7 +70,6 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
     /*
      * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
      */
-    //kprintf("hi");
     if (current_thread == NULL) {
 
  	curcontext= &startup_context;

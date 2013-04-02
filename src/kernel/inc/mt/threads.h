@@ -31,7 +31,6 @@ struct thread* current_thread;
 struct thread {
     CPU_STATE *		state;
     uint32_t 		t_id;
-    uint8_t* 		stack;
     uint8_t* 		user_stack;
     struct proc*		proc;
     struct thread*	next;

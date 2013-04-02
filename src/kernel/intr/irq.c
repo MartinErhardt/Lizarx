@@ -28,7 +28,7 @@ CPU_STATE* handle_irq(CPU_STATE* cpu)
 	if (cpu->INFO_INTR >= 0x28) 
 	{
 		// EOI an Slave-PIC
-		OUTB((uint16_t)0xa0, (uint8_t)0x20);
+		OUTB(0xa0, 0x20);
 	}
 	else if(cpu->INFO_INTR==0x21)
 	{
@@ -40,6 +40,6 @@ CPU_STATE* handle_irq(CPU_STATE* cpu)
 	}
 
 	// EOI an Master-PIC
-	OUTB((uint16_t)0x20, (uint8_t)0x20)
+	OUTB(0x20, 0x20)
 	return new_cpu;
 }

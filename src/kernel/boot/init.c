@@ -47,7 +47,7 @@ void init(multiboot_info *mb_info)
     kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
 
     pmm_init(mb_info);
-    //
+    
     vmm_init();
     
     vheap_init();
@@ -56,20 +56,20 @@ void init(multiboot_info *mb_info)
     init_idt();
 #endif
         
-    kprintf("[INIT] I: init loads Bootmods...0x%x",mb_info->mbs_mods_count);
+    kprintf("[INIT] I: init loads Bootmods...");
     if(mb_info->mbs_mods_count ==0){
 	//kprintf("FAILED No Programs found\n");
     }else{
 	multiboot_module* modules = mb_info->mbs_mods_addr;
 	for(i=0;i<mb_info->mbs_mods_count;i++){
 	    if(init_elf((void*) modules[i].mod_start,i)==0){
-		kprintf("SUCCESS with mod: %d",i);
+		//kprintf("SUCCESS with mod: %d",i);
 	    }else{
 		//kprintf("FAILED with mod: %d",i);
 	    }
 	}
     }
-    kprintf("\n");
+    kprintf(" SUCCESS\n");
 
     enable_intr();
 }

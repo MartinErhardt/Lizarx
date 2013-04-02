@@ -27,12 +27,12 @@
 
 #define CMOS_READ(DATA,OFF) 	uint8_t tmp =0;\
 				INB(CMOS_PORT_ADDRESS,tmp)\
-				OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (offset & 0x7F))\
+				OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (OFF & 0x7F))\
 				INB(CMOS_PORT_DATA,DATA)
 
 #define CMOS_WRITE(DATA,OFF) 	uint8_t tmp =0;\
 				INB(CMOS_PORT_ADDRESS,tmp)\
-				OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (offset & 0x7F))\
+				OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (OFF & 0x7F))\
 				OUTB(CMOS_PORT_DATA,DATA)
 
 #endif
