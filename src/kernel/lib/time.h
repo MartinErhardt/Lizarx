@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/drv/timer/timer.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/lib/time.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,18 +16,36 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include<hal.h>
-#include<drv/timer/timer.h>
-#include<mt/sched.h>
-#include<stdint.h>
-#include <dbg/console.h>
+#ifndef TIMER_H
+#define TIMER_H
 
-uint32_t time=0;
-CPU_STATE* timer_handler(CPU_STATE* new_cpu)
+#include<stdint.h>
+
+#define CLOCKS_PER_SEC 1024
+
+struct tm
 {
-    time++;
-    
-    CPU_STATE* state = schedule(new_cpu);
-    
-    return state;
+	int tm_sec;
+	int tm_min;
+	int tm_mday;
+	int tm_mon;
+	int tm_year;
+	int tm_wday;
+	int tm_yday;
+	int tm_isdst;
 }
+
+typedef unsigned int clock_t;
+typedef unsigned int time_t;
+
+clock_t clock (void);
+double difftime (time_t end, time_t beginning);
+time_t time (time_t* timer);
+time_t mktime (struct tm * timeptr);
+
+char* ctime (const time_t * timer);
+char* asctime (const struct tm * timeptr);
+struct tm * gmtime (const time_t * timer);
+struct tm * localtime (const time_t * timer);
+size_t strftime (char* ptr, size_t maxsize, const char* format,const struct tm* timeptr );
+#endif

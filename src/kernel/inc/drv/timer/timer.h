@@ -24,7 +24,7 @@
 #include<stdbool.h>
 
 
-extern uint32_t tss[32];
+
 //extern uint32_t time;
 CPU_STATE* timer_handler(CPU_STATE* new_cpu);
 

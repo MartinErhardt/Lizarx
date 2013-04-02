@@ -21,6 +21,7 @@
 
 #include<hal.h>
 
+extern uint32_t tss[32];
 CPU_STATE* schedule();
 
 #endif
