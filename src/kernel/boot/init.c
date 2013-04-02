@@ -63,7 +63,7 @@ void init(multiboot_info *mb_info)
 	multiboot_module* modules = mb_info->mbs_mods_addr;
 	for(i=0;i<mb_info->mbs_mods_count;i++){
 	    if(init_elf((void*) modules[i].mod_start,i)==0){
-		//kprintf("SUCCESS with mod: %d",i);
+		kprintf("SUCCESS with mod: %d",i);
 	    }else{
 		//kprintf("FAILED with mod: %d",i);
 	    }

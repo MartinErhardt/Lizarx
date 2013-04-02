@@ -51,23 +51,22 @@ void init_keyboard(void)
 void send_command(uint8_t command)
 {
     uint8_t kbc_buffer_state=0x0;
-    INB(kbc_buffer_state,0x64)
+    INB(0x64,kbc_buffer_state)
     // Warten bis die Tastatur bereit ist, und der Befehlspuffer leer ist
-    while (kbc_buffer_state & 0x2) {INB(kbc_buffer_state,0x64)}
+    while (kbc_buffer_state & 0x2) {INB(0x64,kbc_buffer_state)}
 
     OUTB(0x60, command);
 };
 void kbc_handler(uint8_t irq) {
     
-    uint8_t scancode;
-    //uint8_t keycode = 0;
+    uint8_t scancode=0;
     
     // Abbrechen wenn die Initialisierung noch nicht abgeschlossen wurde
     if (!init_done) {
         return;
     }
 
-    INB(scancode,0x60);
+    INB(0x60,scancode);
     // Zum Testen sollte folgendes verwendet werden:
     kprintf("0x%x", scancode);
     //Nach erfolgreichen Tests, könnte eine send_key_event Funtkion wie bei Týndur verwendet werden
@@ -75,9 +74,9 @@ void kbc_handler(uint8_t irq) {
 static void clearkbcbuffer()
 {
     uint8_t kbc_buffer_state=0x0;
-    INB(kbc_buffer_state,0x64)
+    INB(0x64,kbc_buffer_state)
     while (kbc_buffer_state & 0x1) {
-        INB(kbc_buffer_state,0x64)
+        INB(0x64,kbc_buffer_state)
     }
     return;
 }

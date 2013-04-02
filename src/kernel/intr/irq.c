@@ -25,18 +25,21 @@
 CPU_STATE* handle_irq(CPU_STATE* cpu)
 {
 	CPU_STATE* new_cpu = cpu;
-	//kprintf("switch");
-	if (cpu->INFO_INTR >= 0x28) {
-	            // EOI an Slave-PIC
-	            OUTB(0xa0, 0x20)
-	}else if(cpu->INFO_INTR==0x21){kbc_handler(0x21);}
-	 else if (cpu->INFO_INTR == 0x20) {
-	    new_cpu = timer_handler(cpu);
-	    //kprintf("esp= 0x%x",new_cpu->esp);
+	if (cpu->INFO_INTR >= 0x28) 
+	{
+		// EOI an Slave-PIC
+		OUTB((uint16_t)0xa0, (uint8_t)0x20);
+	}
+	else if(cpu->INFO_INTR==0x21)
+	{
+		kbc_handler(0x21);
+	}
+	else if (cpu->INFO_INTR == 0x20) 
+	{
+		new_cpu = timer_handler(cpu);
 	}
 
 	// EOI an Master-PIC
-	OUTB(0x20, 0x20)
-	//kprintf("irq 0x%x",new_cpu->esp);
+	OUTB((uint16_t)0x20, (uint8_t)0x20)
 	return new_cpu;
 }

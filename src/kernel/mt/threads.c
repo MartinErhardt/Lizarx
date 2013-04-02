@@ -45,7 +45,7 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	new_st_->eip = (uintptr_t) entry;
 #ifdef ARCH_X86
 	new_st_->cs = 0x18 | 0x03;
-	new_st_->ss = 0x20 | 0x03;
+	new_st_->ss = 0x23;
 	SET_IRQ(new_st_->REG_FLAGS)
 #endif
 	new_t->t_id=num_threads;
@@ -53,7 +53,7 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	new_t->stack=kvmm_malloc(PAGE_SIZE);
 	new_t->user_stack 	= user_stack;
 	new_t->proc=in_proc;
-	new_t->state->esp= (uintptr_t) user_stack+STDRD_STACKSIZ;
+	new_t->state->esp= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
 	new_t->next=first_thread;
 	first_thread = new_t;
 	//kprintf("stackphys at 0x%x stackvirt at 0x%x stack at 0x%x",virt_to_phys(&startup_context,(uintptr_t)new_st_),(uintptr_t)new_st_,new_t->stack);
@@ -83,7 +83,13 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
     else 
     {
 	curcontext= current_thread->proc->context;
+	//kprintf("ss=0x%x cs=0x%x eflags=0x%x",cpu->ss,cpu->cs,cpu->REG_FLAGS);
 	*current_thread->state = *cpu;
+	
+#ifdef ARCH_X86
+	current_thread->state->ss = 0x23;
+#endif
+	
 	if(current_thread->next != NULL)
 	{
 		next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->pd);
@@ -99,11 +105,7 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
     /* Prozessorzustand des neuen Tasks aktivieren */
     cpu = current_thread->state;
     
-#ifdef ARCH_X86
-	cpu->cs = 0x18 | 0x03;
-	cpu->ss = 0x20 | 0x03;
-	SET_IRQ(cpu->REG_FLAGS)
-#endif
+
     //kprintf("cur=0x%x ",(uintptr_t)current_thread->state->ss);
     /*
     if(!next_context) {

@@ -9,4 +9,6 @@ kernel /boot/kernel    # Edit it to the filename of your kernel.
 
 module /boot/test1.mod
 module /boot/test2.mod
+module /boot/test3.mod
+
 boot

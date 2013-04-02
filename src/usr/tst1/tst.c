@@ -25,13 +25,13 @@ void uprintfstrcol_scr(uint8_t font, char* fmt);
 void _start(void)
 {
     //unsigned int i=0;
-    //char string[16] = "[TST] started\n#>";
+    //char stringa[13] ="this is proc2";
 
     // Exception
     //asm ("movl $0, %ebx; div %ebx");
     while(1)
     { 
-	asm volatile( "add $1, %eax");
+	//uprintf(&stringa[0]);
 	//i++;
     }
 }

@@ -23,7 +23,7 @@
 #include<mm/vmm.h>
 
 #define OUTB( PORT, DATA) 	asm volatile ("outb %0, %1" : : "a" ((uint8_t)DATA), "Nd" ((uint16_t)PORT));
-#define INB( DATA,PORT ) 	asm ("inb %1, %0" : "=a" (DATA) : "Nd" (PORT));
+#define INB( PORT,DATA ) 	asm ("inb %1, %0" : "=a" (DATA) : "Nd" (PORT));
 
 #define ENABLE_INTR		asm volatile("sti");
 #define DISABLE_INTR		asm volatile("cli");

@@ -15,4 +15,7 @@ stage2_eltorito
 # or ISOs
 *.iso
 
+# ignore libC ,coz libC is part of a seperate submodule
+src/usr/libC/*
+
 snippets.txt
