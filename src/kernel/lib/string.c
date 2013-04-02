@@ -123,7 +123,12 @@ void *memset(void *ptr, uint32_t val, size_t len)
       size_t i;
       //kprintf("[LIB] I: memset called");
       for (i=0; i<len/4; i++) {
-	      p[i] = val;
+		p[i] = val;
+      }
+      if(len%4)
+      {
+		val&= ~(0xffffffff<<(len%4*8));
+		p[i+1]=val;
       }
 
       return ptr;

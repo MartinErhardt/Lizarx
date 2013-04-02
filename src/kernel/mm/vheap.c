@@ -71,6 +71,11 @@ void* kmalloc(size_t size){
     }
     return NULL;
 }
+void* kcalloc(size_t size){
+    void* returnval = kmalloc(size);
+    memset(returnval,0x00000000,size);
+    return NULL;
+}
 void kfree(void*ptr){
     struct heap_block* cur =first ;
     while(cur!=NULL){

@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/lib/stdlib.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86/types.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,17 +15,27 @@
  *   You should have received a copy of the GNU General Public License along
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */ 
+#ifndef X86_TYPES_H
+#define X86_TYPES_H
+
+#define WORD_WIDTH 32
+/*
+ * The code below only works with LP32, which is th default on GCC with i386 target
  */
-#ifndef STDLIB_H
-#define STDLIB_H
-#include<stdint.h>
-#include"mm/vheap.h"
 
-char * itoa(int x, int radix);
+#define UN_64 unsigned long long
+#define UN_32 unsigned int
+#define UN_16 unsigned short
+#define UN_8  unsigned char
 
-static inline void* malloc (size_t size) { return kmalloc(size); }
-static inline void* calloc (size_t size) { return kcalloc(size); }
-static inline void free (void* ptr) { kfree(ptr); }
-static inline void*realloc(void* ptr, size_t size) { return krealloc(ptr,size); }
+#define N_64 long long
+#define N_32 int
+#define N_16 short
+#define N_8  char
+
+#define SIZE_T unsigned int
+#define UPTR_T unsigned long
+#define PTR_T long
 
 #endif

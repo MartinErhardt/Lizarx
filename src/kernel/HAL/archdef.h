@@ -19,6 +19,6 @@
 #ifndef ARCHDEF_H
 #define ARCHDEF_H
 
-#define ARCH_X86
+#define ARCH_X86 x86
 
 #endif

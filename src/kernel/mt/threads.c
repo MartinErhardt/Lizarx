@@ -20,7 +20,7 @@
 #include<mt/threads.h>
 #include<hal.h>
 #include<mt/proc.h>
-#include<mm/vheap.h>
+#include<stdlib.h>
 #include<mm/vmm.h>
 #include<dbg/console.h>
 
@@ -29,9 +29,9 @@ static uint32_t num_threads = 0;
 int32_t create_thread(void* entry,uint32_t p_id)
 {
 	struct proc* in_proc=get_proc(p_id);
-	struct thread* new_t=(struct thread*)kmalloc(sizeof(struct thread));
+	struct thread* new_t=(struct thread*)malloc(sizeof(struct thread));
 	
-	CPU_STATE* new_st_=(CPU_STATE*)kmalloc(sizeof(CPU_STATE));
+	CPU_STATE* new_st_=(CPU_STATE*)malloc(sizeof(CPU_STATE));
 	uint8_t* user_stack 	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
 
 	if(in_proc==NULL){

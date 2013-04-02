@@ -24,5 +24,5 @@
 #include "macros.h"
 #include "cpu.h"
 #include "cmos.h"
-
+#include "types.h"
 #endif
