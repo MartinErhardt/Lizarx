@@ -22,10 +22,10 @@
 #include<stdint.h>
 #include <dbg/console.h>
 
-uint32_t time=0;
+uint32_t time_intrs=0;
 CPU_STATE* timer_handler(CPU_STATE* new_cpu)
 {
-    time++;
+    time_intrs++;
     
     CPU_STATE* state = schedule(new_cpu);
     

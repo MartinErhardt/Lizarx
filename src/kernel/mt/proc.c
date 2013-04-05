@@ -38,6 +38,7 @@ struct proc* create_proc()
 	new_proc->user=new_user;
 	new_proc->p_id=num_proc;
 	new_proc->next=first_proc;
+	new_proc->clock=0x0;
 	first_proc = new_proc;
 	
 	return new_proc;

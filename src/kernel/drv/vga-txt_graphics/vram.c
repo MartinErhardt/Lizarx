@@ -176,7 +176,7 @@ uint32_t kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar){
         } else {
             kput(*fmt,font);
         }
-	
+
         fmt++;
     }
 

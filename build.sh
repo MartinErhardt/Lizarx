@@ -38,6 +38,9 @@ rm *.o
 cd ../vga-txt_graphics
 rm *.o
 
+cd ../hwtime
+rm *.o
+
 cd ../timer
 rm *.o
 

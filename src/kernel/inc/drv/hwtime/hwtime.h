@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/x86/cmos.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/inc/drv/hwtime.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,32 +15,13 @@
  *   You should have received a copy of the GNU General Public License along
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */ 
-#ifndef X86_CMOS_H
-#define X86_CMOS_H
+ */
+#ifndef HWTIME_H
+#define HWTIME_H
 
 #include<stdint.h>
-#include"asm_inline.h"
+#include<time.h>
 
-#define BCD_DECODE(x) ((0xf & x) + (10 * (((0xf << 4) & x) >> 4)))
-
-#define CMOS_PORT_ADDRESS 0x70
-#define CMOS_PORT_DATA    0x71
-
-static inline uint8_t cmos_read(uint8_t off){
-	uint8_t tmp =0;
-	uint8_t data =0;
-	INB(CMOS_PORT_ADDRESS,tmp)
-	OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (off & 0x7F))
-	INB(CMOS_PORT_DATA,data)
-	return data;
-}
-
-static inline void cmos_write(uint8_t off,uint8_t data){
-	uint8_t tmp =0;
-	INB(CMOS_PORT_ADDRESS,tmp)
-	OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (off & 0x7F))
-	OUTB(CMOS_PORT_DATA,data)
-}
+struct tm* get_time();
 
 #endif

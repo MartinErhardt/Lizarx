@@ -29,6 +29,8 @@
 #include <mm/vheap.h>
 #include <mt/threads.h>
 #include <mt/proc.h>
+#include <drv/hwtime/hwtime.h>
+#include <stdlib.h>
 
 void init(multiboot_info *mb_info)
 {
@@ -40,6 +42,8 @@ void init(multiboot_info *mb_info)
     cur_proc = NULL;
     startup_context.pd=0x0;
     startup_context.tr=0x0;
+    struct tm* time_is=NULL;
+    
     intr_activated=FALSE;
     
     memset(0x0,0x0,4);
@@ -70,6 +74,13 @@ void init(multiboot_info *mb_info)
 	}
     }
     kprintf(" SUCCESS\n");
-
+    //that's for testing purposes
+    time_is = get_time();
+    
+    kprintf("Year is  %d \n",time_is->tm_year);
+    kprintf("Mon is   %d \n",time_is->tm_mon);
+    kprintf("Day is   %d \n",time_is->tm_mday);
+    kprintf("Min is   %d \n",time_is->tm_min);
+    
     enable_intr();
 }

@@ -22,11 +22,12 @@
 #include<mm/vmm.h>
 #include<stdint.h>
 #include"user.h"
-
+#include<time.h>
 struct proc {
     uint32_t 	p_id;
     struct user*user;
 //    char[10]	desc;
+    clock_t clock;
     vmm_context*	context;
     struct proc*next;
 };

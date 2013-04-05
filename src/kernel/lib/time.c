@@ -17,8 +17,44 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include"time.h"
-#include<drv/timer.h>
+#include<drv/timer/timer.h>
+#include<drv/hwtime/hwtime.h>
+#include<mt/threads.h>
+#define SECS_PER_MIN 60
+#define SECS_PER_HOUR 3600
+#define SECS_PER_DAY 86400
+#define SECS_PER_YEAR 31556952
 
-clock_t clock (void){
-	return time;
+#define YEAR0_IN_UNIX_TIME 1970
+
+clock_t clock (void)
+{
+	if(current_thread!=NULL)
+	{
+		return current_thread->proc->clock;
+	}
+	else
+	{
+		return -1;
+	}
+}
+double difftime (time_t end, time_t beginning)
+{
+	return (double)(end-beginning);
+}
+time_t mktime (struct tm * timeptr)
+{
+	return 	((((timeptr->tm_year-YEAR0_IN_UNIX_TIME)*SECS_PER_YEAR)+
+		((timeptr->tm_year/4)*SECS_PER_DAY))+// leap year
+		timeptr->tm_yday*SECS_PER_DAY+
+		timeptr->tm_hour*SECS_PER_HOUR+
+		timeptr->tm_min*SECS_PER_MIN);
+}
+time_t time (time_t* timer)
+{
+	time_t new_timer=mktime(get_time());
+	if(timer!=NULL){
+		*timer=new_timer;
+	}
+	return new_timer;
 }
