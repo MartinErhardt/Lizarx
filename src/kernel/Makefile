@@ -11,7 +11,8 @@ CFLAGS = -m32 -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffre
 
 kernel: $(OBJS_OPTI) $(OBJS_UNOPTI)
 	$(LD) $(LDFLAGS) -o $@ $^
-	
+	rm $(OBJS_OPTI) $(OBJS_UNOPTI)
+
 $(OBJS_OPTI): EXTRA_FLAGS := -Os
 
 ASFLAGS =-m32 -nostdinc -ffreestanding -I HAL
@@ -20,9 +21,6 @@ LDFLAGS = -melf_i386 -Tkernel.ld
 %.o: %.c
 	$(CC) $(CFLAGS) $(EXTRA_FLAGS)  -o $@ -c $<
 
+
 %.o: %.S
 	$(CC) $(ASFLAGS) -c -o $@ $^
-clean:
-	rm $(OBJS)
-
-.PHONY: clean

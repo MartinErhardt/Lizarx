@@ -10,11 +10,7 @@ LDFLAGS = -melf_i386 -Ttst2.ld
 
 tst2.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
+	rm $(OBJS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $^
-
-clean:
-	rm $(OBJS)
-
-.PHONY: clean
