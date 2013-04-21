@@ -12,10 +12,10 @@
 bin/boot/kernel
 stage2_eltorito
 
+kernel
+
 # or ISOs
 *.iso
 
-# ignore libC ,coz libC is part of a seperate submodule
-src/usr/libC/*
-
-snippets.txt
+# ignore boomstick and crosscompile blabla
+src/usr/buildtools
