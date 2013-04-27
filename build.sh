@@ -8,7 +8,7 @@ rm lizarx86.iso
 if [ ! -f bin/boot/grub/stage2_eltorito ]
 then
 	echo "downloading stage2_eltorito"
-	cd bin/boot/grub/stage2_eltorito
+	cd bin/boot/grub/
 	wget https://docs.google.com/file/d/0B-x3QNiQfEeCallWMmxzVlZPRHM/edit
 	mv edit stage2_eltorito
 	cd ../../..
@@ -18,7 +18,7 @@ if [ ! -d src/usr/buildtools ]
 then
 	echo "downloading buildutils"
 	cd src/usr
-	#git clone https://github.com/MartinErhardt/buildtools.git
+	git clone https://github.com/MartinErhardt/buildtools.git
 	chmod buildtools 771
 	cd ../..
 fi

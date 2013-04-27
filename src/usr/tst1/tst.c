@@ -1,10 +1,10 @@
 #include <stdint.h>
-
+#include <string.h>
 #define SYS_WRITE 0
 
 void uprintf(char* fmt, ...);
 void uprintfstrcol_scr(uint8_t font, char* fmt);
-//char * itoa(int x, int radix);
+char * itoa(int x, int radix);
 
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1
@@ -22,18 +22,17 @@ void uprintfstrcol_scr(uint8_t font, char* fmt);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
-void _start(void)
+int main(int argc, char** argv)
 {
-    //unsigned int i=0;
-    //char stringa[13] ="this is proc2";
-
-    // Exception
-    //asm ("movl $0, %ebx; div %ebx");
+    char str[] = "almost every programmer should know memset!";
+    memset (str,'-',6);
+    uprintf(itoa(strlen(&str[0]),10));
     while(1)
     { 
-	//uprintf(&stringa[0]);
+	
 	//i++;
     }
+    return 0;
 }
 void uprintf(char* fmt, ...){
     uprintfstrcol_scr(VGA_WHITE,fmt);
@@ -50,7 +49,7 @@ void uprintfstrcol_scr(uint8_t font, char* fmt){
 /*
  * converts a long to a char
  * @return ptr to converted int
- *
+ */
 char * itoa(int x, int radix) {
     char buf[65];
     const char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -67,4 +66,4 @@ char * itoa(int x, int radix) {
         x /= radix;
     } while (x);
     return p;
-}*/
+}
