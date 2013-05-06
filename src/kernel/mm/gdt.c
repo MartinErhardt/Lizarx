@@ -59,6 +59,8 @@ void init_gdt(void)
     gdt_set_entry(4, 0xfffff,0,  GDT_ACCESS_SEGMENT |
         GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
     gdt_set_entry(5,sizeof(tss),(uint32_t) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
+#else
+    #error lizarx build: No valid arch found in src/kernel/mm/gdt.c
 #endif
     // reload GDT
     asm volatile("lgdt %0" : : "m" (gdtp));
@@ -75,5 +77,4 @@ void init_gdt(void)
     kprintf("SUCCESS\n");
     // Taskregister neu laden
     asm volatile("ltr %%ax" : : "a" (5 << 3));
-
 }

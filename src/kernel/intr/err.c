@@ -47,6 +47,8 @@ void redscreen(CPU_STATE* cpu){
 	    cpu->eip,
 	    cpu->eflags, 
 	    cpu->cs, cpu->ss
- 	  );
+	  );
+#else
+	  #error lizarx build: No valid arch found in src/kernel/intr/err.c
 #endif
 }

@@ -47,6 +47,8 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	new_st_->cs = 0x18 | 0x03;
 	new_st_->ss = 0x23;
 	SET_IRQ(new_st_->REG_FLAGS)
+#else
+	#error lizarx build: No valid arch found in src/kernel/mt/threads.c
 #endif
 	new_t->t_id=num_threads;
 	new_t->state = new_st_;
@@ -86,6 +88,8 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
 	
 #ifdef ARCH_X86
 	current_thread->state->ss = 0x23;
+#else
+	#error lizarx build: No valid arch found in src/kernel/mt/threads.c
 #endif
 	
 	if(current_thread->next != NULL)
