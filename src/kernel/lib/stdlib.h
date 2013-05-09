@@ -21,7 +21,7 @@
 #include<stdint.h>
 #include"mm/vheap.h"
 
-char * itoa(int x, int radix);
+char * itoa(unsigned int n, unsigned int base);
 
 static inline void* malloc (size_t size) { return kmalloc(size); }
 static inline void* calloc (size_t size) { return kcalloc(size); }

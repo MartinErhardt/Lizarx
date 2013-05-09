@@ -26,7 +26,7 @@
 struct proc {
     uint32_t 	p_id;
     struct user*user;
-//    char[10]	desc;
+//    char[10]	cmd;
     clock_t clock;
     vmm_context*	context;
     struct proc*next;

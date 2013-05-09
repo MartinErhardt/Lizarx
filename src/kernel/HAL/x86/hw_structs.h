@@ -23,13 +23,14 @@
 #include<mm/pmm.h>
 
 //------------------------------------------------------------------GDT-structs--------------------------------------------------------------------
-struct gdt_entry{
+struct gdt_entry
+{
 	uint16_t 	limit;
 	uint32_t 	base :24;
-	uint8_t 		accessbyte;
+	uint8_t 	accessbyte;
 	uint32_t 	limit2 :4;
 	uint32_t 	flags :4;
-	uint8_t 		base2;
+	uint8_t 	base2;
 }__attribute__((packed));
 
 //------------------------------------------------------------------IDT-structs--------------------------------------------------------------------
@@ -42,26 +43,34 @@ struct idt_entry
     uint16_t isr_offset2;
 }__attribute__((packed));
 //-----------------------------------------------------------------Paging-structures---------------------------------------------------------------
-struct vmm_pagedirentr{
+struct vmm_pagedirentr
+{
     uint8_t rw_flags; 
     uint8_t reserved :4;
     uintptr_t pagetbl_ptr :20;
 }__attribute__((packed));
 
-struct vmm_pagetblentr{
+struct vmm_pagetblentr
+{
     uint8_t rw_flags; 
     uint8_t reserved :4;
     uintptr_t page_ptr :20;
 }__attribute__((packed));
 
-
-struct vmm_pagedir{
+struct vmm_pagedir
+{
     struct vmm_pagedirentr pgdir[1024];
 }__attribute__((packed, aligned(PAGE_SIZE)));
 
-struct vmm_pagetbl{
+struct vmm_pagetbl
+{
     struct vmm_pagetblentr pgtbl[1024];
 }__attribute__((packed, aligned(PAGE_SIZE)));
 
+struct stack_frame
+{
+        struct stack_frame * base_ptr;
+        uintptr_t return_addr;
+}__attribute__((packed));
 
 #endif

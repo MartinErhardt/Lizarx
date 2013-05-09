@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #define SYS_WRITE 0
+#define SYS_ERROR 8
 
 void uprintf(char* fmt, ...);
 void uprintfstrcol_scr(uint8_t font, char* fmt);
@@ -24,12 +25,9 @@ char * itoa(int x, int radix);
 #define VGA_WHITE 0xf
 int main(int argc, char** argv)
 {
-    char str[] = "almost every programmer should know memset!";
-    memset (str,'-',6);
-    uprintf(itoa(strlen(&str[0]),10));
+    asm volatile ("int $0x30"::"a"(SYS_ERROR));
     while(1)
-    { 
-	
+    {
 	//i++;
     }
     return 0;

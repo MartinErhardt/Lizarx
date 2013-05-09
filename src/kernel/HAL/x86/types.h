@@ -34,6 +34,8 @@
 #define N_16 short
 #define N_8  char
 
+#define UINT_T UN_32
+#define INT_T N_32
 #define SIZE_T unsigned int
 #define UPTR_T unsigned long
 #define PTR_T long

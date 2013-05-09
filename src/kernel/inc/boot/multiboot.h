@@ -21,7 +21,7 @@
 
 #include <stdint.h>
 
-typedef struct {
+struct multiboot_info {
     uint32_t    mbs_flags;
     uint32_t    mbs_mem_lower;
     uint32_t    mbs_mem_upper;
@@ -32,19 +32,20 @@ typedef struct {
     uint32_t    mbs_syms[4];
     uint32_t    mbs_mmap_length;
     void*       mbs_mmap_addr;
-} __attribute__((packed)) multiboot_info;
+} __attribute__((packed));
 
-typedef struct{
+struct multiboot_mmap {
     uint32_t    entry_size;
     uint64_t    base;
     uint64_t    length;
     uint32_t    type;
-} __attribute__((packed)) multiboot_mmap ;
+} __attribute__((packed));
 
-typedef struct {
+struct multiboot_module {
     uint32_t    mod_start;
     uint32_t    mod_end;
     char*       cmdline;
     uint32_t    reserved;
-} __attribute__((packed)) multiboot_module ;
+} __attribute__((packed));
+
 #endif

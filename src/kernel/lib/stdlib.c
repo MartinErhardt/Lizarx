@@ -22,20 +22,24 @@
  * converts a long to a char
  * @return ptr to converted int
  **/
-char * itoa(int x, int radix) {
-    char buf[65];
-    const char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
-    char* p=0x0;
-    
-    if (radix > 36) {// radix mustn't be larger than 36 for security(overflow)
-        return 0x0;
-    }
-
-    p = buf + 64;
-    *p = '\0';
-    do {
-        *--p = digits[x % radix];
-        x /= radix;
-    } while (x);
-    return p;
+char * itoa(unsigned int n, unsigned int base)
+{
+	static char new_str[16];
+	unsigned int i = 14;
+	
+	do
+	{
+		unsigned int cur_digit = n % base;
+		if (cur_digit < 10)
+		{
+			new_str[i--] = cur_digit + '0';
+		}
+		else
+		{
+			new_str[i--] = (cur_digit - 10) + 'a';
+		}
+	}
+	while((n /= base) > 0);
+	new_str[15] = '\0';
+	return (char*)(new_str+(i+1));
 }

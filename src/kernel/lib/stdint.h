@@ -39,4 +39,7 @@ typedef PTR_T intptr_t;
 // Unsigned pointer-sized integer
 typedef UPTR_T uintptr_t;
 
+typedef INT_T int_t;
+typedef UINT_T uint_t;
+
 #endif

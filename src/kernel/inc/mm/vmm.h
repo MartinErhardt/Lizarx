@@ -34,7 +34,8 @@
 
 #define KERNEL_SPACE 	0x1000000 //=256 MB
 
-typedef struct {
+typedef struct 
+{
     struct vmm_pagedir* pd;
     struct vmm_tree_master* tr;
 } vmm_context;
@@ -47,7 +48,7 @@ vmm_context vmm_crcontext();
 void* kvmm_malloc(size_t size);
 void* uvmm_malloc(vmm_context* context,size_t size);
 void* vmm_malloc(vmm_context* context,size_t size, uintptr_t from,uintptr_t to,uint8_t flgs);
-int32_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs);
+int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs);
 void vmm_free(vmm_context* context,void* page);
 void kvmm_free(void* page);
 
@@ -60,5 +61,5 @@ void* cpyout(vmm_context* context,void* src,size_t siz);
 uintptr_t virt_to_phys(vmm_context* context,uintptr_t virt);
 uintptr_t phys_to_virt(vmm_context* context,uintptr_t phys);
 
-uintptr_t vmm_find_freemem(vmm_context* context,uint32_t size, uintptr_t from,uintptr_t to);
+uintptr_t vmm_find_freemem(vmm_context* context,size_t size, uintptr_t from,uintptr_t to);
 #endif

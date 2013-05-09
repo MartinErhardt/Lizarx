@@ -26,7 +26,7 @@
 #define BITMAP_SIZE 32768
 #define PAGE_SIZE 4096 // page size in bytes
 
-void pmm_init(multiboot_info* mb_info);
+void pmm_init(struct multiboot_info* mb_info);
 uint32_t pmm_malloc_4k(void);
 uint32_t pmm_malloc(uint32_t pages);
 bool pmm_realloc(uint32_t index, uint32_t pages);

@@ -1,9 +1,8 @@
 # don't version backups
 *.bak
-*~
 *.kate-swp
 *.kate.swp
-
+*~
 # or binaries
 *.elf
 *.o
@@ -11,8 +10,6 @@
 *.mod
 bin/boot/kernel
 stage2_eltorito
-
-kernel
 
 # or ISOs
 *.iso

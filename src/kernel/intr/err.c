@@ -19,27 +19,30 @@
 #include<intr/err.h>
 #include<hal.h>
 #include<dbg/console.h>
+#include<dbg/stack_trace.h>
 #include<drv/vga-txt_graphics/vram.h>
+#include<boot/init.h>
+#include<stdlib.h>
 
 void handle_exception(CPU_STATE* cpu){
-	//redscreen(cpu);
-	kprintf("err");
-	while(1) {
+	redscreen(cpu);
+	while(1) 
+	{
 	   // Prozessor anhalten
 	   asm volatile("cli; hlt");
 	}
 }
 void redscreen(CPU_STATE* cpu){
-    clrscr(VGA_BLACK, VGA_RED);
+	clrscr(VGA_BLACK, VGA_RED);
 #ifdef ARCH_X86
-    kprintfcol_scr(VGA_RED,VGA_BLACK,"A CRITICAL ERROR HAS OCURRED:\n"\
+	kprintfcol_scr(VGA_RED,VGA_BLACK,"A CRITICAL ERROR HAS OCURRED:\n"\
 	    "Error: %d \n"\
-	    "EAX: 0x%p \t   EBX: 0x%p \t   ECX: 0x%p \t   EDX: 0x%p \n"\
-	    "ESI: 0x%p \t   EDI: 0x%p \n"\
-	    "ESP: 0x%p \t   EBP 0x%p \n"\
-	    "EIP: 0x%p \n"\
-	    "EFLAGS:0x%p \n"\
-	    "CS:  0x%p  \t   SS: 0x%p", 
+	    "EAX: 0x%x \tEBX: 0x%x\tECX: 0x%x\tEDX: 0x%x\n"\
+	    "ESI: 0x%x\tEDI: 0x%x\n"\
+	    "ESP: 0x%x\tEBP 0x%x\n"\
+	    "EIP: 0x%x \n"\
+	    "EFLAGS:0x%x\n"\
+	    "CS:  0x%x\tSS: 0x%x\n", 
 	    cpu->intr,
 	    cpu->eax, cpu->ebx, cpu->ecx, cpu->edx,
 	    cpu->esi, cpu->edi,
@@ -48,7 +51,9 @@ void redscreen(CPU_STATE* cpu){
 	    cpu->eflags, 
 	    cpu->cs, cpu->ss
 	  );
+	get_stack_trace(kernel_elf,(uintptr_t)cpu->ebp,(uintptr_t)cpu->eip);
 #else
 	  #error lizarx build: No valid arch found in src/kernel/intr/err.c
 #endif
+
 }

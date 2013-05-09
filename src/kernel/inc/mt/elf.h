@@ -135,7 +135,9 @@
 #define ELF_REL_RELATIVE			8 // B+A
 #define ELF_REL_GOTOFF				9 // S + A- GOT
 #define ELF_REL_GOTPC				10// GOT+A- P
-
+/*
+ * The following structures are used to read out the ELF format
+ */
 struct elf_header 
 {
     uint32_t    i_magic;
@@ -148,7 +150,7 @@ struct elf_header
     uint16_t    type;
     uint16_t    machine;
     uint32_t    version;
-    uint32_t    entry;
+    uintptr_t    entry;
     uintptr_t   ph_offset;
     uintptr_t   sh_offset;
     uint32_t    flags;
@@ -163,13 +165,13 @@ struct elf_header
 struct elf_program_header
 {
     uint32_t    type;
-    uint32_t    offset;
+    uintptr_t    offset;
     uintptr_t   virt_addr;
     uintptr_t    phys_addr;
-    uint32_t    file_size;
-    uint32_t    mem_size;
+    size_t    file_size;
+    size_t    mem_size;
     uint32_t    flags;
-    uint32_t    alignment;
+    size_t    alignment;
 } __attribute__((packed));
 
 struct elf_section_header 
@@ -179,10 +181,10 @@ struct elf_section_header
     uint32_t    flags;
     uintptr_t   virt_addr;
     uintptr_t   off;
-    uint32_t    size;
+    size_t    size;
     uint32_t    link;
     uint32_t    info;
-    uint32_t    align;
+    size_t    align;
     uint32_t    entry_size;
 } __attribute__((packed));
 
@@ -190,7 +192,7 @@ struct elf_symbol
 {
     uint32_t	name;
     uintptr_t	value;
-    uint32_t	size;
+    size_t	size;
     uint8_t	info;
     uint8_t	other;
     uint16_t	section_index;
@@ -208,8 +210,17 @@ struct elf_rela
     uint32_t	info;
     int32_t	addend;
 } __attribute__((packed));
+/*
+ * ... but elf_info is an OS specific higher level structure 
+ */
+struct elf_info
+{
+    struct elf_symbol *	symbols;
+    uintptr_t			strings;
+    uintptr_t			code;
+};
 
 int32_t init_elf(void* image);
+uintptr_t * get_last_function(void * elf_header, uintptr_t addr);
 
 #endif
-

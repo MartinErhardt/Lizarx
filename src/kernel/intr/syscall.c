@@ -23,6 +23,7 @@
 #include<mm/vmm.h>
 #include<mm/pmm.h>
 #include<mm/vheap.h>
+#include<string.h>
 
 CPU_STATE* handle_syscall(CPU_STATE* cpu){
 	char* copybuf_ptr;
@@ -42,6 +43,7 @@ CPU_STATE* handle_syscall(CPU_STATE* cpu){
 	    case(SYS_GETPID):break;
 	    case(SYS_KILLPID):break;
 	    case(SYS_FORKPID):break;
+	    case(SYS_ERROR):break;
 	    default:break;
 	}
 	return cpu;

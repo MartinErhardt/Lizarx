@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/drv/timer/timer.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>src/kernel/inc/dbg/stack_trace.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,16 +16,9 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include<hal.h>
-#include<drv/timer/timer.h>
-#include<mt/sched.h>
-#include<stdint.h>
-#include <dbg/console.h>
+#ifndef STACK_TRACE_H
+#define STACK_TRACE_H
 
-uint32_t time_intrs=0;
-CPU_STATE* timer_handler(CPU_STATE* new_cpu)
-{
-	time_intrs++;
-	CPU_STATE* state = schedule(new_cpu);
-	return state;
-}
+int get_stack_trace(void* elf,uintptr_t start_base_ptr, uintptr_t start_instr_ptr);
+
+#endif

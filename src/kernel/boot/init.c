@@ -31,61 +31,59 @@
 #include <mt/proc.h>
 #include <drv/hwtime/hwtime.h>
 #include <stdlib.h>
+#include <boot/init.h>
 
-void init(multiboot_info *mb_info)
+void init(struct multiboot_info * mb_info)
 {
-    // initialize global variables
-    uint32_t i;
-    first_thread = NULL;
-    current_thread = NULL;
-    first_proc = NULL;
-    cur_proc = NULL;
-    startup_context.pd=0x0;
-    startup_context.tr=0x0;
-    struct tm* time_is=NULL;
-    
-    intr_activated=FALSE;
-    
-    memset(0x0,0x0,4);
-    clrscr(VGA_BLACK,VGA_WHITE);
-    kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
-
-    pmm_init(mb_info);
-    
-    vmm_init();
-    
-    vheap_init();
+	// initialize global variables
+	uint32_t i;
+	first_thread = NULL;
+	current_thread = NULL;
+	first_proc = NULL;
+	cur_proc = NULL;
+	startup_context.pd=0x0;
+	startup_context.tr=0x0;
+	//struct tm* time_is=NULL;
+	struct multiboot_module* modules = mb_info->mbs_mods_addr;
+	kernel_elf=(void * )modules[0].mod_start;
+	intr_activated=FALSE;
+	
+	memset(0x0,0x0,4);
+	clrscr(VGA_BLACK,VGA_WHITE);
+	kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
+	pmm_init(mb_info);
+	
+	vmm_init();
+	
+	vheap_init();
 #ifdef ARCH_X86
-    init_gdt();
-    init_idt();
+	init_gdt();
+	init_idt();
 #else
-    #error lizarx build: No valid arch found in src/kernel/boot/init.c
+	#error lizarx build: No valid arch found in src/kernel/boot/init.c
 #endif
-    
-    kprintf("[INIT] I: init loads Bootmods...");
-    if(mb_info->mbs_mods_count ==0){
-	//kprintf("FAILED No Programs found\n");
-    }else{
-	multiboot_module* modules = mb_info->mbs_mods_addr;
-	for(i=0;i<mb_info->mbs_mods_count;i++){
-	    if(init_elf((void*) modules[i].mod_start)==0)
-	    {
-		//kprintf("SUCCESS with mod: %d",i);
-	    }
-	    else
-	    {
-		//kprintf("FAILED with mod: %d",i);
-	    }
+	kprintf("[INIT] I: init loads Bootmods...");
+	if(mb_info->mbs_mods_count ==0)
+	{
+	    //kprintf("FAILED No Programs found\n");
 	}
-    }
-    kprintf(" SUCCESS\n");
-    //that's for testing purposes
-    time_is = get_time();
-    
-    kprintf("Year is  %d \n",time_is->tm_year);
-    kprintf("Mon is   %d \n",time_is->tm_mon);
-    kprintf("Day is   %d \n",time_is->tm_mday);
-    kprintf("Min is   %d \n",time_is->tm_min);
-    
-    enable_intr();
+	else
+	{
+		for(i=1;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
+		{
+			if(init_elf((void*) modules[i].mod_start)==0)
+			{
+			    //kprintf("SUCCESS with mod: %d",i);
+			}
+			else
+			{
+			    //kprintf("FAILED with mod: %d",i);
+			}
+		}
+	}
+	
+	kprintf(" SUCCESS\n");
+	//that's for testing purposes
+	//time_is = get_time();
+	enable_intr();
 }

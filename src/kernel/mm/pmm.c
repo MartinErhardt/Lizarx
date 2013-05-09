@@ -41,10 +41,10 @@ static uint32_t physbitmap[BITMAP_SIZE];
 extern const void kernel_start;
 extern const void kernel_end;
 
-void pmm_init(multiboot_info* mb_info)
+void pmm_init(struct multiboot_info * mb_info)
 {
-    multiboot_mmap* mmap = mb_info->mbs_mmap_addr;
-    multiboot_mmap* mmap_end = (void*)
+    struct multiboot_mmap* mmap = mb_info->mbs_mmap_addr;
+    struct multiboot_mmap* mmap_end = (void*)
         ((uintptr_t) mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length);
     /* Per Default ist erst einmal alles reserviert */
     memset(physbitmap, 0x00000000, sizeof(physbitmap));
@@ -78,7 +78,7 @@ void pmm_init(multiboot_info* mb_info)
      * Die Multibootstruktur auch, genauso wie die Liste von Multibootmodulen.
      * Wir gehen bei beiden davon aus, dass sie maximal 4k gross werden
      */
-    multiboot_module* modules = mb_info->mbs_mods_addr;
+    struct multiboot_module* modules = mb_info->mbs_mods_addr;
 
     pmm_mark_used((uintptr_t)(mb_info)/PAGE_SIZE);
     pmm_mark_used((uintptr_t)(modules)/PAGE_SIZE);
