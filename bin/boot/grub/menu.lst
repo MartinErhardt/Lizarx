@@ -8,8 +8,9 @@ title lizarx86
 kernel /boot/kernel    # Edit it to the filename of your kernel.
 
 module /boot/kernel
-module /boot/test1.mod
-module /boot/test2.mod
-module /boot/test3.mod
+module /boot/SO_example_main.mod
+module /boot/SO_example_lib.mod
+module /boot/proc1.mod
+module /boot/proc2.mod
 
 boot

@@ -25,7 +25,7 @@ char * itoa(int x, int radix);
 #define VGA_WHITE 0xf
 int main(int argc, char** argv)
 {
-    asm volatile ("int $0x30"::"a"(SYS_ERROR));
+    uprintf("wowow");
     while(1)
     {
 	//i++;

@@ -36,7 +36,6 @@ uintptr_t * get_last_function(void* elf_header, uintptr_t addr)
 	unsigned int section_num = ((struct elf_header*)elf_header)->sh_entry_count;
 	for(i=0;i<section_num;i++)
 	{
-		//kprintf(itoa(i,10));
 		if(section_header->type==ELF_SECTION_TYPE_SYMTAB)
 		{
 			cur_sym=(struct elf_symbol*)((uintptr_t)(elf_header)+(section_header->off));
@@ -135,7 +134,8 @@ int32_t init_elf(void* image)
 	*/
 	
 	ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
-	for (i = 0; i < header->ph_entry_count; i++, ph++) {
+	for (i = 0; i < header->ph_entry_count; i++, ph++) 
+	{
 		void* dest = (void*) ph->virt_addr;
 		void* src = ((char*) image) + ph->offset;
 		/* Nur Program Header vom Typ LOAD laden */

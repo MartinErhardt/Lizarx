@@ -1,9 +1,30 @@
 #build shell skript
 echo "This is the build-script for lizarx86"
 echo "It's required ro run in the root folder of the project"
-
 rm lizarx86.iso
+TOOLCHAIN_DIR=host
+CLONE_TOOLCHAIN="FALSE"
+if [ ! -d $TOOLCHAIN_DIR/buildtools ]
+then
+	CLONE_TOOLCHAIN="TRUE"
+fi
+if [ $1 !="--no-toolchain" ]
+then
+	
+	cd $TOOLCHAIN_DIR
+	if [ $CLONE_TOOLCHAIN == "TRUE" ]
+	then
+		git clone https://github.com/MartinErhardt/buildtools.git
+	fi
+	cd buildtools
+	./build.sh
+	cd ../..
+fi
 
+export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/build/gcc-obj/gcc
+export PATH=$PATH:$COMPILER_PATH
+export LD_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/i386-pc-lizarx/bin/ld
+export CC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/bin/i386-pc-lizarx-gcc
 
 if [ ! -f bin/boot/grub/stage2_eltorito ]
 then
@@ -14,23 +35,15 @@ then
 	cd ../../..
 fi
 
-if [ ! -d src/usr/buildtools ]
-then
-	echo "downloading buildutils"
-	cd src/usr
-	git clone https://github.com/MartinErhardt/buildtools.git
-	chmod buildtools 771
-	cd ../..
-fi
-
 cd src
 make 
 cd ..
 
 cp ./src/kernel/kernel ./bin/boot/kernel
 rm ./src/kernel/kernel
-cp ./src/usr/tst1/tst1.elf ./bin/boot/test1.mod
-cp ./src/usr/tst2/tst2.elf ./bin/boot/test2.mod
-cp ./src/usr/tst3/tst3.elf ./bin/boot/test3.mod
+cp ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
+cp ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
+cp ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
+cp ./src/usr/tst3/tst3.elf ./bin/boot/proc2.mod
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx86.iso bin
 /usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int -no-kvm -d int 

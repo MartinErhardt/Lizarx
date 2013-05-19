@@ -69,7 +69,7 @@ void init(struct multiboot_info * mb_info)
 	}
 	else
 	{
-		for(i=1;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
+		for(i=3;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
 		{
 			if(init_elf((void*) modules[i].mod_start)==0)
 			{
