@@ -133,3 +133,25 @@ void *memset(void *ptr, uint32_t val, size_t len)
 
       return ptr;
 }
+size_t strlen(const char *s) 
+{
+
+    const char *sret = s;
+
+    while (*s) 
+    {
+        s++;
+    }
+
+    return s - sret;
+}
+int strcmp(const char *s1, const char *s2)
+{
+
+    while (*s1 && *s1 == *s2) 
+    {
+        ++s1;
+        ++s2;
+    }
+    return (unsigned char)*s1 - (unsigned char)*s2;
+}

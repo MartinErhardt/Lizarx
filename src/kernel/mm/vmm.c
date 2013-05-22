@@ -127,9 +127,9 @@ void* kvmm_malloc(size_t size){
 	}
 	
 	return (void*)virt;
-    }
-    void* uvmm_malloc(vmm_context* context,size_t size)
-    {
+}
+void* uvmm_malloc(vmm_context* context,size_t size)
+{
 	
 	int i;
 	if((size%PAGE_SIZE)==0)
@@ -163,7 +163,7 @@ void* kvmm_malloc(size_t size){
 }
 uintptr_t vmm_find_freemem(vmm_context* context,size_t size, uintptr_t from,uintptr_t to)
 {
-	uintptr_t virt=0x0;// avoid unitialized Pointer Bug
+	uintptr_t virt=0x00000000;// avoid unitialized Pointer Bug
 	int i,j;
 	for (i = from/PAGE_SIZE; i < to/PAGE_SIZE-(size-1); i++) {// find and map free 
 mark:
@@ -264,7 +264,7 @@ void kvmm_free(void* page)//FIXME No Overflow check
 }
 /*
  * Write copyin/out for user-kernel data exchange
- *
+ * FIXME: pagefault, if context != cur_context
  */
 
 void* cpyout(vmm_context* context,void* src,size_t siz){

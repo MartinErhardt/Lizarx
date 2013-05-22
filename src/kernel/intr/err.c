@@ -25,7 +25,8 @@
 #include<stdlib.h>
 
 void handle_exception(CPU_STATE* cpu){
-	redscreen(cpu);
+	kprintf("err");
+	//redscreen(cpu);
 	while(1) 
 	{
 	   // Prozessor anhalten

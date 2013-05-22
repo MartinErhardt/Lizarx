@@ -4,6 +4,7 @@ echo "It's required ro run in the root folder of the project"
 rm lizarx86.iso
 TOOLCHAIN_DIR=host
 CLONE_TOOLCHAIN="FALSE"
+export PROJ_ROOT=$(pwd)
 if [ ! -d $TOOLCHAIN_DIR/buildtools ]
 then
 	CLONE_TOOLCHAIN="TRUE"
@@ -41,9 +42,9 @@ cd ..
 
 cp ./src/kernel/kernel ./bin/boot/kernel
 rm ./src/kernel/kernel
-cp ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
-cp ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
-cp ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
-cp ./src/usr/tst3/tst3.elf ./bin/boot/proc2.mod
+mv ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
+mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
+mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
+mv ./src/usr/tst3/tst3.elf ./bin/boot/proc2.mod
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx86.iso bin
 /usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int -no-kvm -d int 

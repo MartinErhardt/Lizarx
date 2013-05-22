@@ -124,31 +124,36 @@ uint32_t pmm_malloc_4k(void)
 }
 uint32_t pmm_malloc(uint32_t pages)
 {
-    int i, j,k;
-    for (i = 0; i < BITMAP_SIZE*32-pages; i++) {
-      
+	int i, j,k;
+	for (i = 0; i < BITMAP_SIZE*32-pages; i++) 
+	{
+	  
 mark:
-	
-	for(j=0;j<pages;j++){
-
-	    if (pmm_is_alloced(i+j)==TRUE) {
-		//if(i+j==0x4d){
-		//	kprintf("i+j is alloced 0x%x",i+j);
-		//}
-		i++;
-		goto mark;
-	    } else if(j+1==pages){
-		for(k =0;k<pages;k++){
-		    //kprintf("mark 0x%x",i+k);
-		    pmm_mark_used(i+k);
+	    
+		for(j=0;j<pages;j++)
+		{
+			if (pmm_is_alloced(i+j)==TRUE) 
+			{
+				//if(i+j==0x4d){
+				//	kprintf("i+j is alloced 0x%x",i+j);
+				//}
+				i++;
+				goto mark;
+			} 
+			else if(j+1==pages)
+			{
+				for(k =0;k<pages;k++)
+				{
+					//kprintf("mark 0x%x",i+k);
+					pmm_mark_used(i+k);
+				}
+				return i;
+			}
 		}
-		return i;
-	    }
 	}
-    }
-    kprintf("[PMM] found no free memory at: %x");
-    /* Scheint wohl nichts frei zu sein... */
-    return 0x0;
+	kprintf("[PMM] found no free memory at: %x");
+	/* Scheint wohl nichts frei zu sein... */
+	return 0x0;
 }
 bool pmm_realloc(uint32_t index, uint32_t pages)
 {

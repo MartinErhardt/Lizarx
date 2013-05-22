@@ -47,7 +47,8 @@ struct proc* get_proc(uint32_t p_id)
 {
 	struct proc* cur=first_proc;
 	
-	do{
+	do
+	{
 		if(cur->p_id==p_id)
 		{
 			return cur;
@@ -56,6 +57,7 @@ struct proc* get_proc(uint32_t p_id)
 		{
 			cur = cur->next;
 		}
-	}while(cur!=NULL);
+	}
+	while(cur!=NULL);
 	return NULL;
 }

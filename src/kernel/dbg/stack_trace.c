@@ -21,6 +21,8 @@
 #include<mt/elf.h>
 #include<dbg/console.h>
 
+//-fno-omit-frame-pointer for user stacktracing
+
 int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_ptr)
 {
 	struct stack_frame * cur_stack_frame;

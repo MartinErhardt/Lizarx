@@ -25,7 +25,6 @@ char * itoa(int x, int radix);
 #define VGA_WHITE 0xf
 int main(int argc, char** argv)
 {
-    uprintf("wowow");
     while(1)
     {
 	//i++;

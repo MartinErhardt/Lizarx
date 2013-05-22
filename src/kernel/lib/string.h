@@ -26,5 +26,6 @@
 void *memcpy(void *dst, const void *src, size_t len);
 void *memmove ( void *dst, const void *src, size_t len );
 void *memset ( void *ptr, uint32_t val, size_t len );
-
+size_t strlen(const char *s);
+int strcmp(const char *s1, const char *s2);
 #endif
