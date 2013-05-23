@@ -38,7 +38,8 @@ void vheap_init(){
 }
 void* kmalloc(size_t size){
     struct heap_block* cur =first ;
-    if(size>=PAGE_SIZE){
+    if(size>=PAGE_SIZE)
+    {
 	vheap_enlarge(size);
     }
     while(cur!=NULL){
@@ -74,7 +75,7 @@ void* kmalloc(size_t size){
 void* kcalloc(size_t size){
     void* returnval = kmalloc(size);
     memset(returnval,0x00000000,size);
-    return NULL;
+    return returnval;
 }
 void kfree(void*ptr){
     struct heap_block* cur =first ;

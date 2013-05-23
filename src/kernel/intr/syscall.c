@@ -25,7 +25,8 @@
 #include<mm/vheap.h>
 #include<string.h>
 
-CPU_STATE* handle_syscall(CPU_STATE* cpu){
+CPU_STATE* handle_syscall(CPU_STATE* cpu)
+{
 	char* copybuf_ptr;
 	uint8_t font;
 	switch(cpu->REG_FUNCRET){

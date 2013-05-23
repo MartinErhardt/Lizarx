@@ -1,5 +1,5 @@
-
+#include"main.h"
 void foo(void)
 {
-	//while(1){}
+	uprintf("hello shared");
 }

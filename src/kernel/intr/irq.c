@@ -38,7 +38,6 @@ CPU_STATE* handle_irq(CPU_STATE* cpu)
 	{
 		new_cpu = timer_handler(cpu);
 	}
-
 	// EOI an Master-PIC
 	OUTB(0x20, 0x20)
 	return new_cpu;

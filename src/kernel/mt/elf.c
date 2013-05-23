@@ -144,7 +144,7 @@ int32_t init_elf(void* image)
 		void* dest = (void*) ph->virt_addr;
 		void* src = ((char*) image) + ph->offset;
 		/* Nur Program Header vom Typ LOAD laden */
-		if ((ph->type != ELF_PROGRAM_TYPE_LOAD)&&(ph->type!= ELF_PROGRAM_TYPE_DYNAMIC))
+		if (ph->type != ELF_PROGRAM_TYPE_LOAD)
 		{
 			continue;
 		}
@@ -233,7 +233,7 @@ void * init_shared_lib(void* image, vmm_context * context)
 	ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
 	for (i = 0; i < header->ph_entry_count; i++, ph++)
 	{
-		if ((ph->type != ELF_PROGRAM_TYPE_LOAD)&&(ph->type!= ELF_PROGRAM_TYPE_DYNAMIC))
+		if (ph->type != ELF_PROGRAM_TYPE_LOAD)
 		{
 			continue;
 		}
@@ -294,12 +294,19 @@ void link_main_against(struct elf_header* elf_main,struct elf_header* elf_lib,vm
 	{
 		
 		cur_rel=&dynamic_main->jmp_rel[i];
-		
 		cur_reloc_field = (uint_t *)cur_rel->offset;
 		
 		*cur_reloc_field=dynamic_lib->sym[ELF_REL_BIND(cur_rel->info)].value+B;
-		kprintf("reloc field: %x val: %x",B);
 	}
+	for(i=0;i<dynamic_lib->jmp_rel_count;i++)
+	{
+		cur_rel=&dynamic_lib->jmp_rel[i];
+		
+		cur_reloc_field = (uint_t *)(cur_rel->offset+B);
+		kprintf("reloc field: %p",cur_reloc_field);
+		*cur_reloc_field=dynamic_main->sym[ELF_REL_BIND(cur_rel->info)].value;
+	}
+	
 	SET_CONTEXT(curpd_phys);
 }
 static struct elf_section_header * get_dynamic(struct elf_header* elf)
@@ -323,6 +330,7 @@ static struct dynamic * section_to_dynamic(struct elf_dyn* cur_dyn,int_t section
 {
 	unsigned int i = 0;
 	struct dynamic * new_dynamic=calloc(sizeof(struct dynamic));
+	kprintf("dyn at 0x%x size: 0x%x",(uintptr_t)new_dynamic,sizeof(struct dynamic));
 	for(i=0;i<section_dynamic_num;i++)
 	{
 		if(cur_dyn->type == ELF_DYNAMIC_TYPE_SYM_TAB)
@@ -342,8 +350,8 @@ static struct dynamic * section_to_dynamic(struct elf_dyn* cur_dyn,int_t section
 		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_JMPREL)
 		{
-			new_dynamic->jmp_rel = (struct	elf_rel * )cur_dyn->un.ptr+B;
-			kprintf("num: %x\n",cur_dyn->un.ptr+B);
+			new_dynamic->jmp_rel = (struct	elf_rel * )(cur_dyn->un.ptr+B);
+			kprintf("jmprel: %p %x\n",new_dynamic->jmp_rel);
 		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_PLTRELSZ)
 		{
