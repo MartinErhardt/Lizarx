@@ -58,7 +58,6 @@ static void vmm_map_kernel(vmm_context* context);
 static int_t vmm_map_inallcon(uintptr_t virt, uintptr_t phys,uint8_t flgs);
 static void vmm_mark_used_inallcon(uint_t page);
 static void vmm_mark_used(vmm_context*first,uint_t page);
-static bool vmm_is_alloced(vmm_context* context,uint_t page);
 static void vmm_mark_free(vmm_context* context,uint_t page);
 
 vmm_context vmm_init(void)
@@ -150,7 +149,7 @@ void* uvmm_malloc(vmm_context* context,size_t size)
 			{
 				kprintf("[VMM] E: vmm_malloc gets invalid return value from vmm_map_page\n");
 			}
-			vmm_mark_used(context,virt/PAGE_SIZE+size);
+			vmm_mark_used(context,virt/PAGE_SIZE+i);
 		}
 	}
 	else
@@ -229,6 +228,7 @@ int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 					kprintf("[VMM] E: vmm_realloc called vmm_map_page and got error\n");
 					return -1;
 				}
+				vmm_mark_used(context,page+k);
 			}
 			return 0;
 		}
@@ -267,8 +267,10 @@ void kvmm_free(void* page)//FIXME No Overflow check
  * FIXME: pagefault, if context != cur_context
  */
 
-void* cpyout(vmm_context* context,void* src,size_t siz){
-	void* dst =uvmm_malloc((void*)((uintptr_t)(context)),siz);
+void* cpyout(void* src,size_t siz)
+{
+	vmm_context* curcontext= current_thread->proc->context;
+	void* dst =uvmm_malloc(curcontext,siz);
 	memcpy(dst,src,siz);
 	return dst;
 }

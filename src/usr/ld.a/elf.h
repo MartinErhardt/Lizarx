@@ -1,4 +1,4 @@
-/*   <src-path>src/kernel/inc/mt/elf.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+ /*   <src-path>src/kernel/inc/mt/elf.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -23,10 +23,8 @@
  */
 #ifndef ELF_H
 #define ELF_H
- 
-#include <stdint.h>
-#include <mm/vmm.h>
 
+#include"lib_stat/st_stdint.h"
 #define ELF_MAGIC 0x464C457F
 
 //---------------------------------elf-header-----------------------------------
@@ -169,83 +167,83 @@
  */
 struct elf_header
 {
-    uint32_t	i_magic;
-    uint8_t	i_class;
-    uint8_t	i_data;
-    uint8_t	i_version;
-    uint8_t	i_pad;
-    uint64_t	i_reserved;
+    st_uint32_t	i_magic;
+    st_uint8_t	i_class;
+    st_uint8_t	i_data;
+    st_uint8_t	i_version;
+    st_uint8_t	i_pad;
+    st_uint64_t	i_reserved;
     
-    uint16_t	type;
-    uint16_t	machine;
-    uint32_t	version;
-    uintptr_t	entry;
-    uintptr_t	ph_offset;
-    uintptr_t	sh_offset;
-    uint32_t	flags;
-    uint16_t	header_size;
-    uint16_t	ph_entry_size;
-    uint16_t	ph_entry_count;
-    uint16_t	sh_entry_size;
-    uint16_t	sh_entry_count;
-    uint16_t	sh_str_table_index;
+    st_uint16_t	type;
+    st_uint16_t	machine;
+    st_uint32_t	version;
+    st_uintptr_t	entry;
+    st_uintptr_t	ph_offset;
+    st_uintptr_t	sh_offset;
+    st_uint32_t	flags;
+    st_uint16_t	header_size;
+    st_uint16_t	ph_entry_size;
+    st_uint16_t	ph_entry_count;
+    st_uint16_t	sh_entry_size;
+    st_uint16_t	sh_entry_count;
+    st_uint16_t	sh_str_table_index;
 } __attribute__((packed));
 
 struct elf_program_header
 {
-    uint32_t	type;
-    uintptr_t	offset;
-    uintptr_t	virt_addr;
-    uintptr_t	phys_addr;
-    size_t	file_size;
-    size_t	mem_size;
-    uint32_t	flags;
-    size_t	alignment;
+    st_uint32_t	type;
+    st_uintptr_t	offset;
+    st_uintptr_t	virt_addr;
+    st_uintptr_t	phys_addr;
+    st_size_t	file_size;
+    st_size_t	mem_size;
+    st_uint32_t	flags;
+    st_size_t	alignment;
 } __attribute__((packed));
 
 struct elf_section_header 
 {
-    uint32_t	name;
-    uint32_t	type;
-    uint32_t	flags;
-    uintptr_t	virt_addr;
-    uintptr_t	off;
-    size_t	size;
-    uint32_t	link;
-    uint32_t	info;
-    size_t	align;
-    uint32_t	entry_size;
+    st_uint32_t	name;
+    st_uint32_t	type;
+    st_uint32_t	flags;
+    st_uintptr_t	virt_addr;
+    st_uintptr_t	off;
+    st_size_t	size;
+    st_uint32_t	link;
+    st_uint32_t	info;
+    st_size_t	align;
+    st_uint32_t	entry_size;
 } __attribute__((packed));
 
 struct elf_symbol
 {
-    uint32_t	name;
-    uintptr_t	value;
-    size_t	size;
-    uint8_t	info;
-    uint8_t	other;
-    uint16_t	section_index;
+    st_uint32_t	name;
+    st_uintptr_t	value;
+    st_size_t	size;
+    st_uint8_t	info;
+    st_uint8_t	other;
+    st_uint16_t	section_index;
 } __attribute__((packed));
 
 struct elf_rel
 {
-    uintptr_t	offset;
-    uint_t	info;
+    st_uintptr_t	offset;
+    st_uint_t	info;
 } __attribute__((packed));
 
 struct elf_rela
 {
-    uintptr_t	offset;
-    uint32_t	info;
-    int32_t	addend;
+    st_uintptr_t	offset;
+    st_uint32_t	info;
+    st_int32_t	addend;
 } __attribute__((packed));
 
 struct elf_dyn
 {
-    int_t type;
+    st_int_t type;
     union {
-	uint_t val;
-	uintptr_t ptr;
+	st_uint_t val;
+	st_uintptr_t ptr;
     } un;
 }__attribute__((packed));
 /*
@@ -256,12 +254,10 @@ struct dynamic
 	struct elf_symbol * sym;
 	
 	struct	elf_rel * jmp_rel;
-	int_t	jmp_rel_count;
+	st_int_t	jmp_rel_count;
 	
-	int_t * hash;
+	st_int_t * hash;
 	char * str;
 };
-int32_t init_elf(void* image);
-uintptr_t * get_last_function(void * elf_header, uintptr_t addr);
 
 #endif

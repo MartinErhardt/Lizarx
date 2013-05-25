@@ -43,8 +43,10 @@ void init(struct multiboot_info * mb_info)
 	cur_proc = NULL;
 	startup_context.pd=0x0;
 	startup_context.tr=0x0;
+	
 	//struct tm* time_is=NULL;
 	struct multiboot_module* modules = mb_info->mbs_mods_addr;
+	modules_glob=modules;
 	kernel_elf=(void * )modules[0].mod_start;
 	intr_activated=FALSE;
 	
@@ -69,29 +71,15 @@ void init(struct multiboot_info * mb_info)
 	}
 	else
 	{
-		for(i=1;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
+		for(i=2;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
 		{
-cont:
-			if(i==2)
-			{
-				kprintf("hellooo");
-				link_main_against(
-					(void * ) modules[1].mod_start,(void * ) 
-					modules[2].mod_start,first_proc->context,
-					(uintptr_t)init_shared_lib(
-						(void*)modules[i].mod_start,first_proc->context)
-					);
-				i=3;
-				goto cont;
-			}
 			if(init_elf((void*) modules[i].mod_start)==0)
 			{
 			}
 			else
 			{
-				//kprintf("FAILED with mod: %d",i);
+				kprintf("FAILED with mod: %d",i);
 			}
-
 		}
 	}
 	

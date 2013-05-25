@@ -57,7 +57,7 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	new_t->state->esp= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
 	new_t->next=first_thread;
 	first_thread = new_t;
-	//kprintf("stackphys at 0x%x stackvirt at 0x%x stack at 0x%x",virt_to_phys(&startup_context,(uintptr_t)new_st_),(uintptr_t)new_st_,new_t->stack);
+	kprintf("stackvirt at 0x%x",new_t->user_stack);
 	return 0;
 }
 CPU_STATE* dispatch_thread(CPU_STATE* cpu){
@@ -72,7 +72,8 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
     /*
      * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
      */
-    if (current_thread == NULL) {
+    if (current_thread == NULL) 
+    {
 
  	curcontext= &startup_context;
 	next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->pd);
@@ -115,7 +116,8 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
 	while(1){}
     }*/
     
-    if(current_thread->proc->context!=curcontext){
+    if(current_thread->proc->context!=curcontext)
+    {
 	SET_CONTEXT(next_context);
     }
 
@@ -150,8 +152,8 @@ int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu){
     /* Prozessorzustand des neuen Tasks aktivieren */
     cpu = current_thread->state;
     
-    if(current_thread->proc!=prev->proc){
-	
+    if(current_thread->proc!=prev->proc)
+    {
 	SET_CONTEXT(virt_to_phys(curcontext,(uintptr_t)current_thread->proc->context));
     }
     return 0;

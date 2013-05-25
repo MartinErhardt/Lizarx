@@ -1,12 +1,10 @@
 #include "foo.h"
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-
+#include<stdint.h>
+#include<string.h>
 #include "main.h"
-
+#include "../ld.a/ld.h"
 #define SYS_WRITE 0
-#define SYS_ERROR 8
+#define SYS_GET_BOOTMOD 9
 
 char * itoa2(unsigned int n, unsigned int base);
 #define VGA_BLACK 0x0
@@ -25,29 +23,59 @@ char * itoa2(unsigned int n, unsigned int base);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
+struct bootmod
+{
+    void * start;
+    size_t size;
+};
+void get_bootmod(int num, struct bootmod* fill_it);
+
+struct bootmod bootmod_main = 
+{
+    .start=NULL,
+    .size=0
+};
+struct bootmod bootmod_lib = 
+{
+    .start=NULL,
+    .size=0
+};
 int main(void)
 {
     uprintf("hello main");
-    uprintf(itoa2((uintptr_t)&foo,16));
+    get_bootmod(2,&bootmod_main);
+    get_bootmod(1,&bootmod_lib);
+    link_against(bootmod_main.start,bootmod_lib.start,(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size));
     foo();
     uprintf("hello main 2");
     while(1){}
     return 0;
 }
 
-void uprintf(char* fmt, ...){
+void uprintf(char* fmt, ...)
+{
     uprintfstrcol_scr(VGA_WHITE,fmt);
 }
-void uprintfstrcol_scr(uint8_t font, char* fmt){
+void uprintfstrcol_scr(unsigned char font, char* fmt){
     asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((uint32_t)fmt));
+    asm volatile( "nop" :: "b" ((unsigned int)fmt));
     //asm volatile( "nop" :: "c" (sizeof("sghs")));
     
     asm volatile( "nop" :: "a" (SYS_WRITE));
     
     asm volatile ("int $0x30");
 }
-
+void get_bootmod(int num, struct bootmod* fill_it)
+{
+    uintptr_t mod_addr;
+    size_t mod_size;
+    asm volatile( "nop" :: "d" (num));
+    asm volatile ("int $0x30"::"a" (SYS_GET_BOOTMOD) );
+    asm volatile("nop" : "=d" (mod_addr) );
+    asm volatile("nop" : "=b" (mod_size) );
+    fill_it->size=mod_size;
+    fill_it->start=(void * )mod_addr;
+}
 /**
  * converts a long to a char
  * @return ptr to converted int

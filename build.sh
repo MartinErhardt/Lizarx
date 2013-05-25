@@ -26,6 +26,7 @@ export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/build/gcc-obj/gcc
 export PATH=$PATH:$COMPILER_PATH
 export LD_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/i386-pc-lizarx/bin/ld
 export CC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/bin/i386-pc-lizarx-gcc
+export AR_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/bin/i386-pc-lizarx-ar
 
 if [ ! -f bin/boot/grub/stage2_eltorito ]
 then

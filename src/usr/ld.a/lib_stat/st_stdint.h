@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/inc/multiboot.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/lib/stdint.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,13 +16,29 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef INIT_H
-#define INIT_H
+#ifndef ST_STDINT_H
+#define ST_STDINT_H
 
-#include <stdint.h>
+typedef unsigned long long st_uint64_t;
+typedef unsigned int st_uint32_t;
+typedef unsigned short st_uint16_t;
+typedef unsigned char st_uint8_t;
 
-void * kernel_elf;
-struct multiboot_module*modules_glob;
-void init(struct multiboot_info *mb_info);
+typedef long long  st_int64_t;
+typedef int st_int32_t;
+typedef short st_int16_t;
+typedef char st_int8_t;
+
+// size 
+typedef unsigned int st_size_t;
+
+// Signed pointer-sized integer 
+typedef long st_intptr_t;
+// Unsigned pointer-sized integer
+typedef unsigned long st_uintptr_t;
+
+typedef unsigned int st_uint_t;
+typedef int st_int_t;
+
 
 #endif

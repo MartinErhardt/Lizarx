@@ -2,6 +2,7 @@
 *.bak
 *.kate-swp
 *.kate.swp
+*,directory
 *~
 # or binaries
 *.elf
@@ -9,6 +10,7 @@
 *.bin
 *.mod
 *.so
+*.a
 bin/boot/kernel
 stage2_eltorito
 

@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/inc/multiboot.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/lib/stdlib.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,13 +16,10 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef INIT_H
-#define INIT_H
+#ifndef STDLIB_H
+#define STDLIB_H
+#include"st_stdint.h"
 
-#include <stdint.h>
-
-void * kernel_elf;
-struct multiboot_module*modules_glob;
-void init(struct multiboot_info *mb_info);
+char * st_itoa(unsigned int n, unsigned int base);
 
 #endif

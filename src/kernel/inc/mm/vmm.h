@@ -32,7 +32,7 @@
 
 #define TMP_PAGEBUF 0x1000
 
-#define KERNEL_SPACE 	0x1000000 //=256 MB
+#define KERNEL_SPACE 	0x4000000 //=256 MB
 
 typedef struct 
 {
@@ -51,12 +51,13 @@ void* vmm_malloc(vmm_context* context,size_t size, uintptr_t from,uintptr_t to,u
 int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs);
 void vmm_free(vmm_context* context,void* page);
 void kvmm_free(void* page);
+bool vmm_is_alloced(vmm_context* context,uint_t page);
 
 int vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs);
 void vmm_unmap(vmm_context*context,uintptr_t virt);
 
 void* cpyin(void* src,size_t siz);
-void* cpyout(vmm_context* context,void* src,size_t siz);
+void* cpyout(void* src,size_t siz);
 
 uintptr_t virt_to_phys(vmm_context* context,uintptr_t virt);
 uintptr_t phys_to_virt(vmm_context* context,uintptr_t phys);

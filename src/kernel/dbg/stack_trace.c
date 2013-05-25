@@ -20,7 +20,8 @@
 #include<stdint.h>
 #include<mt/elf.h>
 #include<dbg/console.h>
-
+#include<mt/elf.h>
+#include<mt/threads.h>
 //-fno-omit-frame-pointer for user stacktracing
 
 int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_ptr)
@@ -39,8 +40,17 @@ int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_p
 	{
 		return -1;
 	}
-	while(cur_stack_frame->base_ptr != 0)
+		vmm_context* curcontext=NULL;
+	
+	if(!intr_activated)
 	{
+		curcontext= &startup_context;
+	}
+	else
+	{
+		curcontext= current_thread->proc->context;
+	}
+	while((cur_stack_frame->base_ptr != 0)&&(vmm_is_alloced(curcontext, (uintptr_t)cur_stack_frame->base_ptr/PAGE_SIZE)))	{
 		last_func=get_last_function(elf,cur_stack_frame->return_addr);
 		kprintf("<%s + 0x%x>\n",
 			(const char*)last_func[1],
