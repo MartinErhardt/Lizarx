@@ -18,10 +18,10 @@
  */
 #include"elf.h"
 #include"ld.h"
-#include"../tst2/main.h"
 #include"lib_stat/st_stdint.h"
 #include"lib_stat/st_stdlib.h"
 #include"lib_stat/st_string.h"
+#include"lib_stat/video.h"
 #define SYS_VMM_MALLOC 10
 static st_uintptr_t st_vmm_malloc(st_size_t);
 static struct elf_section_header * get_dynamic(struct elf_header* elf);
@@ -161,30 +161,30 @@ void * init_shared_lib(void* image, st_size_t size)
 	
 	if (header->i_magic != ELF_MAGIC) 
 	{
-		uprintf("[ELF_LOADER] E: init_elf couldn't find valid ELF-Magic!\n");
+		vprintf("[ELF_LOADER] E: init_elf couldn't find valid ELF-Magic!\n");
 		return ST_NULL;
 	}
 	if (header->i_class != ELF_CLASS_32)
 	{
-		uprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
+		vprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
 		return ST_NULL;
 	}
 	if ((header->i_data != ELF_DATA_LITTLEENDIAN)||(header->version != ELF_DATA_LITTLEENDIAN))
 	{
-		uprintf("[ELF_LOADER] E: init_elf found elf with data != ELF_DATA_LITTLEENDIAN!\n");
+		vprintf("[ELF_LOADER] E: init_elf found elf with data != ELF_DATA_LITTLEENDIAN!\n");
 		return ST_NULL;
 	}
 	if (header->type != ELF_TYPE_DYN)
 	{
-		uprintf("[ELF_LOADER] E: init_elf found elf with type != ELF_TYPE_EXEC\n");
+		vprintf("[ELF_LOADER] E: init_elf found elf with type != ELF_TYPE_EXEC\n");
 	}
 	if (header->machine != ELF_MACHINE_386)
 	{
-		uprintf("[ELF_LOADER] E: init_elf found elf with invalid target!\n");
+		vprintf("[ELF_LOADER] E: init_elf found elf with invalid target!\n");
 	}
 	if (header->i_version != ELF_VERSION_CURRENT)
 	{
-	    uprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
+	    vprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
 	    return ST_NULL;
 	}
 	/*
@@ -235,7 +235,3 @@ static size_t elf_get_size(struct elf_header * elf)
 	}
 	return size;
 }*/
-void foo_stat()
-{
-	uprintf("hello static");
-}

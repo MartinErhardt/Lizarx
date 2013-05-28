@@ -32,6 +32,7 @@ CPU_STATE* handle_syscall(CPU_STATE* cpu)
 	uint8_t font;
 	size_t bm_size;
 	vmm_context* curcontext;
+	kprintf("sbrk was here");
 	switch(cpu->REG_FUNCRET){
 	    case(SYS_DRAW):
 	        

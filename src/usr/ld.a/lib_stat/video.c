@@ -40,11 +40,11 @@
 
 void vprintf(char* fmt, ...)
 {
-    uprintfstrcol_scr(VGA_WHITE,fmt);
+    vprintfstrcol_scr(VGA_WHITE,fmt);
 }
-void vprintfstrcol_scr(uint8_t font, char* fmt)
+void vprintfstrcol_scr(st_uint8_t font, char* fmt)
 {
     asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((uint32_t)fmt));    
+    asm volatile( "nop" :: "b" ((st_uint32_t)fmt));    
     asm volatile ("int $0x30" :: "a" (SYS_WRITE));
 }

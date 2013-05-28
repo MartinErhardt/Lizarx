@@ -1,5 +1,7 @@
 #include"main.h"
+
 void foo(void)
 {
-	uprintf("hello shared");
+	char hello_shared[]="hello shared";
+	uprintf(&hello_shared[0]);
 }

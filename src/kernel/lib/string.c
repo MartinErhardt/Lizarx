@@ -17,37 +17,21 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include "string.h"
-#include <stdint.h>
-
-#include<dbg/console.h>
-
+/*
+ * copy a block of memory, handling overlapping
+ * regions correctly.
+ */
 void* memcpy(void* dest, const void* src, size_t n)
 {
     unsigned char* d = dest;
     const unsigned char* s = src;
-      /*
-	* memcpy does not support overlapping buffers, so always do it
-	* forwards. (Don't change this without adjusting memmove.)
-	*
-	* For speedy copying, optimize the common case where both pointers
-	* and the length are word-aligned, and copy word-at-a-time instead
-	* of byte-at-a-time. Otherwise, copy by bytes.
-	*
-	* The alignment logic below should be portable. We rely on
-	* the compiler to be reasonably intelligent about optimizing
-	* the divides and modulos out. Fortunately, it is.
-	*/
+
     while (n--) {
         *d++ = *s++;
     }
 
     return dest;
 }
-/*
- * copy a block of memory, handling overlapping
- * regions correctly.
- */
-
 void * memmove(void *dst, const void *src, size_t len)
 {
       size_t i;

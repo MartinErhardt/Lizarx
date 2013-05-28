@@ -20,6 +20,6 @@
 #define VIDEO_H
 
 void vprintf(char* fmt, ...);
-void vprintfstrcol_scr(uint8_t font, char* fmt);
+void vprintfstrcol_scr(st_uint8_t font, char* fmt);
 
 #endif

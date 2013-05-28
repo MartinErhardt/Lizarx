@@ -20,8 +20,5 @@
 #define LD_H
 #include"elf.h"
 #include"lib_stat/st_stdint.h"
-void link_against(struct elf_header* elf_main,struct elf_header* elf_lib, st_uintptr_t B);
 void link_lib_against(struct elf_header* elf_main,struct elf_header* elf_lib);
-void foo_stat();
-void * init_shared_lib(void* image, st_size_t size);
 #endif

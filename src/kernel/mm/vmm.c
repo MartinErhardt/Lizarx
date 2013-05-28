@@ -211,7 +211,6 @@ int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 		size=size/PAGE_SIZE+1;
 	}
 	uintptr_t phys=(uintptr_t) pmm_malloc(size)*PAGE_SIZE;
-	
 	for(j=0;j<size;j++) 
 	{
 		if (vmm_is_alloced(context,page+j)==TRUE) 
@@ -219,22 +218,18 @@ int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 			kprintf("[VMM] E: vmm_realloc says: page 0x%x000 alloiced\n",page +j);
 			return -1;
 		} 
-		else if(j==size-1)
+	}
+	for(k =0;k<size;k++)
+	{
+		if(vmm_map(context,(page+k)*PAGE_SIZE,phys+(k*PAGE_SIZE),flgs)<0)
 		{
-			for(k =0;k<size;k++)
-			{
-				if(vmm_map(context,(page+k)*PAGE_SIZE,phys,flgs)<0)
-				{
-					kprintf("[VMM] E: vmm_realloc called vmm_map_page and got error\n");
-					return -1;
-				}
-				vmm_mark_used(context,page+k);
-			}
-			return 0;
+			kprintf("[VMM] E: vmm_realloc called vmm_map_page and got error\n");
+			return -1;
 		}
+		vmm_mark_used(context,page+k);
 	}
 	kprintf("[VMM] E: vmm_realloc couldn't get free space in addressspace\n");
-	return -1;
+	return 0;
 }
 /*
  * FIXME Map tmp at 0x1000
@@ -291,7 +286,6 @@ int_t vmm_map_inallcon(uintptr_t virt, uintptr_t phys,uint8_t flgs){
 			}
 			cur=cur->next;
 		}
-	  
 	}
 	if(startup_context.pd){
 		if(vmm_map(&startup_context,virt,phys,flgs)){
@@ -507,7 +501,7 @@ static void vmm_map_kernel(vmm_context* context)
 			node_virt=vmm_find_freemem(curcontext,1,0x0,KERNEL_SPACE/PAGE_SIZE);
 			node_phys =(uintptr_t)pmm_malloc(1);
 			context->tr->nodepkg[i].nodepkg_ptr=node_virt/PAGE_SIZE;
-			vmm_map(curcontext,node_virt,node_phys*PAGE_SIZE,FLGCOMBAT_KERNEL);
+			vmm_map_inallcon(node_virt,node_phys*PAGE_SIZE,FLGCOMBAT_KERNEL);
 			memset((void*)node_virt,0x00000000,PAGE_SIZE);
 			vmm_mark_used_inallcon(context->tr->nodepkg[i].nodepkg_ptr);
 			//kprintf("tree%d node virt = 0x%x",i,node_virt);

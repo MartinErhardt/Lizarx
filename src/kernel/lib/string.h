@@ -23,7 +23,7 @@
 
 #define NULL ((void*) 0)
 
-void *memcpy(void *dst, const void *src, size_t len);
+void* memcpy(void* dest, const void* src, size_t n);
 void *memmove ( void *dst, const void *src, size_t len );
 void *memset ( void *ptr, uint32_t val, size_t len );
 size_t strlen(const char *s);

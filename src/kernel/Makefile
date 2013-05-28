@@ -4,7 +4,7 @@ SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
 OBJS_UNOPTI = $(addsuffix .o,$(basename $(SRCS_UNOPTI)))
 
-CFLAGS = -m32 -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I HAL
+CFLAGS = -m32 -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I HAL -fno-tree-loop-distribute-patterns
 
 kernel: $(OBJS_OPTI) $(OBJS_UNOPTI)
 	$(LD_CROSS) $(LDFLAGS) -o $@ $^

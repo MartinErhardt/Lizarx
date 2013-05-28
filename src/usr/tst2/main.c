@@ -1,12 +1,13 @@
 #include "foo.h"
 #include<stdint.h>
 #include<string.h>
+#include<stdlib.h>
 #include "main.h"
 #include "../ld.a/ld.h"
 #define SYS_WRITE 0
 #define SYS_GET_BOOTMOD 9
-
-char * itoa2(unsigned int n, unsigned int base);
+extern unsigned long initHeap();
+char * itoa(unsigned int n, unsigned int base);
 #define VGA_BLACK 0x0
 #define VGA_BLUE 0x1
 #define VGA_GREEN 0x2
@@ -23,6 +24,11 @@ char * itoa2(unsigned int n, unsigned int base);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
+extern "C"
+{
+void * init_shared_lib(void* image, st_size_t size);
+void link_against(struct elf_header* elf_main,struct elf_header* elf_lib, st_uintptr_t B);
+}
 struct bootmod
 {
     void * start;
@@ -42,12 +48,13 @@ struct bootmod bootmod_lib =
 };
 int main(void)
 {
-    uprintf("hello main");
     get_bootmod(2,&bootmod_main);
     get_bootmod(1,&bootmod_lib);
-    link_against(bootmod_main.start,bootmod_lib.start,(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size));
+    link_against((struct elf_header*)bootmod_main.start,(struct elf_header*) bootmod_lib.start,(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size));
     foo();
-    uprintf("hello main 2");
+    unsigned int malloced=(unsigned int)malloc(10);
+    *((unsigned int*)malloced)= 0xDEADBEEF;
+    uprintf(itoa(malloced,16));
     while(1){}
     return 0;
 }
@@ -76,11 +83,7 @@ void get_bootmod(int num, struct bootmod* fill_it)
     fill_it->size=mod_size;
     fill_it->start=(void * )mod_addr;
 }
-/**
- * converts a long to a char
- * @return ptr to converted int
- **/
-char * itoa2(unsigned int n, unsigned int base)
+char * itoa(unsigned int n, unsigned int base)
 {
 	static char new_str[16];
 	unsigned int i = 14;
@@ -101,3 +104,4 @@ char * itoa2(unsigned int n, unsigned int base)
 	new_str[15] = '\0';
 	return (char*)(new_str+(i+1));
 }
+

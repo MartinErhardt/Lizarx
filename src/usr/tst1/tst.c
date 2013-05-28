@@ -1,11 +1,12 @@
-#include <stdint.h>
-#include <string.h>
+#include<math.h>
+
+
 #define SYS_WRITE 0
 #define SYS_ERROR 8
 
 void uprintf(char* fmt, ...);
-void uprintfstrcol_scr(uint8_t font, char* fmt);
-char * itoa(int x, int radix);
+void uprintfstrcol_scr(unsigned char font, char* fmt);
+char * itoa(unsigned int n, unsigned int base);
 
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1
@@ -23,44 +24,51 @@ char * itoa(int x, int radix);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
-int main(int argc, char** argv)
+extern "C" int main();
+//extern "C" void _start();
+int main()
 {
-    while(1)
-    {
-	//i++;
-    }
+    char hellocpp[]="hello C++ \n";
+    char hellolibc[]="hello libC; sqrt of 4 =";
+    char newline[]="\n";
+    uprintf(&hellocpp[0]);
+    uprintf(&hellolibc[0]);
+    uprintf(itoa(sqrt(4),10));
+    uprintf(&newline[0]);
+
+    while(1);
     return 0;
 }
 void uprintf(char* fmt, ...){
     uprintfstrcol_scr(VGA_WHITE,fmt);
 }
-void uprintfstrcol_scr(uint8_t font, char* fmt){
+void uprintfstrcol_scr(unsigned char font, char* fmt){
     asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((uint32_t)fmt));
+    asm volatile( "nop" :: "b" ((unsigned int)fmt));
     //asm volatile( "nop" :: "c" (sizeof("sghs")));
     
     asm volatile( "nop" :: "a" (SYS_WRITE));
     
     asm volatile ("int $0x30");
 }
-/*
- * converts a long to a char
- * @return ptr to converted int
- */
-char * itoa(int x, int radix) {
-    char buf[65];
-    const char* digits = "0123456789abcdefghijklmnopqrstuvwxyz";
-    char* p=0x0;
-    
-    if (radix > 36) {// radix mustn't be larger than 36 for security(overflow)
-        return 0x0;
-    }
-
-    p = buf + 64;
-    *p = '\0';
-    do {
-        *--p = digits[x % radix];
-        x /= radix;
-    } while (x);
-    return p;
+char * itoa(unsigned int n, unsigned int base)
+{
+	static char new_str[16];
+	unsigned int i = 14;
+	
+	do
+	{
+		unsigned int cur_digit = n % base;
+		if (cur_digit < 10)
+		{
+			new_str[i--] = cur_digit + '0';
+		}
+		else
+		{
+			new_str[i--] = (cur_digit - 10) + 'a';
+		}
+	}
+	while((n /= base) > 0);
+	new_str[15] = '\0';
+	return (char*)(new_str+(i+1));
 }

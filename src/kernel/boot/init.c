@@ -43,7 +43,6 @@ void init(struct multiboot_info * mb_info)
 	cur_proc = NULL;
 	startup_context.pd=0x0;
 	startup_context.tr=0x0;
-	
 	//struct tm* time_is=NULL;
 	struct multiboot_module* modules = mb_info->mbs_mods_addr;
 	modules_glob=modules;

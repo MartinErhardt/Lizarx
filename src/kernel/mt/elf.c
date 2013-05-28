@@ -126,7 +126,6 @@ int32_t init_elf(void* image)
 	}
 	new_proc=create_proc();
 	create_thread((void*) header->entry,new_proc->p_id);
-	
 	/*
 	* Alle Program Header durchgehen und den Speicher an die passende Stelle
 	* kopieren.
@@ -148,7 +147,6 @@ int32_t init_elf(void* image)
 		{
 		    kprintf("[ELF_LOADER] E: init_elf an elf want to be loaded at %x ; That's in Kernelspace!\n",ph->virt_addr);
 		}
-		
 		if(vmm_realloc(new_proc->context,(void*)ph->virt_addr,ph->mem_size,FLGCOMBAT_USER)<0)
 		{
 			kprintf("[ELF_LOADER] W: init_elf couldn't realloc for PH!\n");//it is only a warning yet ,coz the header could be in the same Page and that's not tested yet
