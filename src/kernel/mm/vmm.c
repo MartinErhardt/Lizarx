@@ -228,7 +228,6 @@ int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 		}
 		vmm_mark_used(context,page+k);
 	}
-	kprintf("[VMM] E: vmm_realloc couldn't get free space in addressspace\n");
 	return 0;
 }
 /*

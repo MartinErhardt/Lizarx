@@ -20,5 +20,31 @@
 #define LD_H
 #include"elf.h"
 #include"lib_stat/st_stdint.h"
-void link_lib_against(struct elf_header* elf_main,struct elf_header* elf_lib);
+
+/*
+ * OS-specific format
+ */
+struct elf_lib
+{
+	struct elf_header * header;
+	st_uintptr_t runtime_addr;
+};
+
+struct dynamic
+{
+	struct elf_header * header;
+	st_uintptr_t runtime_addr;
+	
+	struct elf_symbol * sym;
+	
+	struct	elf_rel * jmp_rel;
+	st_int_t	jmp_rel_count;
+	
+	struct	elf_rel * dyn_rel;
+	st_int_t	dyn_rel_count;
+	
+	st_int_t * hash;
+	char * str;
+};
+
 #endif

@@ -6,8 +6,7 @@
 #include "../ld.a/ld.h"
 #define SYS_WRITE 0
 #define SYS_GET_BOOTMOD 9
-extern unsigned long initHeap();
-char * itoa(unsigned int n, unsigned int base);
+
 #define VGA_BLACK 0x0
 #define VGA_BLUE 0x1
 #define VGA_GREEN 0x2
@@ -26,8 +25,8 @@ char * itoa(unsigned int n, unsigned int base);
 #define VGA_WHITE 0xf
 extern "C"
 {
-void * init_shared_lib(void* image, st_size_t size);
-void link_against(struct elf_header* elf_main,struct elf_header* elf_lib, st_uintptr_t B);
+	void * init_shared_lib(void* image, st_size_t size);
+	void link_lib_against(struct elf_lib* first_elf, ...);
 }
 struct bootmod
 {
@@ -46,11 +45,24 @@ struct bootmod bootmod_lib =
     .start=NULL,
     .size=0
 };
+
 int main(void)
 {
     get_bootmod(2,&bootmod_main);
     get_bootmod(1,&bootmod_lib);
-    link_against((struct elf_header*)bootmod_main.start,(struct elf_header*) bootmod_lib.start,(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size));
+    uintptr_t lib_load_addr=(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size);
+    struct elf_lib main_=
+    {
+	.header=(struct elf_header *)bootmod_main.start,
+	.runtime_addr=0
+    };
+    struct elf_lib lib_=
+    {
+	.header=(struct elf_header *)bootmod_lib.start,
+	.runtime_addr=lib_load_addr
+    };
+    link_lib_against(&main_,&lib_,NULL);
+    link_lib_against(&lib_,&main_,NULL);
     foo();
     unsigned int malloced=(unsigned int)malloc(10);
     *((unsigned int*)malloced)= 0xDEADBEEF;
@@ -69,7 +81,6 @@ void uprintfstrcol_scr(unsigned char font, char* fmt){
     //asm volatile( "nop" :: "c" (sizeof("sghs")));
     
     asm volatile( "nop" :: "a" (SYS_WRITE));
-    
     asm volatile ("int $0x30");
 }
 void get_bootmod(int num, struct bootmod* fill_it)
@@ -79,7 +90,7 @@ void get_bootmod(int num, struct bootmod* fill_it)
     asm volatile( "nop" :: "d" (num));
     asm volatile ("int $0x30"::"a" (SYS_GET_BOOTMOD) );
     asm volatile("nop" : "=d" (mod_addr) );
-    asm volatile("nop" : "=b" (mod_size) );
+    asm volatile("nop" : "=c" (mod_size) );
     fill_it->size=mod_size;
     fill_it->start=(void * )mod_addr;
 }

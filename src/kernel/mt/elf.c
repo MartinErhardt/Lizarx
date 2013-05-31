@@ -24,9 +24,6 @@
 #include<mt/proc.h>
 #include<mt/threads.h>
 #include<stdlib.h>
-//static uint32_t elf_hash(const unsigned char *name);
-//static struct elf_symbol * get_sym_by_name(struct dynamic * dyn_struct, char * sym_name);
-
 uintptr_t * get_last_function(void* elf_header, uintptr_t addr)
 {
 	static uintptr_t ret_buf[2];

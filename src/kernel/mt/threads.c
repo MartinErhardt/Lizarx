@@ -57,7 +57,6 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	new_t->state->esp= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
 	new_t->next=first_thread;
 	first_thread = new_t;
-	kprintf("stackvirt at 0x%x",new_t->user_stack);
 	return 0;
 }
 CPU_STATE* dispatch_thread(CPU_STATE* cpu){

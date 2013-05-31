@@ -32,7 +32,6 @@ CPU_STATE* handle_syscall(CPU_STATE* cpu)
 	uint8_t font;
 	size_t bm_size;
 	vmm_context* curcontext;
-	kprintf("sbrk was here");
 	switch(cpu->REG_FUNCRET){
 	    case(SYS_DRAW):
 	        
@@ -52,7 +51,7 @@ CPU_STATE* handle_syscall(CPU_STATE* cpu)
 	    case(SYS_GET_BOOTMOD):
 		bm_size= modules_glob[cpu->REG_DATA0].mod_end-modules_glob[cpu->REG_DATA0].mod_start;
 		cpu->REG_DATA0=(uintptr_t)cpyout((void*) modules_glob[cpu->REG_DATA0].mod_start, bm_size);
-		cpu->REG_DATA1=bm_size;
+		cpu->REG_DATA2=bm_size;
 		break;
 	    case(SYS_VMM_MALLOC):
 		curcontext=NULL;

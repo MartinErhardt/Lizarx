@@ -32,16 +32,7 @@ int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_p
 #ifndef F_DBG
 	kprintf("disable -Os in EXTRA_FLAGS in src/kernel/Makefile to achieve better results\n");
 #endif
-	if (start_base_ptr)
-	{
-		cur_stack_frame = (struct stack_frame*) start_base_ptr;
-	}
-	else
-	{
-		return -1;
-	}
-		vmm_context* curcontext=NULL;
-	
+	vmm_context* curcontext=NULL;
 	if(!intr_activated)
 	{
 		curcontext= &startup_context;
@@ -50,7 +41,17 @@ int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_p
 	{
 		curcontext= current_thread->proc->context;
 	}
-	while((cur_stack_frame->base_ptr != 0)&&(vmm_is_alloced(curcontext, (uintptr_t)cur_stack_frame->base_ptr/PAGE_SIZE)))	{
+	if ((start_base_ptr)&&(vmm_is_alloced(curcontext,start_base_ptr/PAGE_SIZE)))
+	{
+		cur_stack_frame = (struct stack_frame*) start_base_ptr;
+	}
+	else
+	{
+		return -1;
+	}
+	
+	while((cur_stack_frame->base_ptr != 0)&&(vmm_is_alloced(curcontext, (uintptr_t)cur_stack_frame->base_ptr/PAGE_SIZE)))
+	{
 		last_func=get_last_function(elf,cur_stack_frame->return_addr);
 		kprintf("<%s + 0x%x>\n",
 			(const char*)last_func[1],

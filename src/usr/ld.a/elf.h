@@ -241,23 +241,11 @@ struct elf_rela
 struct elf_dyn
 {
     st_int_t type;
-    union {
+    union 
+    {
 	st_uint_t val;
 	st_uintptr_t ptr;
     } un;
 }__attribute__((packed));
-/*
- * OS-specific format
- */
-struct dynamic
-{
-	struct elf_symbol * sym;
-	
-	struct	elf_rel * jmp_rel;
-	st_int_t	jmp_rel_count;
-	
-	st_int_t * hash;
-	char * str;
-};
 
 #endif
