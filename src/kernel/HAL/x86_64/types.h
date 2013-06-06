@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/hal.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86/types.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,17 +15,29 @@
  *   You should have received a copy of the GNU General Public License along
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */ 
+#ifndef X86_64_TYPES_H
+#define X86_64_TYPES_H
+
+#define WORD_WIDTH 64
+/*
+ * The code below only works with LP64, which is th default on GCC with x86_64 target
  */
-#ifndef HAL_H
-#define HAL_H
 
-#include "archdef.h"
+#define UN_64 unsigned long long
+#define UN_32 unsigned int
+#define UN_16 unsigned short
+#define UN_8  unsigned char
 
-#ifdef ARCH_X86
-	#include "x86/x86.h"
-#endif
-#ifdef ARCH_X86_64
-	#include "x86_64/x86_64.h"
-#endif
+#define N_64 long long
+#define N_32 int
+#define N_16 short
+#define N_8  char
+
+#define UINT_T UN_64
+#define INT_T N_64
+#define SIZE_T unsigned long
+#define UPTR_T unsigned long
+#define PTR_T long
 
 #endif

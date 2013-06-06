@@ -1,0 +1,92 @@
+/*   <src-path>/src/kernel/HAL/x86/cpu.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+ * 
+ *   Copyright (C) 2013  martin.erhardt98@googlemail.com
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License along
+ *   with this program; if not, write to the Free Software Foundation, Inc.,
+ *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+#ifndef X86_64_CPU_H
+#define X86_64_CPU_H
+
+#include<stdint.h>
+
+#define CPU_STATE 	x86_64_cpu_state
+#define REG_FUNCRET 	rax
+#define REG_IP 		rip
+#define REG_DATA0 	rdx
+#define REG_DATA1 	rbx
+#define REG_DATA2 	rcx
+#define REG_STACKPTR 	rsp
+#define REG_FLAGS 	rflags
+#define INFO_INTR 	intr
+
+typedef struct {
+    // manually secured registers
+    uint64_t   rax;
+    uint64_t   rbx;
+    uint64_t   rcx;
+    uint64_t   rdx;
+    uint64_t   rsi;
+    uint64_t   rdi;
+    uint64_t   rbp;
+    uint64_t   r8;
+    uint64_t   r9;
+    uint64_t   r10;
+    uint64_t   r11;
+    uint64_t   r12;
+    uint64_t   r13;
+    uint64_t   r14;
+    uint64_t   r15;
+    
+
+    uint64_t   intr;
+    uint64_t   error;
+
+    // secured by cpu
+    uint64_t   rip;
+    uint64_t   cs;
+    uint64_t   rflags;
+    uint64_t   rsp;
+    uint64_t   ss;
+} x86_64_cpu_state;
+
+#define NEW_STATE     CPU_STATE new_state = {\
+        .rax = 0,\
+        .rbx = 0,\
+        .rcx = 0,\
+        .rdx = 0,\
+        .rsi = 0,\
+        .rdi = 0,\
+        .rbp = 0,\
+        .rsp = 0,\
+        .rip = 0,\
+        .r8=0,\
+        .r9=0,\
+        .r10=0,\
+        .r11=0,\
+        .r12=0,\
+        .r13=0,\
+        .r14=0,\
+        .r15=0,\
+        .cs  = 0,\
+        .ss  = 0,\
+        .rflags = 0,\
+    };
+    
+#define SET_IRQ(FLAGS) FLAGS=0x202;
+         /* Ring-0-Segmentregister nicht mehr benutzt*/
+        //.cs  = 0x08,
+	/* Ring-3-Segmentregister */   
+	/* IRQs einschalten (IF = 1) */
+#endif

@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/hal.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/archdef.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,16 +16,9 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef HAL_H
-#define HAL_H
+#ifndef ARCHDEF_H
+#define ARCHDEF_H
 
-#include "archdef.h"
-
-#ifdef ARCH_X86
-	#include "x86/x86.h"
-#endif
-#ifdef ARCH_X86_64
-	#include "x86_64/x86_64.h"
-#endif
+#define ARCH_X86_64 x86_64
 
 #endif

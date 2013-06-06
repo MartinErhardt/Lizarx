@@ -19,7 +19,15 @@
 #ifndef STDINT_H
 #define STDINT_H
 
+#include<archdef.h>
+
+#ifdef ARCH_X86
 #include<x86/types.h>
+#endif
+
+#ifdef ARCH_X86_64
+#include<x86_64/types.h>
+#endif
 
 typedef UN_64 uint64_t;
 typedef UN_32 uint32_t;

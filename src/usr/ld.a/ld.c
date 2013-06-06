@@ -265,7 +265,8 @@ static st_uint32_t elf_hash(const unsigned char *name)
 {
     st_uint32_t h = 0, g;
     
-    while (*name) {
+    while (*name) 
+    {
         h = (h << 4) + *name++;
         if ((g = h & 0xf0000000) != 0) 
 	{

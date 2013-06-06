@@ -46,7 +46,7 @@ void init(struct multiboot_info * mb_info)
 	//struct tm* time_is=NULL;
 	struct multiboot_module* modules = mb_info->mbs_mods_addr;
 	modules_glob=modules;
-	kernel_elf=(void * )modules[0].mod_start;
+	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
 	intr_activated=FALSE;
 	
 	memset(0x0,0x0,4);
@@ -60,8 +60,8 @@ void init(struct multiboot_info * mb_info)
 #ifdef ARCH_X86
 	init_gdt();
 	init_idt();
-#else
-	#error lizarx build: No valid arch found in src/kernel/boot/init.c
+/*#else
+	#error lizarx build: No valid arch found in src/kernel/boot/init.c*/
 #endif
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
@@ -72,7 +72,7 @@ void init(struct multiboot_info * mb_info)
 	{
 		for(i=2;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
 		{
-			if(init_elf((void*) modules[i].mod_start)==0)
+			if(init_elf((void*) (uintptr_t)modules[i].mod_start)==0)
 			{
 			}
 			else

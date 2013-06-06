@@ -104,7 +104,7 @@ void pmm_init(struct multiboot_info * mb_info)
     kprintf("SUCCESS\n");
 }
 
-uint32_t pmm_malloc_4k(void)
+uint_t pmm_malloc_4k(void)
 {
     int i;
 
@@ -122,14 +122,13 @@ uint32_t pmm_malloc_4k(void)
     /* Scheint wohl nichts frei zu sein... */
     return 0x0;
 }
-uint32_t pmm_malloc(uint32_t pages)
+uint_t pmm_malloc(uint32_t pages)
 {
 	int i, j,k;
 	for (i = 0; i < BITMAP_SIZE*32-pages; i++) 
 	{
 	  
 mark:
-	    
 		for(j=0;j<pages;j++)
 		{
 			if (pmm_is_alloced(i+j)==TRUE) 

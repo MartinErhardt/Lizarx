@@ -48,8 +48,12 @@ struct bootmod bootmod_lib =
 
 int main(void)
 {
+    //
+    //
+    //while(1){}
     get_bootmod(2,&bootmod_main);
     get_bootmod(1,&bootmod_lib);
+    
     uintptr_t lib_load_addr=(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size);
     struct elf_lib main_=
     {
@@ -61,13 +65,14 @@ int main(void)
 	.header=(struct elf_header *)bootmod_lib.start,
 	.runtime_addr=lib_load_addr
     };
+
     link_lib_against(&main_,&lib_,NULL);
     link_lib_against(&lib_,&main_,NULL);
     foo();
     unsigned int malloced=(unsigned int)malloc(10);
     *((unsigned int*)malloced)= 0xDEADBEEF;
     uprintf(itoa(malloced,16));
-    while(1){}
+    while(1);
     return 0;
 }
 

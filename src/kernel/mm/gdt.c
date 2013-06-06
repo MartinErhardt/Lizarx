@@ -58,13 +58,12 @@ void init_gdt(void)
         GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
     gdt_set_entry(4, 0xfffff,0,  GDT_ACCESS_SEGMENT |
         GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(5,sizeof(tss),(uint32_t) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
-#else
-    #error lizarx build: No valid arch found in src/kernel/mm/gdt.c
+    gdt_set_entry(5,sizeof(tss),(uint_t) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
 #endif
     // reload GDT
     asm volatile("lgdt %0" : : "m" (gdtp));
 
+#ifdef ARCH_X86
     // reload the gdt segmentregisters, so that they are really used
     asm volatile(
         "mov $0x10, %ax;"
@@ -74,6 +73,9 @@ void init_gdt(void)
         "ljmp $0x8, $.1;"
         ".1:"
     );
+/*#else
+    #error lizarx build: No valid arch found in src/kernel/mm/gdt.c*/
+#endif
     kprintf("SUCCESS\n");
     // Taskregister neu laden
     asm volatile("ltr %%ax" : : "a" (5 << 3));

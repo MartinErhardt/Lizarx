@@ -24,9 +24,8 @@ char * itoa(unsigned int n, unsigned int base);
 #define VGA_LMAGENTA 0xc
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
-extern "C" int main();
 //extern "C" void _start();
-int main()
+int main(void)
 {
     char hellocpp[]="hello C++ \n";
     char hellolibc[]="hello libC; sqrt of 4 =";
@@ -44,7 +43,7 @@ void uprintf(char* fmt, ...){
 }
 void uprintfstrcol_scr(unsigned char font, char* fmt){
     asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((unsigned int)fmt));
+    asm volatile( "nop" :: "b" ((unsigned long)fmt));
     //asm volatile( "nop" :: "c" (sizeof("sghs")));
     
     asm volatile( "nop" :: "a" (SYS_WRITE));

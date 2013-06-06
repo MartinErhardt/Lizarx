@@ -67,8 +67,7 @@ vmm_context vmm_init(void)
 	startup_context = vmm_crcontext();
 
 	SET_CONTEXT((uintptr_t)startup_context.pd)
-    
-	ENABLE_PAGING 
+	ENABLE_PAGING
 	paging_activated=TRUE;
 	kprintf("SUCCESS\n");
 	return startup_context;
@@ -84,14 +83,14 @@ vmm_context vmm_crcontext()
 	//kprintf("phys at 0x%x/n",virt_to_phys(&startup_context,(uintptr_t)new_context.pd));
 	memset((void*)new_context.pd,0x00000000,PAGE_SIZE*2);// clear the PgDIR to avoid invalid values
 	memset((void*)new_context.tr,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
+	
 	vmm_map_kernel(&new_context);
 	return new_context;
 }
 
-void* kvmm_malloc(size_t size){
-    
+void* kvmm_malloc(size_t size)
+{
 	int i;
-    
 	if((size%PAGE_SIZE)==0)
 	{
 		size=size/PAGE_SIZE;
@@ -180,26 +179,19 @@ mark:
 			} 
 			else if(j==size-1)
 			{
-				virt = i*PAGE_SIZE;
-				goto out;
+				virt = i*PAGE_SIZE;//kprintf("mem %x %x",
+				//virt,(uintptr_t)context);
+				return virt;
 			}
 		}
 	}
-out:
-	
-	if(virt ==0x0)
-	{// nothing was found
-	  kprintf("[VMM] E: vmm_find_freemem couldn't get free space in addressspace\n");
-	  return 0x0;
-	}
-	else
-	{
-	  return virt;
-	}
+	// nothing was found
+	kprintf("[VMM] E: vmm_find_freemem couldn't get free space in addressspace\n");
+	return 0x0;
 }
-int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
+int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 {
-	int j,k;
+	int j;
 	uintptr_t page =(uintptr_t) ptr/PAGE_SIZE;
 	
 	if((size%PAGE_SIZE)==0)
@@ -210,7 +202,7 @@ int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 	{
 		size=size/PAGE_SIZE+1;
 	}
-	uintptr_t phys=(uintptr_t) pmm_malloc(size)*PAGE_SIZE;
+	uintptr_t phys=pmm_malloc(size)*PAGE_SIZE;
 	for(j=0;j<size;j++) 
 	{
 		if (vmm_is_alloced(context,page+j)==TRUE) 
@@ -219,14 +211,14 @@ int vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 			return -1;
 		} 
 	}
-	for(k =0;k<size;k++)
+	for(j =0;j<size;j++)
 	{
-		if(vmm_map(context,(page+k)*PAGE_SIZE,phys+(k*PAGE_SIZE),flgs)<0)
+		if(vmm_map(context,(page+j)*PAGE_SIZE,phys+(j*PAGE_SIZE),flgs)<0)
 		{
 			kprintf("[VMM] E: vmm_realloc called vmm_map_page and got error\n");
 			return -1;
 		}
-		vmm_mark_used(context,page+k);
+		vmm_mark_used(context,page+j);
 	}
 	return 0;
 }
@@ -279,22 +271,26 @@ int_t vmm_map_inallcon(uintptr_t virt, uintptr_t phys,uint8_t flgs){
 	{
 		while(cur!=NULL)
 		{
-			if(vmm_map(cur->context, virt,phys,flgs)){
+			if(vmm_map(cur->context, virt,phys,flgs))
+			{
 				kprintf("[VMM] E: kvmm_malloc vmm_mark_used_inallcon get invalid vmm_mark_used return\n");
 				return -1;
 			}
 			cur=cur->next;
 		}
 	}
-	if(startup_context.pd){
-		if(vmm_map(&startup_context,virt,phys,flgs)){
+	if(startup_context.pd)
+	{
+		if(vmm_map(&startup_context,virt,phys,flgs))
+		{
 			kprintf("[VMM] E: kvmm_malloc vmm_mark_used_inallcon get invalid vmm_mark_used return\n");
 			return -1;
 		}
 	}
 	return 0;
 }
-int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs){
+int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs)
+{
 	struct vmm_pagetbl* page_table=NULL;
 	
 	uint_t page =virt/PAGE_SIZE;
@@ -310,7 +306,8 @@ int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs)
 	    curcontext= current_thread->proc->context;
 	}
 	// We need 4k alignment 
-	if (((virt % PAGE_SIZE)!=0) || ((phys % PAGE_SIZE)!= 0)) {
+	if (((virt % PAGE_SIZE)!=0) || ((phys % PAGE_SIZE)!= 0)) 
+	{
 	    kprintf("[VMM] E: vmm_map has no 4k alignment\n",virt,phys);
 	    return -1;
 	}
@@ -326,7 +323,7 @@ int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs)
 	if (context->pd->pgdir[pd_index].rw_flags& FLG_IN_MEM) 
 	{
 		/* Page Table ist schon vorhanden */
-		page_table = (void*)(context->pd->pgdir[pd_index].pagetbl_ptr*PAGE_SIZE);
+		page_table = (void*)((uintptr_t)context->pd->pgdir[pd_index].pagetbl_ptr*PAGE_SIZE);
 		
 		if((paging_activated)&&(virt != TMP_PAGEBUF))// if paging is activated TMP_PAGEBUF will be allways mapped
 		{
@@ -334,18 +331,22 @@ int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs)
 			
 			page_table =(struct vmm_pagetbl *)TMP_PAGEBUF;
 		}
-		else if(virt==TMP_PAGEBUF){
+		else if(virt==TMP_PAGEBUF)
+		{
 			page_table =(struct vmm_pagetbl *)((uintptr_t)(context->pd)+PAGE_SIZE);
 		}
 	} 
 	else 
 	{
 		// setup new pagetable 
-		if(pd_index==0){
-			if(curcontext->pd!=NULL){
+		if(pd_index==0)
+		{
+			if(curcontext->pd!=NULL)
+			{
 				page_table =(struct vmm_pagetbl *)(virt_to_phys(&startup_context,(uintptr_t)context->pd)+PAGE_SIZE);
 			}
-			else{
+			else
+			{
 				page_table =(struct vmm_pagetbl *)((uintptr_t)context->pd+PAGE_SIZE);
 			}
 		}
@@ -360,7 +361,8 @@ int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs)
 		    kprintf("[VMM] E: vmm_map_page doesn't found a Page Table\n");
 		    return -1;
 		}
-		struct vmm_pagedirentr new_pgdirentr ={
+		struct vmm_pagedirentr new_pgdirentr =
+		{
 		    .rw_flags = flgs,
 		    .reserved=0x0,
 		    .pagetbl_ptr =(uintptr_t)(page_table)/PAGE_SIZE
@@ -415,7 +417,7 @@ bool vmm_is_alloced(vmm_context* context,uint_t page)//FIXME No Overflow check
 	uint_t node_ind=page%1024;
 	uint_t inner_nodepkgoff=(master_ind%32)*1024;
 	struct vmm_tree_master*tree = context->tr;
-	struct vmm_tree_nodepkg* nodes = (void*)(tree->nodepkg[master_ind/32].nodepkg_ptr*PAGE_SIZE);
+	struct vmm_tree_nodepkg* nodes = (void*)((uintptr_t)tree->nodepkg[master_ind/32].nodepkg_ptr*PAGE_SIZE);
 	
 	/*if(tree->used[master_ind])
 	{
@@ -437,7 +439,7 @@ static void vmm_mark_used(vmm_context* context,uint_t page)
 	uint_t node_ind=page%1024;
 	uint_t inner_nodepkgoff=(master_ind%32)*1024;
 	struct vmm_tree_master*tree = context->tr;
-	struct vmm_tree_nodepkg* nodes = (void*)(tree->nodepkg[master_ind/32].nodepkg_ptr*PAGE_SIZE);
+	struct vmm_tree_nodepkg* nodes = (void*)((uintptr_t)tree->nodepkg[master_ind/32].nodepkg_ptr*PAGE_SIZE);
 	/*
 	if(tree->used[master_ind])
 	{
@@ -451,7 +453,7 @@ static void vmm_mark_free(vmm_context* context,uint_t page)
 	uint_t node_ind=page%1024;
 	uint_t inner_nodepkgoff=(master_ind%32)*1024;
 	struct vmm_tree_master*tree = context->tr;
-	struct vmm_tree_nodepkg* nodes = (void*)(tree->nodepkg[master_ind/32].nodepkg_ptr*PAGE_SIZE);
+	struct vmm_tree_nodepkg* nodes = (void*)((uintptr_t)tree->nodepkg[master_ind/32].nodepkg_ptr*PAGE_SIZE);
 	/*
 	if(tree->used[master_ind])
 	{
@@ -498,14 +500,14 @@ static void vmm_map_kernel(vmm_context* context)
 		for(i=0;i<32;i++)
 		{
 			node_virt=vmm_find_freemem(curcontext,1,0x0,KERNEL_SPACE/PAGE_SIZE);
-			node_phys =(uintptr_t)pmm_malloc(1);
+			node_phys =pmm_malloc(1);
 			context->tr->nodepkg[i].nodepkg_ptr=node_virt/PAGE_SIZE;
 			vmm_map_inallcon(node_virt,node_phys*PAGE_SIZE,FLGCOMBAT_KERNEL);
 			memset((void*)node_virt,0x00000000,PAGE_SIZE);
 			vmm_mark_used_inallcon(context->tr->nodepkg[i].nodepkg_ptr);
 			//kprintf("tree%d node virt = 0x%x",i,node_virt);
 		}
-		for (i = 0; i <KERNEL_SPACE/PAGE_SIZE; i ++) 
+		for (i = 0; i <KERNEL_SPACE/PAGE_SIZE; i ++)
 		{
 			if(vmm_is_alloced(curcontext,i))
 			{
@@ -523,12 +525,12 @@ static void vmm_map_kernel(vmm_context* context)
 	{
 		for(i=0;i<32;i++)
 		{
-			node_phys =(uintptr_t)pmm_malloc(1);
+			node_phys =pmm_malloc(1);
 			context->tr->nodepkg[i].nodepkg_ptr=node_phys;
 			memset((void*)(node_phys*PAGE_SIZE),0x00000000,PAGE_SIZE);
 		}
 		
-		for (i = 0; i <KERNEL_SPACE/PAGE_SIZE; i ++) 
+		for (i = 0; i <KERNEL_SPACE/PAGE_SIZE; i ++)
 		{
 			if(pmm_is_alloced(i))
 			{

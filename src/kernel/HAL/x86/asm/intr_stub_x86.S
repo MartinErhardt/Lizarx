@@ -16,9 +16,6 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
- 
-#include<archdef.h>
-#ifdef ARCH_X86
 
 .extern handle_exception
 .extern handle_irq
@@ -156,5 +153,3 @@ INTR_STUB_IRQ 33
 
 // Syscall
 INTR_STUB_SYSCALL 48
-
-#endif

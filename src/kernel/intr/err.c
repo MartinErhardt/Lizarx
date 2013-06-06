@@ -53,8 +53,8 @@ void redscreen(CPU_STATE* cpu){
 	    cpu->cs, cpu->ss
 	  );
 	get_stack_trace(kernel_elf,(uintptr_t)cpu->ebp,(uintptr_t)cpu->eip);
-#else
-	  #error lizarx build: No valid arch found in src/kernel/intr/err.c
+/*#else
+	  #error lizarx build: No valid arch found in src/kernel/intr/err.c*/
 #endif
 
 }

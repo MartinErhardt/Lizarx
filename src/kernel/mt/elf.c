@@ -113,8 +113,8 @@ int32_t init_elf(void* image)
 	{
 		kprintf("[ELF_LOADER] E: init_elf found elf with invalid target!\n");
 	}
-#else
-    #error lizarx build: No valid arch found in src/kernel/mt/threads.c
+/*#else
+    #error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
 #endif
 	if (header->i_version != ELF_VERSION_CURRENT)
 	{
@@ -151,8 +151,10 @@ int32_t init_elf(void* image)
 		SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->pd));
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);
+		//
 		SET_CONTEXT(curpd_phys);
 	}
+	//while(1);
 	//print_symbols(image,(struct elf_section_header*)((uintptr_t)(image)+header->sh_offset),header->sh_entry_count);
 	return 0;
 }

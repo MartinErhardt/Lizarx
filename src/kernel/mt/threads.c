@@ -42,19 +42,19 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	
 	NEW_STATE
 	*new_st_=new_state;
-	new_st_->eip = (uintptr_t) entry;
+	new_st_->REG_IP = (uintptr_t) entry;
 #ifdef ARCH_X86
 	new_st_->cs = 0x18 | 0x03;
 	new_st_->ss = 0x23;
 	SET_IRQ(new_st_->REG_FLAGS)
-#else
-	#error lizarx build: No valid arch found in src/kernel/mt/threads.c
+/*#else
+	#error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
 #endif
 	new_t->t_id=num_threads;
 	new_t->state = new_st_;
 	new_t->user_stack 	= user_stack;
 	new_t->proc=in_proc;
-	new_t->state->esp= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
+	new_t->state->REG_STACKPTR= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
 	new_t->next=first_thread;
 	first_thread = new_t;
 	return 0;
@@ -76,7 +76,7 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
 
  	curcontext= &startup_context;
 	next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->pd);
-	
+	//kprintf("next_contexta 0x%x",next_context);
         current_thread = first_thread;
 
     } 
@@ -88,18 +88,20 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
 	
 #ifdef ARCH_X86
 	current_thread->state->ss = 0x23;
-#else
-	#error lizarx build: No valid arch found in src/kernel/mt/threads.c
+/*#else
+	#error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
 #endif
 	
 	if(current_thread->next != NULL)
 	{
 		next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->pd);
+		//kprintf("next_contextc 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
 		current_thread = current_thread->next;
 	}
 	else 
 	{
 	    next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->pd);
+	    //kprintf("next_contextaa 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
             current_thread = first_thread;
         }
     }
@@ -117,24 +119,30 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
     
     if(current_thread->proc->context!=curcontext)
     {
+	
 	SET_CONTEXT(next_context);
     }
 
     return cpu;
 }
-int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu){
+int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu)
+{
 
     struct thread*prev=current_thread;
     struct thread*switch_to=get_thread(t_id);
     vmm_context* curcontext=NULL;
     
-    if(!intr_activated){
+    if(!intr_activated)
+    {
         curcontext= &startup_context;
 	//kprintf("her");
-    }else{
+    }
+    else
+    {
         curcontext= current_thread->proc->context;
     }
-    if(switch_to==NULL){
+    if(switch_to==NULL)
+    {
 	return -1;
     }
     /*
@@ -157,9 +165,11 @@ int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu){
     }
     return 0;
 }
-struct thread* get_thread(uint32_t t_id){
+struct thread* get_thread(uint32_t t_id)
+{
 	struct thread* cur=first_thread;
-	while(cur->next!=NULL){
+	while(cur->next!=NULL)
+	{
 		if(cur->t_id==t_id)
 		{
 			return cur;

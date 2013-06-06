@@ -17,7 +17,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include<archdef.h>
 .section multiboot
 #define MB_MAGIC 0x1badb002
 #define MB_FLAGS 0x0
@@ -39,18 +38,16 @@
 // sichtbar)
 .global _start
 _start:
-#ifdef ARCH_X86
     // Stack initialisieren
     mov $kernel_stack, %esp
 
     // C-Code aufrufen und Multiboot-Infostruktur als Parameter uebergeben
-    push %ebx
+    push %rbx
     call init
 
     // Falls wir jemals aus init zurueckkommen sollten, gehen wir in eine
     // Endlosschleife
     jmp .
-#endif
 // 8 kB Stack fuer den Kernel. Das Label steht hinter dem freien Speicher,
 // weil der Stack nach unten waechst
 .section .bss

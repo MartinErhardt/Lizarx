@@ -53,7 +53,7 @@ void vmm_free(vmm_context* context,void* page);
 void kvmm_free(void* page);
 bool vmm_is_alloced(vmm_context* context,uint_t page);
 
-int vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs);
+int_t vmm_map(vmm_context* context, uintptr_t virt, uintptr_t phys,uint8_t flgs);
 void vmm_unmap(vmm_context*context,uintptr_t virt);
 
 void* cpyin(void* src,size_t siz);

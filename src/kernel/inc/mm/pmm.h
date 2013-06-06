@@ -27,8 +27,8 @@
 #define PAGE_SIZE 4096 // page size in bytes
 
 void pmm_init(struct multiboot_info* mb_info);
-uint32_t pmm_malloc_4k(void);
-uint32_t pmm_malloc(uint32_t pages);
+uint_t pmm_malloc_4k(void);
+uint_t pmm_malloc(uint32_t pages);
 bool pmm_realloc(uint32_t index, uint32_t pages);
 
 void pmm_free(uint32_t page);

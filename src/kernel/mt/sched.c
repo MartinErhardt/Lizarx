@@ -26,7 +26,7 @@ CPU_STATE* schedule(CPU_STATE*cpu)
 {
 	
 	CPU_STATE* state = dispatch_thread(cpu);
-	tss[1] = (uint32_t) (cpu + 1);
+	tss[1] = (uintptr_t) (cpu + 1);
 
 	return state;
 }

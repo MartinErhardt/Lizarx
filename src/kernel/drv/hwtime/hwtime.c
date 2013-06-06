@@ -56,5 +56,7 @@ struct tm* get_time()
 	new_time->tm_yday=yday;
 	new_time->tm_isdst=0x0;
 	return new_time;
+#else
+	return NULL;
 #endif
 }

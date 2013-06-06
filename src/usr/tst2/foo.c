@@ -2,9 +2,10 @@
 int i=2;
 
 void foo2(void);
-char hello_shared[]="hello shared\n";
+char hello_shared[]="hello shared reloaded\n";
 void foo(void)
 {
+	
 	uprintf(itoa(i,16));
 	uprintf(&hello_shared[0]);
 	foo2();
