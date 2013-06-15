@@ -2,7 +2,7 @@
 *.bak
 *.kate-swp
 *.kate.swp
-*,directory
+*.directory
 *~
 # or binaries
 *.elf
@@ -20,6 +20,7 @@ src/kernel/Makefile
 src/kernel/kernel.ld
 bin/boot/grub/menu.lst
 src/kernel/HAL/archdef.h
+src/kernel/loader.ld
 
 # or ISOs
 *.iso
