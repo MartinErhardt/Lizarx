@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/archdef.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/inc/boot/easy_map.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,9 +16,12 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef ARCHDEF_H
-#define ARCHDEF_H
+#ifndef EASY_MAP_H
+#define EASY_MAP_H
 
-#define ARCH_X86 x86
+#include<stdint.h>
+
+void init_easymap();
+void easymap(uint32_t ptr);
 
 #endif

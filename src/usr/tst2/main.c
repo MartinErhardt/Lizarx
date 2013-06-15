@@ -35,41 +35,32 @@ struct bootmod
 };
 void get_bootmod(int num, struct bootmod* fill_it);
 
-struct bootmod bootmod_main = 
-{
-    .start=NULL,
-    .size=0
-};
-struct bootmod bootmod_lib = 
-{
-    .start=NULL,
-    .size=0
-};
+struct bootmod bootmod_main;
+struct bootmod bootmod_lib;
 
 int main(void)
 {
-    //
-    //
-    //while(1){}
+    struct elf_lib main_;
+    struct elf_lib lib_;
+    bootmod_lib.start=NULL;
+    bootmod_lib.size=0;
+    bootmod_main.start=NULL;
+    bootmod_main.size=0;
     get_bootmod(2,&bootmod_main);
     get_bootmod(1,&bootmod_lib);
     
     uintptr_t lib_load_addr=(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size);
-    struct elf_lib main_=
-    {
-	.header=(struct elf_header *)bootmod_main.start,
-	.runtime_addr=0
-    };
-    struct elf_lib lib_=
-    {
-	.header=(struct elf_header *)bootmod_lib.start,
-	.runtime_addr=lib_load_addr
-    };
+    
+    main_.header=(struct elf_header *)bootmod_main.start;
+    main_.runtime_addr=0;
+    
+    lib_.header=(struct elf_header *)bootmod_lib.start;
+    lib_.runtime_addr=lib_load_addr;
 
     link_lib_against(&main_,&lib_,NULL);
     link_lib_against(&lib_,&main_,NULL);
     foo();
-    unsigned int malloced=(unsigned int)malloc(10);
+    unsigned long malloced=(unsigned long)malloc(10);
     *((unsigned int*)malloced)= 0xDEADBEEF;
     uprintf(itoa(malloced,16));
     while(1);
@@ -82,7 +73,7 @@ void uprintf(char* fmt, ...)
 }
 void uprintfstrcol_scr(unsigned char font, char* fmt){
     asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((unsigned int)fmt));
+    asm volatile( "nop" :: "b" ((unsigned long)fmt));
     //asm volatile( "nop" :: "c" (sizeof("sghs")));
     
     asm volatile( "nop" :: "a" (SYS_WRITE));

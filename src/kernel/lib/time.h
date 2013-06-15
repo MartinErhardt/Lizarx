@@ -40,7 +40,7 @@ typedef unsigned int clock_t;
 typedef unsigned int time_t;
 
 clock_t clock (void);
-double difftime (time_t end, time_t beginning);
+//double difftime (time_t end, time_t beginning);
 time_t time (time_t* timer);
 time_t mktime (struct tm * timeptr);
 

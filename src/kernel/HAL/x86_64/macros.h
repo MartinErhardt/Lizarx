@@ -18,37 +18,13 @@
  */
 #ifndef X86_64_MACROS_H
 #define X86_64_MACROS_H
-
-//--------------------------------------------------------------------------GDT--------------------------------------------------------------------
-#define GDT_SIZE 6
-
-/*Accessbyte
-7	 0x80	 Present bit
-6 u. 5	 0x60	 Privilege
-4	 0x10	 Segment bit
-3	 0x08	 Executable bit
-2	 0x04	 Direction bit/Conforming bit
-1	 0x02	 Readable bit/Writable bit
-0	 0x01	 Accessed bit
-*/
-#define GDT_ACCESS_DATASEG 0x02
-#define GDT_ACCESS_CODESEG 0x0a
-#define GDT_ACCESS_TSS     0x09// 0x08
-
-#define GDT_ACCESS_SEGMENT 0x10
-#define GDT_ACCESS_RING0   0x00
-#define GDT_ACCESS_RING3   0x60
-#define GDT_ACCESS_PRESENT 0x80
 /*Flags
 3	 0x8	 Granularity bit
 2	 0x4	 Size bit
 1	 0x2	 Long Mode bit
 0	 0x1	 Available Bit
 */
-#define GDT_FLAG_4KUNIT      0x08
-#define GDT_FLAG_32_BIT  0x0
-#define GDT_FLAG_64_BIT  0x2
-
+#define GDT_FLAG_32_BIT  0x2
 
 //--------------------------------------------------------------------------PIC--------------------------------------------------------------------
 #define MASTER_PIC_COMMAND 0x20

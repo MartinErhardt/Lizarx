@@ -9,7 +9,6 @@ ARCH="i386"
 F_ARCH_X86_64="--arch-x86_64"
 F_NO_TOOLCHAIN="--no-toolchain"
 F_ARCH="i386"
-
 export PROJ_ROOT=$(pwd)
 if [ ! -d $TOOLCHAIN_DIR/buildtools ]
 then
@@ -25,12 +24,12 @@ then
 	F_ARCH=$F_ARCH_X86_64
 	cp src/kernel/HAL/x86_64/Makefile src/kernel/Makefile
 	cp src/kernel/HAL/x86_64/kernel.ld src/kernel/kernel.ld
+	cp src/kernel/HAL/x86_64/loader.ld src/kernel/loader.ld
 	cp src/kernel/HAL/x86_64/archdef.h src/kernel/HAL/archdef.h
-
 else
-	cp src/kernel/HAL/x86/Makefile src/kernel/Makefile
-	cp src/kernel/HAL/x86/kernel.ld src/kernel/kernel.ld
-	cp src/kernel/HAL/x86/archdef.h src/kernel/HAL/archdef.h
+	cp src/kernel/HAL/i386/Makefile src/kernel/Makefile
+	cp src/kernel/HAL/i386/kernel.ld src/kernel/kernel.ld
+	cp src/kernel/HAL/i386/archdef.h src/kernel/HAL/archdef.h
 fi
 
 if [ "$1" != $F_NO_TOOLCHAIN ] && [ "$2" != $F_NO_TOOLCHAIN ]
@@ -42,16 +41,20 @@ then
 		git clone https://github.com/MartinErhardt/buildtools.git
 	fi
 	cd buildtools
-	./build.sh $F_ARCH
+	./build.sh
+	if [ $F_ARCH != $F_ARCH_X86_64 ]
+	then
+		./build.sh $F_ARCH
+	fi
 	cd ../..
 fi
-
-export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/build/gcc-obj/gcc
+export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-gcc
 export PATH=$PATH:$COMPILER_PATH
-export LD_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/$ARCH-pc-lizarx/bin/ld
-export CC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/bin/$ARCH-pc-lizarx-gcc
-export CPPC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/bin/$ARCH-pc-lizarx-g++
-export AR_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/local/bin/$ARCH-pc-lizarx-ar
+export LD_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/$ARCH-pc-lizarx/bin/ld
+export LD32_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/i386-pc-lizarx/i386-pc-lizarx/bin/ld
+export CC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-gcc
+export CPPC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-g++
+export AR_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-ar
 
 if [ ! -f bin/boot/grub/stage2_eltorito ]
 then
@@ -63,13 +66,15 @@ then
 fi
 
 cd src
-make 
+make
 cd ..
 
-cp ./src/kernel/kernel ./bin/boot/kernel
-rm ./src/kernel/kernel
+mv ./src/kernel/kernel ./bin/boot/kernel
+mv ./src/kernel/LM_Loader ./bin/boot/LM_Loader
+cp ./src/kernel/HAL/$ARCH/menu.lst ./bin/boot/grub/menu.lst
 mv ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
 mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
+
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx86.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int -no-kvm -d int 
+/usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int -no-kvm -d int

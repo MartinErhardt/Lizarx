@@ -1,22 +1,49 @@
-ENTRY(_start)
-OUTPUT_FORMAT(elf64-x86-64)
+ENTRY(init)
 SECTIONS
 {
-    . = 0x100000;
-    kernel_start = .;
-    .text : {
-        *(multiboot)
+    KERNEL_VMA = 0x30000;
+    kernel_start = KERNEL_VMA;
+    . = KERNEL_VMA;
+
+    .text : AT(ADDR(.text) - KERNEL_VMA)
+    {
+        _code = .;
         *(.text)
-    } 
-    .data ALIGN(4096) : {
+        *(.rodata*)
+        . = ALIGN(4096);
+    }
+
+   .data : AT(ADDR(.data) - KERNEL_VMA)
+   {
+        _data = .;
         *(.data)
-    }
-    .rodata ALIGN(4096) : {
-        *(.rodata)
-    } 
-    .bss ALIGN(4096) : {
-        *(.bss)
-    }
-    . = ALIGN(4096);
-    kernel_end = .;
+        . = ALIGN(4096);
+   }
+
+   .eh_frame : AT(ADDR(.eh_frame) - KERNEL_VMA)
+   {
+       _ehframe = .;
+       *(.eh_frame)
+        . = ALIGN(4096);
+   }
+   .bss : AT(ADDR(.bss) - KERNEL_VMA)
+   {
+       _bss = .;
+       *(.bss)
+
+       /*
+        * You usually need to include generated COMMON symbols
+        * under kernel BSS section or use gcc's -fno-common
+        */
+
+        *(COMMON)
+       . = ALIGN(4096);
+   }
+
+   _end = .;
+   kernel_end = _end;
+   /DISCARD/ :
+   {
+        *(.comment)
+   }
 }

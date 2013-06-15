@@ -1,0 +1,16 @@
+
+default 0
+#timeout 0
+ 
+#title Boot from hard disk
+#chainloader (hd0)+1
+ 
+title lizarx86_64
+kernel /boot/LM_Loader    # Edit it to the filename of your kernel.
+
+module /boot/kernel
+module /boot/SO_example_lib.mod
+module /boot/SO_example_main.mod
+module /boot/proc1.mod
+
+boot

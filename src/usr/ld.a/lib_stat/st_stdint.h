@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/lib/stdint.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/usr/ld.a/lib_stat/stdint.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -39,6 +39,5 @@ typedef unsigned long st_uintptr_t;
 
 typedef unsigned long st_uint_t;
 typedef long st_int_t;
-
 
 #endif

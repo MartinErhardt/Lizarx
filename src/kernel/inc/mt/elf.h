@@ -26,6 +26,7 @@
  
 #include <stdint.h>
 #include <mm/vmm.h>
+#include <hal.h>
 
 #define ELF_MAGIC 0x464C457F
 
@@ -167,6 +168,7 @@
 /*
  * The following structures are used to read out the ELF format
  */
+#ifdef ARCH_X86
 struct elf_header
 {
     uint32_t	i_magic;
@@ -179,9 +181,9 @@ struct elf_header
     uint16_t	type;
     uint16_t	machine;
     uint32_t	version;
-    uintptr_t	entry;
-    uintptr_t	ph_offset;
-    uintptr_t	sh_offset;
+    uint32_t	entry;
+    uint32_t	ph_offset;
+    uint32_t	sh_offset;
     uint32_t	flags;
     uint16_t	header_size;
     uint16_t	ph_entry_size;
@@ -202,6 +204,44 @@ struct elf_program_header
     uint32_t	flags;
     size_t	alignment;
 } __attribute__((packed));
+#else
+struct elf_header
+{
+    uint32_t	i_magic;
+    uint8_t	i_class;
+    uint8_t	i_data;
+    uint8_t	i_version;
+    uint8_t	i_pad;
+    uint64_t	i_reserved;
+    
+    uint16_t	type;
+    uint16_t	machine;
+    uint32_t	version;
+    uint64_t	entry;
+    uint64_t	ph_offset;
+    uint64_t	sh_offset;
+    uint32_t	flags;
+    uint16_t	header_size;
+    uint16_t	ph_entry_size;
+    uint16_t	ph_entry_count;
+    uint16_t	sh_entry_size;
+    uint16_t	sh_entry_count;
+    uint16_t	sh_str_table_index;
+} __attribute__((packed));
+
+
+struct elf_program_header
+{
+    uint32_t	type;
+    uint32_t	flags;
+    uint64_t	offset;
+    uint64_t	virt_addr;
+    uint64_t	phys_addr;
+    size_t	file_size;
+    size_t	mem_size;
+    size_t	alignment;
+} __attribute__((packed));
+#endif
 
 struct elf_section_header 
 {

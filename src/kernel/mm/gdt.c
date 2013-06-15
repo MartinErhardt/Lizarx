@@ -22,11 +22,15 @@
 #include <stdint.h>
 #include <hal.h>
 /*
+#ifndef GDT_FLAG_32_BIT
+	#define GDT_FLAG_32_BIT 0x2
+#endif*/
+/*
  * INFO: In this File macros from HAL/x86/macros.h and hw_structs from HAL/x86/hw_structs.h are used
  */
 struct gdt_entry gdtable[GDT_SIZE];//gdt entries
 
-void gdt_set_entry(uint8_t i,uint32_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags){ // fill in entry i in gdtable
+void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags){ // fill in entry i in gdtable
 	gdtable[i].limit=limit& 0xffffLL;//
 	gdtable[i].base=base & 0xffffffLL;
 	gdtable[i].accessbyte=accessbyte & 0xffLL;
@@ -44,22 +48,20 @@ void init_gdt(void)
         .limit = GDT_SIZE * 8 - 1,
         .pointer = gdtable,
     };
-    uint32_t tssloc[32] = { 0, 0, 0x10 };
+    unsigned int tssloc[32] = { 0, 0, 0x10 };
     kprintf("[GDT_INIT] I: GDT setup...");
     memmove(&tss,&tssloc,sizeof(tssloc));
-#ifdef ARCH_X86
     // We are going to fill in the structs in gdtable
     gdt_set_entry(0, 0, 0, 0,0);
-    gdt_set_entry(1, 0xfffff,0, GDT_ACCESS_SEGMENT |
+    gdt_set_entry(1, 0xffffffff,0, GDT_ACCESS_SEGMENT |
         GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT);
-    gdt_set_entry(2, 0xfffff,0, GDT_ACCESS_SEGMENT |
+    gdt_set_entry(2, 0xffffffff,0, GDT_ACCESS_SEGMENT |
         GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(3, 0xfffff,0,  GDT_ACCESS_SEGMENT |
+    gdt_set_entry(3, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
         GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(4, 0xfffff,0,  GDT_ACCESS_SEGMENT |
+    gdt_set_entry(4, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
         GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(5,sizeof(tss),(uint_t) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
-#endif
+    gdt_set_entry(5,sizeof(tss),(unsigned int) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
     // reload GDT
     asm volatile("lgdt %0" : : "m" (gdtp));
 
@@ -73,10 +75,10 @@ void init_gdt(void)
         "ljmp $0x8, $.1;"
         ".1:"
     );
-/*#else
-    #error lizarx build: No valid arch found in src/kernel/mm/gdt.c*/
+    asm volatile("ltr %%ax" : : "a" (5 << 3));
 #endif
     kprintf("SUCCESS\n");
+   //while(1);
     // Taskregister neu laden
-    asm volatile("ltr %%ax" : : "a" (5 << 3));
+
 }

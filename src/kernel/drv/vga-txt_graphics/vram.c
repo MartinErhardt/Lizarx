@@ -22,7 +22,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <drv/vga-txt_graphics/vram.h>
-#include <hal.h>
+#include <archdef.h>
 
 #define VIDEO_X 80
 #define VIDEO_Y 25
@@ -101,18 +101,23 @@ void setcurs(uint8_t xp,uint8_t yp)
 
 void drawcurs()
 {
+	/*
 	uint16_t tmp= (cury*VIDEO_X+curx)-1;
+	
 	OUTB(0x3d4,14);
 	OUTB(0x3d5,(uint8_t)(tmp >> 8));
 	OUTB(0x3d4,15);
 	OUTB(0x3d5,(uint8_t)tmp);
+	*/
 }
 void rmvcurs()
 {
+	/*
 	OUTB(0x3d4,14);
 	OUTB(0x3d5,0x07);
 	OUTB(0x3d4,15);
 	OUTB(0x3d5,0xd0);
+	*/
 }
  
 static void newline()
@@ -147,7 +152,7 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 	kprintf_res = 0;
 	while (*fmt) {
 		// serial console(only QEMU)
-		OUTB(0x3f8, *fmt)
+		//OUTB(0x3f8, *fmt)
 		if (*fmt == '%') 
 		{
 			fmt++;

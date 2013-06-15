@@ -11,8 +11,15 @@
 *.mod
 *.so
 *.a
+bin/boot/LM_Loader
 bin/boot/kernel
 stage2_eltorito
+
+# that's temporary stuff
+src/kernel/Makefile
+src/kernel/kernel.ld
+bin/boot/grub/menu.lst
+src/kernel/HAL/archdef.h
 
 # or ISOs
 *.iso

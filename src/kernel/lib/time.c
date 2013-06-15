@@ -37,11 +37,11 @@ clock_t clock (void)
 	{
 		return -1;
 	}
-}
+}/*
 double difftime (time_t end, time_t beginning)
 {
 	return (double)(end-beginning);
-}
+}*/
 time_t mktime (struct tm * timeptr)
 {
 	return 	((((timeptr->tm_year-YEAR0_IN_UNIX_TIME)*SECS_PER_YEAR)+

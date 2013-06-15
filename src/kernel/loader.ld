@@ -1,11 +1,12 @@
+ 
 ENTRY(_start)
 OUTPUT_FORMAT(elf32-i386)
 SECTIONS
 {
     . = 0x100000;
-    kernel_start = .;
+    loader_start = .;
     .text : {
-        *(multiboot)
+        *(.multiboot)
         *(.text)
     } 
     .data ALIGN(4096) : {
@@ -18,5 +19,5 @@ SECTIONS
         *(.bss)
     }
     . = ALIGN(4096);
-    kernel_end = .;
+    loader_end = .;
 }

@@ -6,8 +6,8 @@ SRCS_OPTI = mm/pmm.c\
 	mt/sched.c \
 	mt/proc.c \
 	mt/threads.c \
-	HAL/x86/asm/start_x86.S \
-	HAL/x86/asm/intr_stub_x86.S \
+	HAL/i386/asm/start_x86.S \
+	HAL/i386/asm/intr_stub_x86.S \
 	lib/time.c \
 	intr/irq.c \
 	intr/syscall.c \

@@ -50,7 +50,7 @@ CPU_STATE* handle_syscall(CPU_STATE* cpu)
 	    case(SYS_ERROR):break;
 	    case(SYS_GET_BOOTMOD):
 		bm_size= modules_glob[cpu->REG_DATA0].mod_end-modules_glob[cpu->REG_DATA0].mod_start;
-		cpu->REG_DATA0=(uintptr_t)cpyout((void*) modules_glob[cpu->REG_DATA0].mod_start, bm_size);
+		cpu->REG_DATA0=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
 		cpu->REG_DATA2=bm_size;
 		break;
 	    case(SYS_VMM_MALLOC):

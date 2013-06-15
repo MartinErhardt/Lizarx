@@ -20,8 +20,35 @@
 #define GDT_H
 #include <stdint.h>
 
+//--------------------------------------------------------------------------GDT--------------------------------------------------------------------
+#define GDT_SIZE 6
+
+/*Accessbyte
+7	 0x80	 Present bit
+6 u. 5	 0x60	 Privilege
+4	 0x10	 Segment bit
+3	 0x08	 Executable bit
+2	 0x04	 Direction bit/Conforming bit
+1	 0x02	 Readable bit/Writable bit
+0	 0x01	 Accessed bit
+*/
+#define GDT_ACCESS_DATASEG 0x02
+#define GDT_ACCESS_CODESEG 0x0a
+#define GDT_ACCESS_TSS     0x09// 0x08
+
+#define GDT_ACCESS_SEGMENT 0x10
+#define GDT_ACCESS_RING0   0x00
+#define GDT_ACCESS_RING3   0x60
+#define GDT_ACCESS_PRESENT 0x80
+/*Flags
+3	 0x8	 Granularity bit
+2	 0x4	 Size bit
+1	 0x2	 Long Mode bit
+0	 0x1	 Available Bit
+*/
+#define GDT_FLAG_4KUNIT      0x08
 uint32_t tss[32];
 
-void gdt_set_entry(uint8_t i,uint32_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags);
+void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags);
 void init_gdt(void);
 #endif

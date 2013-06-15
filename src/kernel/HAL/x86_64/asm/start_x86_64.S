@@ -17,7 +17,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-.section multiboot
+.section .multiboot
 #define MB_MAGIC 0x1badb002
 #define MB_FLAGS 0x0
 #define MB_CHECKSUM -(MB_MAGIC + MB_FLAGS)
@@ -42,8 +42,8 @@ _start:
     mov $kernel_stack, %esp
 
     // C-Code aufrufen und Multiboot-Infostruktur als Parameter uebergeben
-    push %rbx
-    call init
+    push %ebx
+    call init_LM
 
     // Falls wir jemals aus init zurueckkommen sollten, gehen wir in eine
     // Endlosschleife

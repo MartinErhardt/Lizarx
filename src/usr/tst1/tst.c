@@ -1,5 +1,7 @@
 #include<math.h>
-
+#include<stdint.h>
+#include<string.h>
+#include<stdlib.h>
 
 #define SYS_WRITE 0
 #define SYS_ERROR 8
@@ -38,10 +40,12 @@ int main(void)
     while(1);
     return 0;
 }
-void uprintf(char* fmt, ...){
+void uprintf(char* fmt, ...)
+{
     uprintfstrcol_scr(VGA_WHITE,fmt);
 }
-void uprintfstrcol_scr(unsigned char font, char* fmt){
+void uprintfstrcol_scr(unsigned char font, char* fmt)
+{
     asm volatile( "nop" :: "d" (font));
     asm volatile( "nop" :: "b" ((unsigned long)fmt));
     //asm volatile( "nop" :: "c" (sizeof("sghs")));

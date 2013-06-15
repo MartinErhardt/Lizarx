@@ -35,6 +35,9 @@
 				asm volatile("mov %0, %%cr0" : : "r" (cr0));
 #define SET_CONTEXT(PAGEDIR)	asm volatile("mov %0, %%cr3" : : "r" (PAGEDIR));
 
+#define READ_MSR(MSR, LO, HI)	asm volatile("rdmsr": "=a"(LO), "=d"(HI) : "c"(MSR));
+#define WRITE_MSR(MSR, LO, HI)	asm volatile("wrmsr": : "a"(LO), "d"(HI), : "c"(MSR));
+
 #define LAST_ADDR 0xfffffffffffffff
 
 #endif

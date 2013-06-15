@@ -31,7 +31,6 @@
  * Willkuerliche Festlegung: 1 = Speicher frei, 0 = Speicher belegt
  */
 
-
 #define WORDWITH 32
 
 static uint32_t physbitmap[BITMAP_SIZE];

@@ -22,7 +22,7 @@
 #include "archdef.h"
 
 #ifdef ARCH_X86
-	#include "x86/x86.h"
+	#include "i386/x86.h"
 #endif
 #ifdef ARCH_X86_64
 	#include "x86_64/x86_64.h"

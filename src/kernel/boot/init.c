@@ -44,6 +44,13 @@ void init(struct multiboot_info * mb_info)
 	startup_context.pd=0x0;
 	startup_context.tr=0x0;
 	//struct tm* time_is=NULL;
+	clrscr(VGA_BLACK,VGA_WHITE);
+#ifdef ARCH_X86_64
+	
+	asm volatile("mov $0x0, %rax");
+	kprintf("hello 64\n");
+	while(1);
+#endif
 	struct multiboot_module* modules = mb_info->mbs_mods_addr;
 	modules_glob=modules;
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
