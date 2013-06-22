@@ -42,7 +42,7 @@ then
 	fi
 	cd buildtools
 	./build.sh
-	if [ $F_ARCH != $F_ARCH_X86_64 ]
+	if [ $F_ARCH == $F_ARCH_X86_64 ]
 	then
 		./build.sh $F_ARCH
 	fi
@@ -77,4 +77,4 @@ mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
 
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx86.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int -no-kvm -d int
+/usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int  -enable-kvm -d int

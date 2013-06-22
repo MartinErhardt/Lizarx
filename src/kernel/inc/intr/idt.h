@@ -5,5 +5,5 @@
 
 void init_idt(void);
 void enable_intr();
-bool intr_activated;
+
 #endif

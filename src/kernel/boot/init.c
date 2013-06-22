@@ -2,19 +2,18 @@
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *  Lizarx is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ *  Lizarx is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License along
- *   with this program; if not, write to the Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  You should have received a copy of the GNU LESSER General Public License
+ *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <dbg/console.h>
 #include <intr/idt.h>
@@ -41,28 +40,23 @@ void init(struct multiboot_info * mb_info)
 	current_thread = NULL;
 	first_proc = NULL;
 	cur_proc = NULL;
-	startup_context.pd=0x0;
-	startup_context.tr=0x0;
+	startup_context.highest_paging=0x0;
+	startup_context.mm_tree=0x0;
 	//struct tm* time_is=NULL;
-	clrscr(VGA_BLACK,VGA_WHITE);
-#ifdef ARCH_X86_64
-	
-	asm volatile("mov $0x0, %rax");
-	kprintf("hello 64\n");
-	while(1);
-#endif
-	struct multiboot_module* modules = mb_info->mbs_mods_addr;
+	struct multiboot_module* modules = (struct multiboot_module*) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob=modules;
+	
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
-	intr_activated=FALSE;
 	
 	memset(0x0,0x0,4);
 	clrscr(VGA_BLACK,VGA_WHITE);
 	kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
 	pmm_init(mb_info);
-	
 	vmm_init();
-	
+
+#ifdef ARCH_X86_64
+	while(1);
+#endif
 	vheap_init();
 #ifdef ARCH_X86
 	init_gdt();

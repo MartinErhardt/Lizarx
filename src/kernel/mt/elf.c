@@ -2,19 +2,18 @@
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *  Lizarx is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ *  Lizarx is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License along
- *   with this program; if not, write to the Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  You should have received a copy of the GNU LESSER General Public License
+ *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include<mt/elf.h>
 #include<dbg/console.h>
@@ -77,16 +76,10 @@ int32_t init_elf(void* image)
 	struct elf_program_header* ph;
 	int i;
 	struct proc* new_proc=NULL; 
-	vmm_context* curcontext=NULL;
-	if(!intr_activated)
-	{
-		curcontext= &startup_context;
-	}
-	else
-	{
-		curcontext= current_thread->proc->context;
-	}
-	uintptr_t curpd_phys= virt_to_phys(curcontext, (uintptr_t)curcontext->pd);
+	
+	vmm_context* curcontext=get_cur_context();
+	
+	uintptr_t curpd_phys= virt_to_phys(curcontext, (uintptr_t)curcontext->highest_paging);
 	/* Ist es ueberhaupt eine ELF-Datei? */
 	//kprintf("0x%x",(uintptr_t)image);
 	if (header->i_magic != ELF_MAGIC) 
@@ -148,7 +141,7 @@ int32_t init_elf(void* image)
 		{
 			kprintf("[ELF_LOADER] W: init_elf couldn't realloc for PH!\n");//it is only a warning yet ,coz the header could be in the same Page and that's not tested yet
 		}
-		SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->pd));
+		SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->highest_paging));
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);
 		//

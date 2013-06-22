@@ -2,19 +2,18 @@
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *  Lizarx is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ *  Lizarx is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License along
- *   with this program; if not, write to the Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  You should have received a copy of the GNU LESSER General Public License
+ *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef MULTIBOOT_H
 #define MULTIBOOT_H
@@ -28,10 +27,10 @@ struct multiboot_info {
     uint32_t    mbs_bootdevice;
     uint32_t    mbs_cmdline;
     uint32_t    mbs_mods_count;
-    void*       mbs_mods_addr;
+    uint32_t       mbs_mods_addr;
     uint32_t    mbs_syms[4];
     uint32_t    mbs_mmap_length;
-    void*       mbs_mmap_addr;
+    uint32_t       mbs_mmap_addr;
 } __attribute__((packed));
 
 struct multiboot_mmap {
@@ -44,7 +43,7 @@ struct multiboot_mmap {
 struct multiboot_module {
     uint32_t    mod_start;
     uint32_t    mod_end;
-    char*       cmdline;
+    uint32_t    cmdline;
     uint32_t    reserved;
 } __attribute__((packed));
 

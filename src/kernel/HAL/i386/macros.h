@@ -61,4 +61,6 @@
 #define FLG_WRITTEN	0x40 // ignored in Page Directory Entry, if 4K Page
 #define FLGPD_NOT4K	0x80 // only in Page Directory Entry
 
+#define PAGING_HIER_SIZE 0x2 // we have
+
 #endif

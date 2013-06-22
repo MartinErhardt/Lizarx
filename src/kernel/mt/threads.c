@@ -2,19 +2,18 @@
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *  Lizarx is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ *  Lizarx is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License along
- *   with this program; if not, write to the Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  You should have received a copy of the GNU LESSER General Public License
+ *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include<stdint.h>
 #include<mt/threads.h>
@@ -34,7 +33,8 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	CPU_STATE* new_st_=(CPU_STATE*)malloc(sizeof(CPU_STATE));
 	uint8_t* user_stack 	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
 
-	if(in_proc==NULL){
+	if(in_proc==NULL)
+	{
 	    kprintf("couldn't get pid");
 	    return -1;
 	}
@@ -74,8 +74,8 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
     if (current_thread == NULL) 
     {
 
- 	curcontext= &startup_context;
-	next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->pd);
+	curcontext= &startup_context;
+	next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
 	//kprintf("next_contexta 0x%x",next_context);
         current_thread = first_thread;
 
@@ -94,13 +94,13 @@ CPU_STATE* dispatch_thread(CPU_STATE* cpu){
 	
 	if(current_thread->next != NULL)
 	{
-		next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->pd);
+		next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->highest_paging);
 		//kprintf("next_contextc 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
 		current_thread = current_thread->next;
 	}
 	else 
 	{
-	    next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->pd);
+	    next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
 	    //kprintf("next_contextaa 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
             current_thread = first_thread;
         }
@@ -130,17 +130,8 @@ int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu)
 
     struct thread*prev=current_thread;
     struct thread*switch_to=get_thread(t_id);
-    vmm_context* curcontext=NULL;
+    vmm_context* curcontext=get_cur_context();
     
-    if(!intr_activated)
-    {
-        curcontext= &startup_context;
-	//kprintf("her");
-    }
-    else
-    {
-        curcontext= current_thread->proc->context;
-    }
     if(switch_to==NULL)
     {
 	return -1;

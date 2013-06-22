@@ -148,7 +148,7 @@ unsigned int kprintfcol_scr(uint8_t forgcol, uint8_t backcol, const char* fmt, .
 unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 {
 	const char* s;
-	uint32_t n;
+	uint_t n;
 	kprintf_res = 0;
 	while (*fmt) {
 		// serial console(only QEMU)
@@ -164,12 +164,12 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 					break;
 				case 'd':
 				case 'u':
-					n = va_arg(appar, unsigned long int);
+					n = va_arg(appar, uint_t );
 					kprintn_scr(n, 10,font);
 					break;
 				case 'x':
 				case 'p':
-					n = va_arg(appar, unsigned long int);
+					n = va_arg(appar, uint_t);
 					kprintn_scr(n, 16,font);
 					break;
 				case '%':

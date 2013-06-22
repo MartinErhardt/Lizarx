@@ -2,19 +2,18 @@
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *  Lizarx is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ *  Lizarx is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License along
- *   with this program; if not, write to the Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  You should have received a copy of the GNU LESSER General Public License
+ *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boot/multiboot.h>
 #include <dbg/console.h>
@@ -26,7 +25,7 @@
 static void load_kernel(struct elf_header* header);
 void init_LM(struct multiboot_info * mb_info)
 {
-	struct multiboot_module* modules = mb_info->mbs_mods_addr;
+	struct multiboot_module* modules = (void*)mb_info->mbs_mods_addr;
 	
 	clrscr(VGA_BLACK,VGA_WHITE);
 	/*
@@ -35,7 +34,7 @@ void init_LM(struct multiboot_info * mb_info)
 	init_gdt();
 	load_kernel((struct elf_header*)(modules[0].mod_start));
 	init_easymap();
-	
+	//while(1);
 	asm volatile
 	(
 		/*
@@ -91,7 +90,9 @@ void init_LM(struct multiboot_info * mb_info)
 		"mov $0xC0000080, %ecx ;"
 		"rdmsr ;"
 		"or $0x00000100, %eax ;"
-		"wrmsr ;"
+		"wrmsr ;");
+	asm volatile("mov %%eax, %%edi" : : "a" (mb_info));
+	asm volatile(
 		/*
 		 * now we are going to enable Paging(from now on we are in Long mode)
 		 */
@@ -101,7 +102,7 @@ void init_LM(struct multiboot_info * mb_info)
 		/* 
 		 * But we need to jump inside a Long mode code segment to start executing AMD64 code
 		 */
-		"ljmp $0x8, $0x30000;"
+		"ljmp $0x8, $0x60000;"
 /* 
  * we only come here if we are running on a i386 like architecture
  */
@@ -124,6 +125,7 @@ void load_kernel(struct elf_header* header)
 		{
 			continue;
 		}
+		//kprintf("memsize: 0x%x",ph->mem_size);
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);
 	}
