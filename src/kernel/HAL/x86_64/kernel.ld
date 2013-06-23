@@ -1,7 +1,7 @@
 ENTRY(init)
 SECTIONS
 {
-    KERNEL_VMA = 0x60000;
+    KERNEL_VMA = 0x120000;
     kernel_start = KERNEL_VMA;
     . = KERNEL_VMA;
 

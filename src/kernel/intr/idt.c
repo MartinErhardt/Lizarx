@@ -29,15 +29,24 @@
 
 struct idt_entry idt[IDT_SIZE];
 
+#define AMD64_BIT_WITH_GDT 0x8
+
 static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
     int flags)
 {
-    unsigned long int handler = (unsigned long int) fn;
-    idt[i].isr_offset = handler & 0xffffLL;
-    idt[i].selector = selector & 0xffffLL;
-    idt[i].ignore = 0x00;
-    idt[i].flags = flags & 0xffLL;
-    idt[i].isr_offset2 = (handler>> 16) & 0xffffLL;
+	uintptr_t handler = (uintptr_t) fn;
+	idt[i].isr_offset = handler & 0xffffLL;
+	idt[i].selector = selector & 0xffffLL;
+#ifdef ARCH_X86
+	idt[i].ist = 0x00;
+	idt[i].isr_offset2 = (handler>> 16) & 0xffffLL;
+#endif
+#ifdef ARCH_X86_64
+	idt[i].ist = i;
+	idt[i].isr_offset2 = (handler>> 16) & 0xffffffffffffLL;
+	flags |= AMD64_BIT_WITH_GDT;
+#endif
+	idt[i].flags = flags & 0xffLL;
 }
 void init_idt(void)
 {
@@ -94,10 +103,10 @@ void init_idt(void)
     // Syscall
     idt_set_entry(48, intr_stub_48, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING3 | IDT_FLAG_PRESENT);
     asm volatile("lidt %0" : : "m" (idtp));
-    kprintf("[INIT] IDT setup... SUCCESS\n");
+    kprintf("[IDT] init_idt ... SUCCESS\n");
 }
 void enable_intr()
 {
     ENABLE_INTR
-    kprintf("[INIT] Interrrupts enabled\n");
+    kprintf("[IDT] enable_intr ... SUCCESS\n");
 };

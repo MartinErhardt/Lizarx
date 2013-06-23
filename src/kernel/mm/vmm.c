@@ -63,16 +63,15 @@ static void vmm_unmap(vmm_context*context,uintptr_t virt);
 
 vmm_context vmm_init(void)
 {
-	kprintf("[VMM] I: VMM setup...");
+	kprintf("[VMM] I: vmm_init ...");
 	/* Speicherkontext anlegen */
 	startup_context = vmm_crcontext();
-	kprintf("context at 0x%x",startup_context.highest_paging);
-
+	
 	SET_CONTEXT((uintptr_t)startup_context.highest_paging)
-
-	//kprintf("print at 0x%p",&kprintf);
+	
+	//kprin	while(1);tf("print at 0x%p",&kprintf);
 	ENABLE_PAGING
-
+	
 	paging_activated=TRUE;
 	kprintf("SUCCESS\n");
 	

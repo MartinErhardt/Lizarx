@@ -24,11 +24,10 @@
 #include <drv/vga-txt_graphics/vram.h>
 #include <boot/init.h>
 /*
- * Der Einfachheit halber deklarieren wir die maximal benoetige Bitmapgroesse
- * statisch (Wir brauchen 4 GB / 4 kB = 1M Bits; 1M Bits sind 1M/32 = 32k
- * Eintraege fuer das Array)
- *
- * Willkuerliche Festlegung: 1 = Speicher frei, 0 = Speicher belegt
+ * So far we implement the PMM as a flat Bitmap where each bit indicates one Page's status.
+ * 0 = free space
+ * 1 = used
+ * PAGE_SIZE =0x1000(on AMD64 and i386 at least
  */
 
 #define WORDWITH 32
@@ -42,26 +41,28 @@ extern const void kernel_end;
 
 void pmm_init(struct multiboot_info * mb_info)
 {
+	
 	struct multiboot_mmap* mmap = (void *)((uintptr_t)(mb_info->mbs_mmap_addr));
 	struct multiboot_mmap* mmap_end = (void*)
 	    ((uintptr_t) (mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length));
-	/* Per Default ist erst einmal alles reserviert */
-	memset(physbitmap, 0x00000000, sizeof(physbitmap));
-	
-	kprintf("[PMM] I: PMM setup ... ");
+	/* by default everything is reserved */
+	memset(&physbitmap, 0x00000000, sizeof(physbitmap));
+	kprintf("[PMM] I: pmm_init ... ");
 	
 	/*
-	* Nur, was die BIOS-Memory-Map als frei bezeichnet, wird wieder als frei
-	* markiert
+	* Here we look in the memory map for free space
 	*/
 	while (mmap < mmap_end) 
 	{
 		if (mmap->type == 1)
 		{
-			/* Der Speicherbereich ist frei, entsprechend markieren */
+			/* 
+			 * We and the addresses with 0xffffffff to prevent a buffer overflow
+			 * FIXME our Bitmap only covers a 32 bit address space
+			 */
 			
-			uintptr_t addr = mmap->base;
-			uintptr_t end_addr = addr + mmap->length;
+			uintptr_t addr = ((uintptr_t)mmap->base)&0xffffffff;
+			uintptr_t end_addr = addr + (((uintptr_t)mmap->length)&0xffffffff);
 			
 			while (addr < end_addr) 
 			{
@@ -71,21 +72,21 @@ void pmm_init(struct multiboot_info * mb_info)
 		}
 		mmap++;
 	}
-	/* Den Kernel wieder als belegt kennzeichnen */
+	/* 
+	 * here we mark the kernel as used
+	 */
 	uintptr_t addr = (uintptr_t) &kernel_start;
-
+	
 	while (addr < (uintptr_t) &kernel_end) 
 	{
 		//kprintf("x%x",addr/PAGE_SIZE);
 		pmm_mark_used(addr/PAGE_SIZE);
 		addr += 0x1000;
 	}
-	    /*
-	* Die Multibootstruktur auch, genauso wie die Liste von Multibootmodulen.
-	* Wir gehen bei beiden davon aus, dass sie maximal 4k gross werden
+	/*
+	* the multiboot structures and the mb_info shouldn't be overwritten either. their maximum allowed size is one Page
 	*/
 	//struct multiboot_module* modules = (void *)((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
-
 	pmm_mark_used((uintptr_t)(mb_info)/PAGE_SIZE);
 	pmm_mark_used((uintptr_t)(modules_glob)/PAGE_SIZE);
 	/* Und die Multibootmodule selber sind auch belegt */
@@ -105,12 +106,8 @@ void pmm_init(struct multiboot_info * mb_info)
 	memset(0x00000000,0x00000000,PAGE_SIZE);
 	pmm_mark_used(0x1);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	pmm_mark_used(0xb8);//mark video ram as used
-	pmm_mark_used(0x104);// FIXME !!! ACTUALLY I DON'T KNOW WHY I NEED THIS !!!
-	//kprintf("count 0x%x",mb_info->mbs_mods_count);
-	/*
-	for(i=0;i<4096;i++){
-	    kprintf("%x",pmm_is_alloced(i+50000));
-	}*/
+	pmm_mark_used(0x104);// FIXME !!! ACTUALLY I DON'T KNOW WHY I NEED THIS FOR AMD64!!! I suppose that's our Stack which is still the MB Loader
+	pmm_mark_used(0x105);// FIXME !!! ACTUALLY I DON'T KNOW WHY I NEED THIS FOR AMD64!!! I suppose that's our Stack which is still the MB Loader
 	kprintf("SUCCESS\n");
 }
 

@@ -27,6 +27,10 @@
 #include<mt/threads.h>
 CPU_STATE* handle_syscall(CPU_STATE* cpu)
 {
+#ifdef ARCH_X86_64
+	kprintf("handle syscall");
+	return cpu;
+#endif
 	char* copybuf_ptr;
 	uint8_t font;
 	size_t bm_size;

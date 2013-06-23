@@ -47,22 +47,24 @@ void init(struct multiboot_info * mb_info)
 	modules_glob=modules;
 	
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
-	
-	memset(0x0,0x0,4);
+#ifdef ARCH_X86
 	clrscr(VGA_BLACK,VGA_WHITE);
-	kprintfcol_scr(VGA_RED,VGA_WHITE,"[INIT] I: init started\n");
+	init_gdt();
+#else
+	setcurs(23,1);
+	kprintf("... SUCCESS\n");
+#endif
+	
+	kprintf("[INIT] I: init started\n");
 	pmm_init(mb_info);
 	vmm_init();
-
-#ifdef ARCH_X86_64
-	while(1);
-#endif
 	vheap_init();
-#ifdef ARCH_X86
-	init_gdt();
+	
 	init_idt();
-/*#else
-	#error lizarx build: No valid arch found in src/kernel/boot/init.c*/
+#ifdef ARCH_X86_64
+	enable_intr();
+	asm volatile("int $0x30;");
+	while(1);
 #endif
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)

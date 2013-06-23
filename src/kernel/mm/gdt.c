@@ -29,7 +29,8 @@
  */
 struct gdt_entry gdtable[GDT_SIZE];//gdt entries
 
-void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags){ // fill in entry i in gdtable
+void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags) // fill in an entry in the gdttable
+{
 	gdtable[i].limit=limit& 0xffffLL;//
 	gdtable[i].base=base & 0xffffffLL;
 	gdtable[i].accessbyte=accessbyte & 0xffLL;
@@ -39,45 +40,43 @@ void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned
 };
 void init_gdt(void)
 {
-
-    struct {
-        uint16_t limit;
-        void* pointer;
-    } __attribute__((packed)) gdtp = {
-        .limit = GDT_SIZE * 8 - 1,
-        .pointer = gdtable,
-    };
-    unsigned int tssloc[32] = { 0, 0, 0x10 };
-    kprintf("[GDT_INIT] I: GDT setup...");
-    memmove(&tss,&tssloc,sizeof(tssloc));
-    // We are going to fill in the structs in gdtable
-    gdt_set_entry(0, 0, 0, 0,0);
-    gdt_set_entry(1, 0xffffffff,0, GDT_ACCESS_SEGMENT |
-        GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT);
-    gdt_set_entry(2, 0xffffffff,0, GDT_ACCESS_SEGMENT |
-        GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(3, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
-        GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(4, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
-        GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-    gdt_set_entry(5,sizeof(tss),(unsigned int) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
-    // reload GDT
-    asm volatile("lgdt %0" : : "m" (gdtp));
-
+	struct {
+	    uint16_t limit;
+	    void* pointer;
+	} __attribute__((packed)) gdtp = {
+	    .limit = GDT_SIZE * 8 - 1,
+	    .pointer = gdtable,
+	};
+	unsigned int tssloc[32] = { 0, 0, 0x10 };
+	kprintf("[GDT] I: init_gdt...");
+	memmove(&tss,&tssloc,sizeof(tssloc));
+	// We are going to fill in the structs in gdtable
+	gdt_set_entry(0, 0, 0, 0,0);
+	gdt_set_entry(1, 0xffffffff,0, GDT_ACCESS_SEGMENT |
+	    GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT);
+	gdt_set_entry(2, 0xffffffff,0, GDT_ACCESS_SEGMENT |
+	    GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
+	gdt_set_entry(3, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
+	    GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
+	gdt_set_entry(4, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
+	    GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
+	gdt_set_entry(5,sizeof(tss),(unsigned int) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
+	// reload GDT
+	asm volatile("lgdt %0" : : "m" (gdtp));
 #ifdef ARCH_X86
-    // reload the gdt segmentregisters, so that they are really used
-    asm volatile(
-        "mov $0x10, %ax;"
-        "mov %ax, %ds;"
-        "mov %ax, %es;"
-        "mov %ax, %ss;"
-        "ljmp $0x8, $.1;"
-        ".1:"
-    );
-    asm volatile("ltr %%ax" : : "a" (5 << 3));
+	// reload the gdt segmentregisters, so that they are really used
+	asm volatile(
+		"mov $0x10, %ax;"
+		"mov %ax, %ds;"
+		"mov %ax, %es;"
+		"mov %ax, %ss;"
+		"ljmp $0x8, $.1;"
+		".1:"
+	);
+	asm volatile("ltr %%ax" : : "a" (5 << 3));
 #endif
-    kprintf("SUCCESS\n");
-   //while(1);
-    // Taskregister neu laden
+	kprintf("SUCCESS\n");
+      //while(1);
+	// Taskregister neu laden
 
 }

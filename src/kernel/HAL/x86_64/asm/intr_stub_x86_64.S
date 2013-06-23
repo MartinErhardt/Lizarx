@@ -73,73 +73,78 @@
 .macro INTR_STUB_ERROR nr
 .global intr_stub_\nr
 intr_stub_\nr:
+
     push $\nr
     SAVE_CPU
     // call handler
-    mov %rsp, %rax
+    mov %rsp, %rdi
     call handle_exception
-    add $4, %esp
+    add $8, %esp
     RESTORE_CPU
 
     // Fehlercode und Interruptnummer vom Stack nehmen
-    add $8, %esp
+    add $0x10, %rsp
 
-    iret
+    iretq
 .endm
 
 .macro INTR_STUB_EXCEPTION nr
 .global intr_stub_\nr
 intr_stub_\nr:
+
     push $0
     push $\nr
     SAVE_CPU
     // call handler
-    mov %rsp, %rax
+    mov %rsp, %rdi
     call handle_exception
     add %rax, %rsp
     RESTORE_CPU
 
     // Fehlercode und Interruptnummer vom Stack nehmen
-    add $8, %rsp
+    add $0x10, %rsp
 
-    iret
+    iretq
 .endm
 
 .macro INTR_STUB_IRQ nr
 .global intr_stub_\nr
 intr_stub_\nr:
+
     push $0
     push $\nr
     SAVE_CPU
+    //
     // call handler
-    mov %rsp, %rax
+    mov %rsp, %rdi
     call handle_irq
     mov %rax, %rsp
+
     RESTORE_CPU
 
     // Fehlercode und Interruptnummer vom Stack nehmen
-    add $8, %rsp
-
-    iret
+    add $0x10, %rsp
+    iretq
 .endm
 
 
 .macro INTR_STUB_SYSCALL nr
 .global intr_stub_\nr
 intr_stub_\nr:
+
     push $0
     push $\nr
     SAVE_CPU
     // call handler
-    mov %rsp, %rax
+    mov %rsp, %rdi
     call handle_syscall
     mov %rax, %rsp
     RESTORE_CPU
 
     // Fehlercode und Interruptnummer vom Stack nehmen
-    add $8, %rsp
+    add $0x10, %rsp
 
-    iret
+    iretq
 .endm
 
 // Exceptions

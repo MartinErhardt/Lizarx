@@ -23,17 +23,41 @@
 #include<boot/init.h>
 #include<stdlib.h>
 
-void handle_exception(CPU_STATE* cpu){
+void handle_exception(CPU_STATE* cpu)
+{
 	kprintf("err");
 	//redscreen(cpu);
 	while(1) 
 	{
 	   // Prozessor anhalten
-	   asm volatile("cli; hlt");
+	   //asm volatile("cli; hlt");
 	}
 }
-void redscreen(CPU_STATE* cpu){
+void redscreen(CPU_STATE* cpu)
+{
 	clrscr(VGA_BLACK, VGA_RED);
+#ifdef ARCH_X86_64
+	kprintfcol_scr(VGA_RED,VGA_BLACK,"A CRITICAL ERROR HAS OCURRED:\n"\
+	    "Error: %d \n"\
+	    "RAX: 0x%x \tRBX: 0x%x \tRCX: 0x%x\tRDX: 0x%x\n"\
+	    "RSI: 0x%x \tRDI: 0x%x\n"\
+	    "RSP: 0x%x \tRBP 0x%x\n"\
+	    "RIP: 0x%x \n"\
+	    "RFLAGS:0x%x\n"\
+	    "R8: 0x%x  \tR9: 0x%x  \tR10 0x%x \tR11 0x%x\n"
+	    "R12 0x%x  \tR13 0x%x  \tR14 0x%x \tR15\n"
+	    "CS: 0x%x  \tSS: 0x%x\n", 
+	    cpu->intr,
+	    cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx,
+	    cpu->rsi, cpu->rdi,
+	    cpu->rsp, cpu->rbp,
+	    cpu->rip,
+	    cpu->rflags, 
+	    cpu->r8, cpu->r9, cpu->r10, cpu->r11, 
+	    cpu->r12, cpu->r13, cpu->r14, cpu->r15,
+	    cpu->cs, cpu->ss
+	  );
+#endif
 #ifdef ARCH_X86
 	kprintfcol_scr(VGA_RED,VGA_BLACK,"A CRITICAL ERROR HAS OCURRED:\n"\
 	    "Error: %d \n"\

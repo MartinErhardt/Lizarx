@@ -36,10 +36,12 @@ struct idt_entry
 {
     unsigned short isr_offset;
     unsigned short selector;
-    unsigned char ignore;
+    unsigned char ist;
     unsigned char flags;
-    unsigned short isr_offset2;
+    unsigned long long isr_offset2 :48;
+    unsigned int reserved;
 }__attribute__((packed));
+
 //-----------------------------------------------------------------Paging-structures---------------------------------------------------------------
 struct vmm_pagemap_level4
 {

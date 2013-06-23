@@ -32,9 +32,10 @@ void init_LM(struct multiboot_info * mb_info)
 	 * Prepare some stuff for later (load kernel ELF setup GDT and Paging structures )
 	 */
 	init_gdt();
+	kprintf("[LM_loader] I: init_LM ...");
 	load_kernel((struct elf_header*)(modules[0].mod_start));
 	init_easymap();
-	//while(1);
+	
 	asm volatile
 	(
 		/*
@@ -57,8 +58,7 @@ void init_LM(struct multiboot_info * mb_info)
 		 * Load 64 bit segment registers
 		 */
 		"mov $0x10, %ax;"
-		"mov %ax, %ds;"
-		"mov %ax, %es;"
+		"mov %ax, %ss;"
 		"mov %ax, %fs;"
 		"mov %ax, %gs;"
 		/*
@@ -102,13 +102,13 @@ void init_LM(struct multiboot_info * mb_info)
 		/* 
 		 * But we need to jump inside a Long mode code segment to start executing AMD64 code
 		 */
-		"ljmp $0x8, $0x60000;"
+		"ljmp $0x8, $0x120000;"
 /* 
  * we only come here if we are running on a i386 like architecture
  */
 		//"LM_nosupport:"
 	);
-	kprintf( "[LM_LOADER] init_LM: longmode not supported ... FAIL\n" );
+	kprintf( "ERROR\n [LM_LOADER] init_LM: longmode not supported ... FAIL\n" );
 	
 }
 void load_kernel(struct elf_header* header)
@@ -125,7 +125,6 @@ void load_kernel(struct elf_header* header)
 		{
 			continue;
 		}
-		//kprintf("memsize: 0x%x",ph->mem_size);
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);
 	}

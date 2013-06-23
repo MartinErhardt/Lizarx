@@ -24,16 +24,20 @@
 static struct heap_block* first=NULL;
 static void vheap_enlarge(size_t size);
 
-struct heap_block{
+struct heap_block
+{
      struct heap_block* next;
      uint8_t free;
      size_t size;
 };
-void vheap_init(){
+void vheap_init()
+{
+    kprintf("[VHEAP] I: vheap_init ... ");
     first= (struct heap_block*)kvmm_malloc(PAGE_SIZE);
     first->size=PAGE_SIZE;
     first->next=NULL;
     first->free=TRUE;
+    kprintf("SUCCESS\n");
 }
 void* kmalloc(size_t size){
     struct heap_block* cur =first ;
@@ -41,7 +45,8 @@ void* kmalloc(size_t size){
     {
 	vheap_enlarge(size);
     }
-    while(cur!=NULL){
+    while(cur!=NULL)
+    {
 	if((cur->size-sizeof(struct heap_block)>=size)&&(cur->free)){
 		
 		if(cur->size-size>sizeof(struct heap_block))
@@ -71,38 +76,41 @@ void* kmalloc(size_t size){
     }
     return NULL;
 }
-void* kcalloc(size_t size){
-    void* returnval = kmalloc(size);
-    memset(returnval,0x00000000,size);
-    return returnval;
+void* kcalloc(size_t size)
+{
+	void* returnval = kmalloc(size);
+	memset(returnval,0x00000000,size);
+	return returnval;
 }
-void kfree(void*ptr){
-    struct heap_block* cur =first ;
-    while(cur!=NULL){
-	if(((uintptr_t)cur+sizeof(struct heap_block)==(uintptr_t)ptr)&&(!cur->free))
+void kfree(void*ptr)
+{
+	struct heap_block* cur =first;
+	while(cur!=NULL)
 	{
-		cur->free=1;
-		return;
+		if(((uintptr_t)cur+sizeof(struct heap_block)==(uintptr_t)ptr)&&(!cur->free))
+		{
+			cur->free=1;
+			return;
+		}
+		else
+		{
+			cur=cur->next;
+		}
 	}
-	else
-	{
-		cur=cur->next;
-	}
-    }
-    
-    return;
+	
+	return;
 }
-void* krealloc(){
+void* krealloc()
+{
     return NULL;
 }
 static void vheap_enlarge(size_t size){
-    
-    struct heap_block *new_heap_sp=(struct heap_block *)kvmm_malloc(size);
-
-    new_heap_sp->next=first;
-    new_heap_sp->free=1;
-    new_heap_sp->size=size-sizeof(struct heap_block *);
-        
-    first=new_heap_sp;
-    
+	
+	struct heap_block *new_heap_sp=(struct heap_block *)kvmm_malloc(size);
+	
+	new_heap_sp->next=first;
+	new_heap_sp->free=1;
+	new_heap_sp->size=size-sizeof(struct heap_block *);
+	    
+	first=new_heap_sp;
 }

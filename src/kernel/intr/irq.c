@@ -24,6 +24,11 @@
 
 CPU_STATE* handle_irq(CPU_STATE* cpu)
 {
+#ifdef ARCH_X86_64
+	kprintf("IRQ");
+	return cpu;
+#endif
+	
 	CPU_STATE* new_cpu = cpu;
 	if (cpu->INFO_INTR >= 0x28) 
 	{
@@ -32,11 +37,15 @@ CPU_STATE* handle_irq(CPU_STATE* cpu)
 	}
 	else if(cpu->INFO_INTR==0x21)
 	{
+#ifdef ARCH_X86
 		kbc_handler(0x21);
+#endif
 	}
 	else if (cpu->INFO_INTR == 0x20) 
 	{
+#ifdef ARCH_X86
 		new_cpu = timer_handler(cpu);
+#endif
 	}
 	// EOI an Master-PIC
 	OUTB(0x20, 0x20)

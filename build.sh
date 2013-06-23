@@ -76,5 +76,5 @@ mv ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
 mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
 
-genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx86.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx86.iso -d int  -enable-kvm -d int
+genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH.iso bin
+/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH.iso -d int  -no-kvm -d int
