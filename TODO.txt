@@ -1,5 +1,0 @@
-1. selfmade(and working) KBC Driver
-2. HAL
-3. kernel mods
-4. VFS
-5. IPC over pipes and VFS

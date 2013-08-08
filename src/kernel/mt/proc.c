@@ -20,6 +20,7 @@
 #include<mm/vheap.h>
 #include<mt/user.h>
 #include<mt/threads.h>
+#include<dbg/console.h>
 
 static int32_t num_proc=0;
 
@@ -28,7 +29,6 @@ struct proc* create_proc()
 	vmm_context *new_con = kmalloc(sizeof(vmm_context));
 	struct proc* new_proc= kmalloc(sizeof(struct proc));
 	struct user* new_user= kmalloc(sizeof(struct user));
-	
 	num_proc++;
 	*new_con =vmm_crcontext();
 	new_user->u_id=0;
@@ -37,7 +37,7 @@ struct proc* create_proc()
 	new_proc->user=new_user;
 	new_proc->p_id=num_proc;
 	new_proc->next=first_proc;
-	new_proc->clock=0x0;
+	//new_proc->clock=0x0;
 	first_proc = new_proc;
 	
 	return new_proc;

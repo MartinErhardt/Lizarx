@@ -20,6 +20,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <hal.h>
+#include <mm/gdt.h>
+
 /*
 #ifndef GDT_FLAG_32_BIT
 	#define GDT_FLAG_32_BIT 0x2
@@ -27,8 +29,12 @@
 /*
  * INFO: In this File macros from HAL/x86/macros.h and hw_structs from HAL/x86/hw_structs.h are used
  */
+#ifdef ARCH_X86
 struct gdt_entry gdtable[GDT_SIZE];//gdt entries
-
+#endif
+#ifdef ARCH_X86_64
+struct gdt_entry * gdtable=(struct gdt_entry *)0x114000;
+#endif
 void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags) // fill in an entry in the gdttable
 {
 	gdtable[i].limit=limit& 0xffffLL;//
@@ -44,12 +50,17 @@ void init_gdt(void)
 	    uint16_t limit;
 	    void* pointer;
 	} __attribute__((packed)) gdtp = {
-	    .limit = GDT_SIZE * 8 - 1,
+#ifdef ARCH_X86
+		.limit = GDT_SIZE * sizeof(struct gdt_entry) - 1,
+#endif
+#ifdef ARCH_X86_64
+		.limit = ( (GDT_SIZE-1) * sizeof(struct gdt_entry) ) + sizeof( struct gdt_tss_entry ) - 1,
+#endif
 	    .pointer = gdtable,
 	};
-	unsigned int tssloc[32] = { 0, 0, 0x10 };
+	
 	kprintf("[GDT] I: init_gdt...");
-	memmove(&tss,&tssloc,sizeof(tssloc));
+	memset(&tss,0x00000000, sizeof(struct tss_t));
 	// We are going to fill in the structs in gdtable
 	gdt_set_entry(0, 0, 0, 0,0);
 	gdt_set_entry(1, 0xffffffff,0, GDT_ACCESS_SEGMENT |
@@ -60,10 +71,11 @@ void init_gdt(void)
 	    GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
 	gdt_set_entry(4, 0xffffffff,0,  GDT_ACCESS_SEGMENT |
 	    GDT_ACCESS_DATASEG | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,GDT_FLAG_32_BIT |GDT_FLAG_4KUNIT);
-	gdt_set_entry(5,sizeof(tss),(unsigned int) tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
+	gdt_set_entry(5,sizeof(tss),(uintptr_t) &tss,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
 	// reload GDT
 	asm volatile("lgdt %0" : : "m" (gdtp));
 #ifdef ARCH_X86
+	tss.ss0=0x10;
 	// reload the gdt segmentregisters, so that they are really used
 	asm volatile(
 		"mov $0x10, %ax;"
@@ -78,5 +90,17 @@ void init_gdt(void)
 	kprintf("SUCCESS\n");
       //while(1);
 	// Taskregister neu laden
-
 }
+#ifdef ARCH_X86_64
+void setup_tss()
+{
+	struct gdt_tss_entry * tss_desc = (struct gdt_tss_entry *)&gdtable[5];
+	tss_desc->limit=sizeof(struct gdt_tss_entry) & 0xffffLL;
+	tss_desc->base=(uintptr_t) &tss & 0xffffffLL;
+	tss_desc->accessbyte=(GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3) & 0xffLL;
+	tss_desc->limit2=(sizeof(struct gdt_tss_entry)>>16) & 0xfLL;
+	tss_desc->flags=GDT_FLAG_32_BIT & 0xfLL;
+	tss_desc->base2=(((uintptr_t) &tss)>>24) & 0xffffffffffLL;
+	asm volatile("ltr %%ax" : : "a" (0x2b));
+}
+#endif

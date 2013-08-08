@@ -20,12 +20,10 @@
 #include<mt/threads.h>
 #include<hal.h>
 #include<dbg/console.h>
+#include<mm/vmm.h>
 
-CPU_STATE* schedule(CPU_STATE*cpu)
+cpu_state* schedule(cpu_state*cpu)
 {
-	
-	CPU_STATE* state = dispatch_thread(cpu);
-	tss[1] = (uintptr_t) (cpu + 1);
-
-	return state;
+	cpu = dispatch_thread(cpu);
+	return cpu;
 }

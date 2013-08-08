@@ -17,19 +17,16 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <dbg/console.h>
-#include<hal.h>
+#include <hal.h>
 #include <drv/keyboard/keyboard.h>
 #include <drv/timer/timer.h>
 #include <intr/irq.h>
+#include <mt/threads.h>
+#include <mm/gdt.h>
 
-CPU_STATE* handle_irq(CPU_STATE* cpu)
+cpu_state* handle_irq(cpu_state* cpu)
 {
-#ifdef ARCH_X86_64
-	kprintf("IRQ");
-	return cpu;
-#endif
-	
-	CPU_STATE* new_cpu = cpu;
+#ifdef ARCH_X86
 	if (cpu->INFO_INTR >= 0x28) 
 	{
 		// EOI an Slave-PIC
@@ -37,17 +34,14 @@ CPU_STATE* handle_irq(CPU_STATE* cpu)
 	}
 	else if(cpu->INFO_INTR==0x21)
 	{
-#ifdef ARCH_X86
 		kbc_handler(0x21);
-#endif
 	}
-	else if (cpu->INFO_INTR == 0x20) 
-	{
-#ifdef ARCH_X86
-		new_cpu = timer_handler(cpu);
 #endif
+	if (cpu->INFO_INTR == 0x20) 
+	{
+		cpu = timer_handler(cpu);
 	}
 	// EOI an Master-PIC
 	OUTB(0x20, 0x20)
-	return new_cpu;
+	return cpu;
 }

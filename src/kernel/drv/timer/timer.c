@@ -20,12 +20,13 @@
 #include<drv/timer/timer.h>
 #include<mt/sched.h>
 #include<stdint.h>
-#include <dbg/console.h>
+#include<dbg/console.h>
+#include<mt/threads.h>
 
 uint32_t time_intrs=0;
-CPU_STATE* timer_handler(CPU_STATE* new_cpu)
+cpu_state* timer_handler(cpu_state* new_cpu)
 {
 	time_intrs++;
-	CPU_STATE* state = schedule(new_cpu);
+	cpu_state* state = schedule(new_cpu);
 	return state;
 }

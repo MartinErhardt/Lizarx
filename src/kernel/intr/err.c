@@ -23,7 +23,7 @@
 #include<boot/init.h>
 #include<stdlib.h>
 
-void handle_exception(CPU_STATE* cpu)
+void handle_exception(cpu_state* cpu)
 {
 	kprintf("err");
 	//redscreen(cpu);
@@ -33,7 +33,7 @@ void handle_exception(CPU_STATE* cpu)
 	   //asm volatile("cli; hlt");
 	}
 }
-void redscreen(CPU_STATE* cpu)
+void redscreen(cpu_state* cpu)
 {
 	clrscr(VGA_BLACK, VGA_RED);
 #ifdef ARCH_X86_64
@@ -47,7 +47,7 @@ void redscreen(CPU_STATE* cpu)
 	    "R8: 0x%x  \tR9: 0x%x  \tR10 0x%x \tR11 0x%x\n"
 	    "R12 0x%x  \tR13 0x%x  \tR14 0x%x \tR15\n"
 	    "CS: 0x%x  \tSS: 0x%x\n", 
-	    cpu->intr,
+	    cpu->error,
 	    cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx,
 	    cpu->rsi, cpu->rdi,
 	    cpu->rsp, cpu->rbp,

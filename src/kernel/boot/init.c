@@ -61,11 +61,7 @@ void init(struct multiboot_info * mb_info)
 	vheap_init();
 	
 	init_idt();
-#ifdef ARCH_X86_64
-	enable_intr();
-	asm volatile("int $0x30;");
-	while(1);
-#endif
+	
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
 	{
@@ -75,17 +71,21 @@ void init(struct multiboot_info * mb_info)
 	{
 		for(i=2;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
 		{
-			if(init_elf((void*) (uintptr_t)modules[i].mod_start)==0)
-			{
-			}
-			else
+			if(init_elf((void*) (uintptr_t)modules[i].mod_start))
 			{
 				kprintf("FAILED with mod: %d",i);
 			}
 		}
 	}
-	
 	kprintf(" SUCCESS\n");
+#ifdef ARCH_X86_64
+	
+	tss.rsp0=((uintptr_t)kvmm_malloc(0x1000))+0xff0;
+	
+	setup_tss();
+	enable_intr();
+	while(1){}
+#endif
 	//that's for testing purposes
 	//time_is = get_time();
 	enable_intr();

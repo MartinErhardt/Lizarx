@@ -35,7 +35,7 @@ typedef enum {
 
 extern void intr_stub_48(void);
 
-CPU_STATE* handle_syscall(CPU_STATE* cpu);
+cpu_state* handle_syscall(cpu_state* cpu);
 /*
 void do_err();
 void do_err2();

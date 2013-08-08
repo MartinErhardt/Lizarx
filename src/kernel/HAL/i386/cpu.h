@@ -20,7 +20,6 @@
 
 #include<stdint.h>
 
-#define CPU_STATE 	x86_cpu_state
 #define REG_FUNCRET 	eax
 #define REG_IP 		eip
 #define REG_DATA0 	edx
@@ -49,23 +48,22 @@ typedef struct {
     uint32_t   eflags;
     uint32_t   esp;
     uint32_t   ss;
-} x86_cpu_state;
+} cpu_state;
+#define INIT_STATE(STATE)		STATE->eax=0x0; \
+					STATE->ebx=0x0; \
+					STATE->ecx=0x0; \
+					STATE->edx=0x0; \
+					STATE->esi=0x0; \
+					STATE->edi=0x0; \
+					STATE->ebp=0x0; \
+					STATE->intr=0x0; \
+					STATE->error=0x0; \
+					STATE->eip=0x0; \
+					STATE->cs=0x18 | 0x03; \
+					STATE->ss=0x23; \
+					STATE->esp=0x0; \
+					STATE->eflags=0x202; 
 
-#define NEW_STATE     CPU_STATE new_state = {\
-        .eax = 0,\
-        .ebx = 0,\
-        .ecx = 0,\
-        .edx = 0,\
-        .esi = 0,\
-        .edi = 0,\
-        .ebp = 0,\
-        .esp = 0,\
-        .eip = 0,\
-        .cs  = 0,\
-        .ss  = 0,\
-        .eflags = 0,\
-    };
-    
 #define SET_IRQ(FLAGS) FLAGS=0x202;
          /* Ring-0-Segmentregister nicht mehr benutzt*/
         //.cs  = 0x08,

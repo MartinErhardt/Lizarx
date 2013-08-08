@@ -85,11 +85,8 @@ vmm_context vmm_crcontext()
 	.highest_paging=kvmm_malloc(PAGE_SIZE*PAGING_HIER_SIZE),
 	.mm_tree=kvmm_malloc(PAGE_SIZE),
 	};
-
-	//kprintf("phys at 0x%x/n",virt_to_phys(&startup_context,(uintptr_t)new_context.pd));
 	memset((void*)new_context.highest_paging,0x00000000,PAGE_SIZE*2);// clear the PgDIR to avoid invalid values
 	memset((void*)new_context.mm_tree,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
-
 	vmm_map_kernel(&new_context);
 	return new_context;
 }
@@ -134,7 +131,6 @@ void* kvmm_malloc(size_t size)
 }
 void* uvmm_malloc(vmm_context* context,size_t size)
 {
-	
 	int i;
 	if((size%PAGE_SIZE)==0)
 	{
@@ -183,7 +179,7 @@ mark:
 				i++;
 				goto mark;
 			} 
-			else if(j==size-1)
+			if(j==size-1)
 			{
 				virt = i*PAGE_SIZE;//kprintf("mem %x %x",
 				//virt,(uintptr_t)context);
@@ -456,7 +452,7 @@ static int_t vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_
 			pagedir_ptrtbl = (struct vmm_pagedir_ptrtbl*)(pmm_malloc(1)*PAGE_SIZE);// alloc physical memory
 		}
 		
-		context->highest_paging[map_lvl4_index].rw_flags=flgs;
+		context->highest_paging[map_lvl4_index].rw_flags=flgs | FLG_USERACCESS;
 		context->highest_paging[map_lvl4_index].reserved=0x0;
 		context->highest_paging[map_lvl4_index].pagedirptrtbl_ptr =((uintptr_t)pagedir_ptrtbl)/PAGE_SIZE;
 		
@@ -525,7 +521,7 @@ static int_t vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_
 			pagedir = (struct vmm_pagedir*)(pmm_malloc(1)*PAGE_SIZE);// alloc physical memory
 		}
 		
-		pagedir_ptrtbl[pd_ptr_index].rw_flags=flgs;
+		pagedir_ptrtbl[pd_ptr_index].rw_flags=flgs | FLG_USERACCESS;
 		pagedir_ptrtbl[pd_ptr_index].reserved=0x0;
 		pagedir_ptrtbl[pd_ptr_index].pagedir_ptr =((uintptr_t)pagedir)/PAGE_SIZE;
 		
@@ -593,7 +589,7 @@ static int_t vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_
 			page_table = (struct vmm_pagetbl*)(pmm_malloc(1)*PAGE_SIZE);// alloc physical memory
 		}
 		
-		pagedir[pd_index].rw_flags=flgs;
+		pagedir[pd_index].rw_flags=flgs | FLG_USERACCESS;
 		pagedir[pd_index].reserved=0x0;
 		pagedir[pd_index].pagetbl_ptr =((uintptr_t)page_table)/PAGE_SIZE;
 		
@@ -805,6 +801,25 @@ uintptr_t virt_to_phys(vmm_context* context,uintptr_t virt)
 	return phys;
 #endif
 #ifdef ARCH_X86_64
-	return virt;
+	uint_t page =virt/PAGE_SIZE;
+	uint_t pt_index = page  % 512;
+	uint_t pd_index = (page%(512*512))/512;
+	uint_t pd_ptr_index = (page%(512*512*512))/(512*512);
+	uint_t map_lvl4_index = page/(512*512*512);
+	vmm_context* curcontext = get_cur_context();
+	struct vmm_pagedir_ptrtbl *pagedir_ptrtbl = (struct vmm_pagedir_ptrtbl *) ((uintptr_t)(context->highest_paging[map_lvl4_index].pagedirptrtbl_ptr)*PAGE_SIZE);
+	vmm_map(curcontext, (uintptr_t)pagedir_ptrtbl,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
+	pagedir_ptrtbl = (struct vmm_pagedir_ptrtbl *)TMP_PAGEBUF;
+	struct vmm_pagedir *pagedir = (struct vmm_pagedir *) ((uintptr_t)(pagedir_ptrtbl[pd_ptr_index].pagedir_ptr)*PAGE_SIZE);
+	
+	vmm_map(curcontext, (uintptr_t)pagedir,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
+	pagedir = (struct vmm_pagedir *)TMP_PAGEBUF;
+	struct vmm_pagetbl *pagetbl = (struct vmm_pagetbl *) ((uintptr_t)(pagedir[pd_index].pagetbl_ptr)*PAGE_SIZE);
+	
+	vmm_map(curcontext, (uintptr_t)pagetbl,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
+	pagetbl = (struct vmm_pagetbl *)TMP_PAGEBUF;
+	uintptr_t phys = pagetbl[pt_index].page_ptr*PAGE_SIZE;
+	
+	return phys;
 #endif
 }

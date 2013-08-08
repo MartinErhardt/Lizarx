@@ -1,0 +1,8 @@
+1. complete X86 Port(Multitasking and ring 3; shared libs)
+2. hardware detection using _MP_ and _SM_ structures
+3. APIC
+4. SMP
+5. VFS in C++
+6. tmpFS (should be a shared library of the VFS)
+7. unix like shell in C++ with OO semantics
+8. don't know yet :D

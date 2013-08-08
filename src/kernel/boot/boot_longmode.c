@@ -21,7 +21,7 @@
 #include <boot/easy_map.h>
 #include <mt/elf.h>
 #include <string.h>
-
+extern const void kernel_stack;
 static void load_kernel(struct elf_header* header);
 void init_LM(struct multiboot_info * mb_info)
 {
@@ -35,7 +35,10 @@ void init_LM(struct multiboot_info * mb_info)
 	kprintf("[LM_loader] I: init_LM ...");
 	load_kernel((struct elf_header*)(modules[0].mod_start));
 	init_easymap();
-	
+	uint32_t esp;
+	asm volatile("mov %esp , %eax;");
+	asm volatile("nop":"=a"(esp));
+	kprintf("                              esp 0x%x  ",esp);
 	asm volatile
 	(
 		/*

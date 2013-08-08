@@ -35,25 +35,25 @@ struct gdt_entry
 //------------------------------------------------------------------IDT-structs--------------------------------------------------------------------
 struct idt_entry
 {
-    uint16_t isr_offset;
-    uint16_t selector;
-    uint8_t ist;
-    uint8_t flags;
-    uint16_t isr_offset2;
+	uint16_t isr_offset;
+	uint16_t selector;
+	uint8_t ist;
+	uint8_t flags;
+	uint16_t isr_offset2;
 }__attribute__((packed));
 //-----------------------------------------------------------------Paging-structures---------------------------------------------------------------
 struct vmm_pagedir
 {
-    uint8_t rw_flags; 
-    uint8_t reserved :4;
-    uintptr_t pagetbl_ptr :20;
+	uint8_t rw_flags; 
+	uint8_t reserved :4;
+	uintptr_t pagetbl_ptr :20;
 }__attribute__((packed));
 
 struct vmm_pagetbl
 {
-    uint8_t rw_flags; 
-    uint8_t reserved :4;
-    uintptr_t page_ptr :20;
+	uint8_t rw_flags; 
+	uint8_t reserved :4;
+	uintptr_t page_ptr :20;
 }__attribute__((packed));
 
 struct stack_frame
@@ -61,5 +61,46 @@ struct stack_frame
         struct stack_frame * base_ptr;
         uintptr_t return_addr;
 }__attribute__((packed));
-
+struct tss_t
+{
+	uint16_t link;
+	uint16_t reserved0;
+	uint32_t esp0;
+	uint16_t ss0;
+	// Everything below is useless!
+	uint16_t reserved1;
+	uint32_t esp1;
+	uint16_t ss1;
+	uint16_t reserved2;
+	uint32_t esp2;
+	uint16_t ss2;
+	uint16_t reserved3;
+	uint32_t cr3;
+	uint32_t eip;
+	uint32_t eflags;
+	uint32_t eax;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t ebx;
+	uint32_t esp;
+	uint32_t ebp;
+	uint32_t esi;
+	uint32_t edi;
+	uint16_t es;
+	uint16_t reserved4;
+	uint16_t cs;
+	uint16_t reserved5;
+	uint16_t ss;
+	uint16_t reserved6;
+	uint16_t ds;
+	uint16_t reserved7;
+	uint16_t fs;
+	uint16_t reserved8;
+	uint16_t gs;
+	uint16_t reserved9;
+	uint16_t LDT_desc;
+	uint16_t reserved10;
+	uint16_t trap_bitnreserved;
+	uint16_t IO_Map_addr;
+}__attribute__((packed));
 #endif

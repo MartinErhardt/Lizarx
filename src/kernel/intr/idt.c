@@ -42,7 +42,7 @@ static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
 	idt[i].isr_offset2 = (handler>> 16) & 0xffffLL;
 #endif
 #ifdef ARCH_X86_64
-	idt[i].ist = i;
+	idt[i].ist = 0x00;
 	idt[i].isr_offset2 = (handler>> 16) & 0xffffffffffffLL;
 	flags |= AMD64_BIT_WITH_GDT;
 #endif

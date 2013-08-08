@@ -20,6 +20,7 @@
 #include<dbg/console.h>
 #include<stdint.h>
 #include<stdbool.h>
+#include<dbg/console.h>
 
 static struct heap_block* first=NULL;
 static void vheap_enlarge(size_t size);
@@ -39,7 +40,8 @@ void vheap_init()
     first->free=TRUE;
     kprintf("SUCCESS\n");
 }
-void* kmalloc(size_t size){
+void* kmalloc(size_t size)
+{
     struct heap_block* cur =first ;
     if(size>=PAGE_SIZE)
     {
@@ -47,11 +49,11 @@ void* kmalloc(size_t size){
     }
     while(cur!=NULL)
     {
-	if((cur->size-sizeof(struct heap_block)>=size)&&(cur->free)){
-		
+	if((cur->size-sizeof(struct heap_block)>=size)&&(cur->free))
+	{
 		if(cur->size-size>sizeof(struct heap_block))
 		{
-			struct heap_block *free=(struct heap_block *)((uintptr_t)(cur)+cur->size-(size+sizeof(struct heap_block)));
+			struct heap_block *free=(struct heap_block *)(((uintptr_t)cur)+cur->size-(size+sizeof(struct heap_block)));
 			
 			free->free=0;
 			free->next=first;
@@ -60,13 +62,12 @@ void* kmalloc(size_t size){
 			first=free;
 			
 			cur->size-=(size+sizeof(struct heap_block));
-			
-			return (void*)((uintptr_t)(free)+sizeof(struct heap_block));
+			return (void*)(((uintptr_t)free)+sizeof(struct heap_block));
 		}
 		else
 		{
 			cur->free=0;
-			return (void*)((uintptr_t)cur + sizeof(struct heap_block));
+			return (void*)(((uintptr_t)cur) + sizeof(struct heap_block));
 		}
 	}
 	else

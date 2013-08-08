@@ -22,6 +22,7 @@
 #include<stdlib.h>
 #include<mm/vmm.h>
 #include<dbg/console.h>
+#include<mm/gdt.h>
 
 static uint32_t num_threads = 0;
 
@@ -30,9 +31,8 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	struct proc* in_proc=get_proc(p_id);
 	struct thread* new_t=(struct thread*)malloc(sizeof(struct thread));
 	
-	CPU_STATE* new_st_=(CPU_STATE*)malloc(sizeof(CPU_STATE));
+	cpu_state* new_state=(cpu_state*)malloc(0xb0);
 	uint8_t* user_stack 	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
-
 	if(in_proc==NULL)
 	{
 	    kprintf("couldn't get pid");
@@ -40,121 +40,107 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	}
 	num_threads++;
 	
-	NEW_STATE
-	*new_st_=new_state;
-	new_st_->REG_IP = (uintptr_t) entry;
-#ifdef ARCH_X86
-	new_st_->cs = 0x18 | 0x03;
-	new_st_->ss = 0x23;
-	SET_IRQ(new_st_->REG_FLAGS)
-/*#else
-	#error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
-#endif
+	INIT_STATE(new_state);
+	new_state->REG_IP = (uintptr_t) entry;
+	new_state->REG_STACKPTR= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
+	
 	new_t->t_id=num_threads;
-	new_t->state = new_st_;
+	new_t->state = new_state;
 	new_t->user_stack 	= user_stack;
 	new_t->proc=in_proc;
-	new_t->state->REG_STACKPTR= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
 	new_t->next=first_thread;
 	first_thread = new_t;
 	return 0;
 }
-CPU_STATE* dispatch_thread(CPU_STATE* cpu){
-   
-    vmm_context* curcontext=NULL;
-    uintptr_t next_context= 0x0;
-    /*
-     * Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
-     * gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
-     * wir spaeter nicht wieder.
-     */
-    /*
-     * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
-     */
-    if (current_thread == NULL) 
-    {
+cpu_state* dispatch_thread(cpu_state* cpu)
+{
+	vmm_context* curcontext=NULL;
+	uintptr_t next_context= 0x0;
 
-	curcontext= &startup_context;
-	next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
-	//kprintf("next_contexta 0x%x",next_context);
-        current_thread = first_thread;
-
-    } 
-    else 
-    {
-	curcontext= current_thread->proc->context;
-	//kprintf("ss=0x%x cs=0x%x eflags=0x%x",cpu->ss,cpu->cs,cpu->REG_FLAGS);
-	*current_thread->state = *cpu;
-	
-#ifdef ARCH_X86
-	current_thread->state->ss = 0x23;
-/*#else
-	#error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
-#endif
-	
-	if(current_thread->next != NULL)
+	/*
+	* Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
+	* gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
+	* wir spaeter nicht wieder.
+	*/
+	/*
+	* Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
+	*/
+	if (current_thread == NULL) 
 	{
-		next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->highest_paging);
-		//kprintf("next_contextc 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
-		current_thread = current_thread->next;
+		curcontext= &startup_context;
+		
+		next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
+		//kprintf("next_contexta 0x%x",next_context);
+		current_thread = first_thread;
 	}
 	else 
 	{
-	    next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
-	    //kprintf("next_contextaa 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
-            current_thread = first_thread;
-        }
-    }
-
-    /* Prozessorzustand des neuen Tasks aktivieren */
-    cpu = current_thread->state;
-    
-
-    //kprintf("cur=0x%x ",(uintptr_t)current_thread->state->ss);
-    /*
-    if(!next_context) {
-	kprintf("next context at 0x%x",(uintptr_t)first_thread->proc->context);
-	while(1){}
-    }*/
-    
-    if(current_thread->proc->context!=curcontext)
-    {
+		curcontext= current_thread->proc->context;
+		//kprintf("ss=0x%x cs=0x%x eflags=0x%x",cpu->ss,cpu->cs,cpu->REG_FLAGS);
+		
+		*current_thread->state = *cpu;
+		
+		if(current_thread->next != NULL)
+		{
+			next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->highest_paging);
+			//kprintf("next_contextc 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
+			current_thread = current_thread->next;
+		}
+		else 
+		{
+			next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
+			//kprintf("next_contextaa 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
+			current_thread = first_thread;
+		}
+	}
+#ifdef ARCH_X86
+	current_thread->state->ss = 0x23;
+	tss.esp0 = ((uintptr_t) cpu)+sizeof(cpu_state);
+#endif
+	/* Prozessorzustand des neuen Tasks aktivieren */
+	cpu = current_thread->state;
+	//cpu->rsp= current_thread->state->rsp;
+	cur_proc=current_thread->proc;
 	
-	SET_CONTEXT(next_context);
-    }
-
-    return cpu;
+	if(current_thread->proc->context!=curcontext)
+	{
+		SET_CONTEXT(next_context);
+	}
+	return cpu;
 }
-int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu)
+int32_t switchto_thread(uint32_t t_id,cpu_state* cpu)
 {
 
-    struct thread*prev=current_thread;
-    struct thread*switch_to=get_thread(t_id);
-    vmm_context* curcontext=get_cur_context();
-    
-    if(switch_to==NULL)
-    {
-	return -1;
-    }
-    /*
-     * Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
-     * gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
-     * wir spaeter nicht wieder.
-     */
-    /*
-     * Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
-     */
-    current_thread->state = cpu;
-    current_thread = switch_to;
-    
-    /* Prozessorzustand des neuen Tasks aktivieren */
-    cpu = current_thread->state;
-    
-    if(current_thread->proc!=prev->proc)
-    {
-	SET_CONTEXT(virt_to_phys(curcontext,(uintptr_t)current_thread->proc->context));
-    }
-    return 0;
+	struct thread*prev=current_thread;
+	struct thread*switch_to=get_thread(t_id);
+	vmm_context* curcontext=get_cur_context();
+	
+	if(switch_to==NULL)
+	{
+	    return -1;
+	}
+	/*
+	* Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
+	* gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
+	* wir spaeter nicht wieder.
+	*/
+	/*
+	* Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
+	*/
+	current_thread->state = cpu;
+	current_thread = switch_to;
+	
+	/* Prozessorzustand des neuen Tasks aktivieren */
+	cpu = current_thread->state;
+#ifdef ARCH_X86
+	current_thread->state->ss = 0x23;
+	tss.esp0 = ((uintptr_t) cpu)+sizeof(cpu_state);
+#endif
+	if(current_thread->proc!=prev->proc)
+	{
+	    SET_CONTEXT(virt_to_phys(curcontext,(uintptr_t)current_thread->proc->context));
+	}
+	return 0;
 }
 struct thread* get_thread(uint32_t t_id)
 {

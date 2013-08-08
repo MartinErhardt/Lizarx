@@ -38,12 +38,12 @@
 
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
-#define IDT_SIZE 256
+#define IDT_SIZE		256
 #define GDT_KERNEL_CODE_SEGMENT 0x8
 #define IDT_FLAG_INTERRUPT_GATE 0xe
-#define IDT_FLAG_PRESENT 0x80
-#define IDT_FLAG_RING0 0x00
-#define IDT_FLAG_RING3 0x60
+#define IDT_FLAG_PRESENT	0x80
+#define IDT_FLAG_RING0		0x00
+#define IDT_FLAG_RING3		0x60
 //-------------------------------------------------------------------------Paging------------------------------------------------------------------
 
 /*

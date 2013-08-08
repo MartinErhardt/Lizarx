@@ -29,17 +29,17 @@ struct thread* first_thread;
 struct thread* current_thread;
 
 struct thread {
-    CPU_STATE *		state;
-    uint32_t 		t_id;
-    uint8_t* 		user_stack;
-    struct proc*		proc;
-    struct thread*	next;
+	cpu_state *	state;
+	uint32_t	t_id;
+	uint8_t*	user_stack;
+	struct proc*	proc;
+	struct thread*	next;
 };
 
 int32_t create_thread(void* entry,uint32_t p_id);
 
-CPU_STATE* dispatch_thread(CPU_STATE* cpu);
-int32_t switchto_thread(uint32_t t_id,CPU_STATE* cpu);
+cpu_state* dispatch_thread(cpu_state* cpu);
+int32_t switchto_thread(uint32_t t_id,cpu_state* cpu);
 struct thread* get_thread(uint32_t t_id);
 
 #endif

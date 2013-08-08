@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/lib/stdbool.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/usr/ld.a/lib/st_stdarg.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,8 +15,13 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef STDBOOL_H
-#define STDBOOL_H
-// bool enum
-typedef enum { FALSE, TRUE } bool;
+#ifndef _STDARG_H
+#define _STDARG_H
+
+typedef __builtin_va_list       va_list;
+#define va_start(ap, X)         __builtin_va_start(ap, X)
+#define va_arg(ap, type)        __builtin_va_arg(ap, type)
+#define va_end(ap)              __builtin_va_end(ap)
+
+
 #endif

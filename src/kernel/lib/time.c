@@ -30,7 +30,7 @@ clock_t clock (void)
 {
 	if(current_thread!=NULL)
 	{
-		return current_thread->proc->clock;
+		return -1;
 	}
 	else
 	{

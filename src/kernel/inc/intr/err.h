@@ -41,7 +41,7 @@ extern void intr_stub_18(void);
 
 extern void * kernel_elf;
 
-void handle_exception(CPU_STATE* cpu);
-void redscreen(CPU_STATE* cpu);
+void handle_exception(cpu_state* cpu);
+void redscreen(cpu_state* cpu);
 
 #endif

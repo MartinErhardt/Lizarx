@@ -21,7 +21,6 @@
 
 #include<stdint.h>
 
-#define CPU_STATE 	x86_64_cpu_state
 #define REG_FUNCRET 	rax
 #define REG_IP 		rip
 #define REG_DATA0 	rdx
@@ -59,32 +58,31 @@ typedef struct {
     uint64_t   rflags;
     uint64_t   rsp;
     uint64_t   ss;
-} x86_64_cpu_state;
+} cpu_state;
 
-#define NEW_STATE     CPU_STATE new_state = {\
-        .rax = 0,\
-        .rbx = 0,\
-        .rcx = 0,\
-        .rdx = 0,\
-        .rsi = 0,\
-        .rdi = 0,\
-        .rbp = 0,\
-        .rsp = 0,\
-        .rip = 0,\
-        .r8=0,\
-        .r9=0,\
-        .r10=0,\
-        .r11=0,\
-        .r12=0,\
-        .r13=0,\
-        .r14=0,\
-        .r15=0,\
-        .cs  = 0,\
-        .ss  = 0,\
-        .rflags = 0,\
-    };
-    
-#define SET_IRQ(FLAGS) FLAGS=0x202;
+#define INIT_STATE(STATE)		STATE->rax=0x0; \
+					STATE->rbx=0x0; \
+					STATE->rcx=0x0; \
+					STATE->rdx=0x0; \
+					STATE->rsi=0x0; \
+					STATE->rdi=0x0; \
+					STATE->rbp=0x0; \
+					STATE->r8=0; \
+					STATE->r9=0; \
+					STATE->r10=0; \
+					STATE->r11=0; \
+					STATE->r12=0; \
+					STATE->r13=0; \
+					STATE->r14=0; \
+					STATE->r15=0; \
+					STATE->intr=0x0; \
+					STATE->error=0x0; \
+					STATE->rip=0x0; \
+					STATE->cs=0x18 | 0x03; \
+					STATE->ss=0x23; \
+					STATE->rsp=0x0; \
+					STATE->rflags=0x202; 
+#define SET_IRQ(FLAGS) FLAGS=0x200;
          /* Ring-0-Segmentregister nicht mehr benutzt*/
         //.cs  = 0x08,
 	/* Ring-3-Segmentregister */   

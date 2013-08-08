@@ -4,11 +4,7 @@ echo "It's required ro run in the root folder of the project"
 rm lizarx86.iso
 TOOLCHAIN_DIR=host
 CLONE_TOOLCHAIN="FALSE"
-ARCH="i386"
-
-F_ARCH_X86_64="--arch-x86_64"
-F_NO_TOOLCHAIN="--no-toolchain"
-F_ARCH="i386"
+export ARCH="i386"
 export PROJ_ROOT=$(pwd)
 if [ ! -d $TOOLCHAIN_DIR/buildtools ]
 then
@@ -18,10 +14,9 @@ if [ "$2"=="--no-toolchain" ]
 then
 	echo "1 argument given"
 fi
-if [ "$1" == $F_ARCH_X86_64 ] || [ "$2" == $F_ARCH_X86_64 ]
+if [ "$1" == "--arch-x86_64" ] || [ "$2" == "--arch-x86_64" ]
 then
-	ARCH="x86_64"
-	F_ARCH=$F_ARCH_X86_64
+	R_ARCH="x86_64"
 	cp src/kernel/HAL/x86_64/Makefile src/kernel/Makefile
 	cp src/kernel/HAL/x86_64/kernel.ld src/kernel/kernel.ld
 	cp src/kernel/HAL/x86_64/loader.ld src/kernel/loader.ld
@@ -32,7 +27,7 @@ else
 	cp src/kernel/HAL/i386/archdef.h src/kernel/HAL/archdef.h
 fi
 
-if [ "$1" != $F_NO_TOOLCHAIN ] && [ "$2" != $F_NO_TOOLCHAIN ]
+if [ "$1" != "--no-toolchain" ] && [ "$2" != "--no-toolchain" ]
 then
 	
 	cd $TOOLCHAIN_DIR
@@ -40,13 +35,21 @@ then
 	then
 		git clone https://github.com/MartinErhardt/buildtools.git
 	fi
+	export TARGET=i386-pc-lizarx
 	cd buildtools
-	./build.sh
-	if [ $F_ARCH == $F_ARCH_X86_64 ]
+	#./build.sh
+	if [ "$R_ARCH" == "x86_64" ]
 	then
-		./build.sh $F_ARCH
+		export ARCH=$R_ARCH
+		export TARGET=x86_64-pc-lizarx
+		./build.sh
 	fi
 	cd ../..
+fi
+if [ "$R_ARCH" == "x86_64" ]
+then
+	export ARCH=$R_ARCH
+	export TARGET=x86_64-pc-lizarx
 fi
 export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-gcc
 export PATH=$PATH:$COMPILER_PATH
@@ -78,3 +81,5 @@ mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
 
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH.iso bin
 /usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH.iso -d int  -no-kvm -d int
+date | cat >> ./doc/lines_of_code.txt
+(cloc . --exclude-dir=host/buildtools --exclude-list-file=doc/exclude_cloc.txt | cat >> ./doc/lines_of_code.txt)&exit

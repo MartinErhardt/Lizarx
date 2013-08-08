@@ -7,7 +7,7 @@ clean:
 	rm  $(OBJS_OPTI) $(OBJS_UNOPTI) $(OBJS_LOADER)
 
 ASFLAGS =  -nostdinc -ffreestanding -I HAL
-CFLAGS = -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I HAL -fno-tree-loop-distribute-patterns 
+CFLAGS = -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I HAL
 C64FLAGS = -mno-red-zone  -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow
 SRCS_OPTI = boot/init.c \
 	mm/pmm.c\
@@ -23,6 +23,7 @@ SRCS_OPTI = boot/init.c \
 	intr/syscall.c \
 	intr/err.c \
 	intr/idt.c \
+	mm/gdt.c \
 	dbg/stack_trace.c \
 	dbg/console.c \
 	drv/timer/timer.c \

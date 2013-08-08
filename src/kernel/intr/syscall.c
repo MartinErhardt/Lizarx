@@ -25,7 +25,7 @@
 #include<string.h>
 #include<boot/init.h>
 #include<mt/threads.h>
-CPU_STATE* handle_syscall(CPU_STATE* cpu)
+cpu_state* handle_syscall(cpu_state* cpu)
 {
 #ifdef ARCH_X86_64
 	kprintf("handle syscall");

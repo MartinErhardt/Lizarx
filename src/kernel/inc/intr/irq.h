@@ -22,5 +22,5 @@
 extern void intr_stub_32(void);
 extern void intr_stub_33(void);
 
-CPU_STATE* handle_irq(CPU_STATE* cpu);
+cpu_state* handle_irq(cpu_state* cpu);
 #endif

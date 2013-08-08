@@ -46,8 +46,12 @@
 0	 0x1	 Available Bit
 */
 #define GDT_FLAG_4KUNIT      0x08
-uint32_t tss[32];
+struct tss_t tss;
 
 void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags);
 void init_gdt(void);
+#ifdef ARCH_X86_64
+void setup_tss();
+#endif
+
 #endif

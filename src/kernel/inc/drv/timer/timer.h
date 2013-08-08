@@ -25,6 +25,6 @@
 
 
 //extern uint32_t time;
-CPU_STATE* timer_handler(CPU_STATE* new_cpu);
+cpu_state* timer_handler(cpu_state* new_cpu);
 
 #endif
