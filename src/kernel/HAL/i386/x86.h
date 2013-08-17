@@ -24,5 +24,6 @@
 #include "cpu.h"
 #include "cmos.h"
 #include "types.h"
+#include "smp_capabilities.h"
 
 #endif

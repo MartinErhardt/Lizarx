@@ -80,6 +80,6 @@ mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
 
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH.iso -d int  -no-kvm -d int
+/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH.iso -d int  -no-kvm -d int -smp 2 -cpu SandyBridge
 date | cat >> ./doc/lines_of_code.txt
 (cloc . --exclude-dir=host/buildtools --exclude-list-file=doc/exclude_cloc.txt | cat >> ./doc/lines_of_code.txt)&exit

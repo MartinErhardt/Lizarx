@@ -45,7 +45,7 @@ void init(struct multiboot_info * mb_info)
 	//struct tm* time_is=NULL;
 	struct multiboot_module* modules = (struct multiboot_module*) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob=modules;
-	
+
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
 #ifdef ARCH_X86
 	clrscr(VGA_BLACK,VGA_WHITE);
@@ -54,8 +54,12 @@ void init(struct multiboot_info * mb_info)
 	setcurs(23,1);
 	kprintf("... SUCCESS\n");
 #endif
-	
 	kprintf("[INIT] I: init started\n");
+	
+	mp_init();
+	cpu_caps();
+	
+	
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
@@ -83,10 +87,9 @@ void init(struct multiboot_info * mb_info)
 	tss.rsp0=((uintptr_t)kvmm_malloc(0x1000))+0xff0;
 	
 	setup_tss();
-	enable_intr();
-	while(1){}
 #endif
 	//that's for testing purposes
 	//time_is = get_time();
 	enable_intr();
+	while(1);
 }

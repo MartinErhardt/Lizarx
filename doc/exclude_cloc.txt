@@ -1,0 +1,2 @@
+doc/lines_of_code.txt
+.gitignore

@@ -106,8 +106,8 @@ void pmm_init(struct multiboot_info * mb_info)
 	memset(0x00000000,0x00000000,PAGE_SIZE);
 	pmm_mark_used(0x1);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	pmm_mark_used(0xb8);//mark video ram as used
-	pmm_mark_used(0x104);// FIXME !!! ACTUALLY I DON'T KNOW WHY I NEED THIS FOR AMD64!!! I suppose that's our Stack which is still the MB Loader
-	pmm_mark_used(0x105);// FIXME !!! ACTUALLY I DON'T KNOW WHY I NEED THIS FOR AMD64!!! I suppose that's our Stack which is still the MB Loader
+	pmm_mark_used(0x104);// FIXME !!! I suppose that's our Stack which is still the MB Loader
+	pmm_mark_used(0x105);// FIXME !!! I suppose that's our Stack which is still the MB Loader
 	kprintf("SUCCESS\n");
 }
 

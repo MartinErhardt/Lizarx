@@ -29,7 +29,7 @@ SRCS_OPTI = boot/init.c \
 	drv/timer/timer.c \
 	drv/hwtime/hwtime.c \
 	drv/keyboard/sc2kc.c \
-	drv/keyboard/keyboard.c
+	drv/keyboard/keyboard.c 
 SRCS_UNOPTI = lib/stdlib.c \
 	lib/string.c \
 	drv/vga-txt_graphics/vram.c

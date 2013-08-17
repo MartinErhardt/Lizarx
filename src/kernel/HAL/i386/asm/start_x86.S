@@ -44,9 +44,7 @@ _start:
     push %ebx
     call init
 
-    // Falls wir jemals aus init zurueckkommen sollten, gehen wir in eine
-    // Endlosschleife
-    jmp .
+    // We will never return
 // 8 kB Stack fuer den Kernel. Das Label steht hinter dem freien Speicher,
 // weil der Stack nach unten waechst
 .section .bss

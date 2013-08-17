@@ -27,49 +27,46 @@
 #include<mt/threads.h>
 cpu_state* handle_syscall(cpu_state* cpu)
 {
-#ifdef ARCH_X86_64
-	kprintf("handle syscall");
-	return cpu;
-#endif
 	char* copybuf_ptr;
 	uint8_t font;
 	size_t bm_size;
 	vmm_context* curcontext;
-	switch(cpu->REG_FUNCRET){
-	    case(SYS_DRAW):
-	        
-		copybuf_ptr =(void*)cpu->REG_DATA1;
-		font = (uint8_t)cpu->REG_DATA0;
-		kprintfcol_scr((font>>4),font,copybuf_ptr);
-		
-		break;
-	    case(SYS_INFO): break;
-	    case(SYS_GETTID):break;
-	    case(SYS_KILLTID):break;
-	    case(SYS_FORKTID):break;
-	    case(SYS_GETPID):break;
-	    case(SYS_KILLPID):break;
-	    case(SYS_FORKPID):break;
-	    case(SYS_ERROR):break;
-	    case(SYS_GET_BOOTMOD):
-		bm_size= modules_glob[cpu->REG_DATA0].mod_end-modules_glob[cpu->REG_DATA0].mod_start;
-		cpu->REG_DATA0=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
-		cpu->REG_DATA2=bm_size;
-		break;
-	    case(SYS_VMM_MALLOC):
-		curcontext=NULL;
-		if(current_thread==NULL)
-		{
-			curcontext= &startup_context;
-		}
-		else
-		{
-			curcontext= current_thread->proc->context;
-		}
-		cpu->REG_DATA0=(uintptr_t)uvmm_malloc(curcontext,cpu->REG_DATA0);
-		
-		break;
-	    default:break;
+	switch(cpu->REG_FUNCRET)
+	{
+		case(SYS_DRAW):
+			
+			copybuf_ptr =(void*)cpu->REG_DATA1;
+			font = (uint8_t)cpu->REG_DATA0;
+			kprintfcol_scr((font>>4),font,copybuf_ptr);
+			
+			break;
+		case(SYS_INFO): break;
+		case(SYS_GETTID):break;
+		case(SYS_KILLTID):break;
+		case(SYS_FORKTID):break;
+		case(SYS_GETPID):break;
+		case(SYS_KILLPID):break;
+		case(SYS_FORKPID):break;
+		case(SYS_ERROR):break;
+		case(SYS_GET_BOOTMOD):
+			bm_size= modules_glob[cpu->REG_DATA0].mod_end-modules_glob[cpu->REG_DATA0].mod_start;
+			cpu->REG_DATA0=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
+			cpu->REG_DATA2=bm_size;
+			break;
+		case(SYS_VMM_MALLOC):
+			curcontext=NULL;
+			if(current_thread==NULL)
+			{
+				curcontext= &startup_context;
+			}
+			else
+			{
+				curcontext= current_thread->proc->context;
+			}
+			cpu->REG_DATA0=(uintptr_t)uvmm_malloc(curcontext,cpu->REG_DATA0);
+			
+			break;
+		default:break;
 	}
 	return cpu;
 }
