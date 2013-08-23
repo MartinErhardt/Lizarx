@@ -54,8 +54,6 @@ bool paging_activated=FALSE;
 //--------------------------------------------------------static-function-declarations--------------------------------------------------------------
 
 static void vmm_map_kernel(vmm_context* context);
-static int_t vmm_map_inallcon(uintptr_t phys, uintptr_t virt,uint8_t flgs);
-static void vmm_mark_used_inallcon(uint_t page);
 static void vmm_mark_used(vmm_context*first,uint_t page);
 static void vmm_mark_free(vmm_context* context,uint_t page);
 static int_t vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt ,uint8_t flgs);
@@ -705,7 +703,7 @@ static void vmm_mark_free(vmm_context* context,uint_t page)
 	}*/
 	nodes->nodepkgentr[(node_ind+inner_nodepkgoff)/32]&= ~(1<<((node_ind+inner_nodepkgoff)%32));
 }
-static void vmm_mark_used_inallcon(uint_t page)
+void vmm_mark_used_inallcon(uint_t page)
 {
 	struct proc* cur =first_proc;
 	

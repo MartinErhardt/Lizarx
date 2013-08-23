@@ -10,7 +10,6 @@ ASFLAGS =  -nostdinc -ffreestanding -I HAL
 CFLAGS = -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I HAL
 C64FLAGS = -mno-red-zone  -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow
 SRCS_OPTI = boot/init.c \
-	mm/pmm.c\
 	mm/vmm.c \
 	mm/vheap.c \
 	mt/elf.c \
@@ -29,10 +28,13 @@ SRCS_OPTI = boot/init.c \
 	drv/timer/timer.c \
 	drv/hwtime/hwtime.c \
 	drv/keyboard/sc2kc.c \
-	drv/keyboard/keyboard.c 
+	drv/keyboard/keyboard.c \
+	HAL/x86_64/asm/trampoline.S \
+	intr/local_apic.c 
 SRCS_UNOPTI = lib/stdlib.c \
 	lib/string.c \
-	drv/vga-txt_graphics/vram.c
+	drv/vga-txt_graphics/vram.c \
+	mm/pmm.c
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
 OBJS_UNOPTI = $(addsuffix .o,$(basename $(SRCS_UNOPTI)))
 

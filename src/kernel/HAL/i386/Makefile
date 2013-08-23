@@ -1,5 +1,4 @@
-SRCS_OPTI = mm/pmm.c\
-	mm/vmm.c \
+SRCS_OPTI = mm/vmm.c \
 	mm/vheap.c \
 	mm/gdt.c \
 	mt/elf.c \
@@ -13,14 +12,16 @@ SRCS_OPTI = mm/pmm.c\
 	intr/syscall.c \
 	intr/err.c \
 	intr/idt.c \
-	boot/init.c \
 	dbg/stack_trace.c \
 	dbg/console.c \
 	drv/timer/timer.c \
 	drv/hwtime/hwtime.c \
 	drv/keyboard/sc2kc.c \
-	drv/keyboard/keyboard.c
-SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c
+	drv/keyboard/keyboard.c \
+	intr/local_apic.c \
+	boot/init.c \
+	HAL/i386/asm/trampoline.S
+SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c mm/pmm.c
 
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
 OBJS_UNOPTI = $(addsuffix .o,$(basename $(SRCS_UNOPTI)))

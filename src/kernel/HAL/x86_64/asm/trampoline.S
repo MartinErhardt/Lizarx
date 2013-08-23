@@ -1,4 +1,4 @@
- /*   <src-path>/src/kernel/inc/intr/idt.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86_64/asm/trampoline.S is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,15 +15,8 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INTR_H
-#define INTR_H
-#include<stdint.h>
-#include <stdbool.h>
 
-void init_idt(void);
-void enable_intr();
-
-extern void intr_stub_30(void);
-extern void intr_stub_31(void);
-
-#endif
+.global trampoline_entry_func
+trampoline_entry_func:
+	cli
+	jmp .

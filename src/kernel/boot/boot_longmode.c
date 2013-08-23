@@ -94,7 +94,7 @@ void init_LM(struct multiboot_info * mb_info)
 		"rdmsr ;"
 		"or $0x00000100, %eax ;"
 		"wrmsr ;");
-	asm volatile("mov %%eax, %%edi" : : "a" (mb_info));
+	asm volatile("mov %%eax, %%edi" : : "a" ((uint32_t)mb_info));
 	asm volatile(
 		/*
 		 * now we are going to enable Paging(from now on we are in Long mode)

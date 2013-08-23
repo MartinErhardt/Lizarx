@@ -26,17 +26,6 @@
 */
 #define GDT_FLAG_32_BIT  0x4
 
-//--------------------------------------------------------------------------PIC--------------------------------------------------------------------
-#define MASTER_PIC_COMMAND 0x20
-#define MASTER_PiC_DATA 0x21
-#define SLAVE_PIC_COMMAND 0xa0
-#define SLAVE_PiC_DATA 0xa1
-
-#define PIC_INIT 0x11
-#define ICW_4 0x01
-
-#define IRQ_BASE 0x20
-
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
 #define IDT_SIZE 256

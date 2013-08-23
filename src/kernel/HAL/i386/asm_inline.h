@@ -34,6 +34,25 @@
 				asm volatile("mov %0, %%cr0" : : "r" (cr0));
 #define SET_CONTEXT(PAGEDIR)	asm volatile("mov %0, %%cr3" : : "r" (PAGEDIR));
 
+#define READ_MSR(MSR, LO, HI)	asm volatile("rdmsr": "=a"(LO), "=d"(HI) : "c"(MSR));
+#define WRITE_MSR(MSR, LO, HI)	asm volatile("wrmsr" :: "a"(LO), "d"(HI), "c" (MSR));
+
 #define LAST_ADDR 0xffffffff
 
+static inline uint64_t rdmsr(uint32_t msr)
+{
+    uint32_t low, high;
+ 
+    READ_MSR(msr, low, high)
+ 
+    return ((uint64_t)high << 32) | low;
+}
+ 
+static inline void wrmsr(uint32_t msr,uint64_t value)
+{
+    uint32_t low = value & 0xFFFFFFFF;
+    uint32_t high = value >> 32;
+ 
+    WRITE_MSR(msr, low, high)
+}
 #endif

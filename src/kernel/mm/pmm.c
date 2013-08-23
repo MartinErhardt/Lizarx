@@ -23,6 +23,7 @@
 #include <dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
 #include <boot/init.h>
+#include <hal.h>
 /*
  * So far we implement the PMM as a flat Bitmap where each bit indicates one Page's status.
  * 0 = free space
@@ -31,6 +32,7 @@
  */
 
 #define WORDWITH 32
+#define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
 static uint32_t physbitmap[BITMAP_SIZE];
 
@@ -60,14 +62,12 @@ void pmm_init(struct multiboot_info * mb_info)
 			 * We and the addresses with 0xffffffff to prevent a buffer overflow
 			 * FIXME our Bitmap only covers a 32 bit address space
 			 */
-			
-			uintptr_t addr = ((uintptr_t)mmap->base)&0xffffffff;
-			uintptr_t end_addr = addr + (((uintptr_t)mmap->length)&0xffffffff);
-			
-			while (addr < end_addr) 
+			uint64_t addr = mmap->base;
+			uint64_t end_addr = addr + mmap->length;
+			while ((addr/PAGE_SIZE < end_addr/PAGE_SIZE)&&(addr<0x100000000)) 
 			{
-				pmm_free(addr/PAGE_SIZE);
-				addr += 0x1000;
+				pmm_free(((uint32_t)addr)/PAGE_SIZE);
+				addr += PAGE_SIZE;
 			}
 		}
 		mmap++;
@@ -105,7 +105,6 @@ void pmm_init(struct multiboot_info * mb_info)
 	pmm_mark_used(0x0);//0x0000000 is reserved for NULL pointers
 	memset(0x00000000,0x00000000,PAGE_SIZE);
 	pmm_mark_used(0x1);//0x1000 is reserved,because that's,where we tmp map our pagetables to
-	pmm_mark_used(0xb8);//mark video ram as used
 	pmm_mark_used(0x104);// FIXME !!! I suppose that's our Stack which is still the MB Loader
 	pmm_mark_used(0x105);// FIXME !!! I suppose that's our Stack which is still the MB Loader
 	kprintf("SUCCESS\n");

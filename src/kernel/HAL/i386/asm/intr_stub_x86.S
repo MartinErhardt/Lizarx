@@ -152,3 +152,13 @@ INTR_STUB_IRQ 33
 
 // Syscall
 INTR_STUB_SYSCALL 48
+
+// APIC Error Interrupt
+.global intr_stub_30
+intr_stub_30:
+	iret
+
+// APIC Spurious Interrupt
+.global intr_stub_31
+intr_stub_31:
+	iret

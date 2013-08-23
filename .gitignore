@@ -22,6 +22,7 @@ bin/boot/grub/menu.lst
 src/kernel/HAL/archdef.h
 src/kernel/loader.ld
 doc/lines_of_code.txt
+src/usr/ld.a/libdld.a
 
 # or ISOs
 *.iso

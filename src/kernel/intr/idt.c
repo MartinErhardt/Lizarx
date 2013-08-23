@@ -24,8 +24,17 @@
 #include <stdbool.h>
 #include <hal.h>
 /*
- * INFO: In this File macros from HAL/x86/macros.h and hw_structs from HAL/x86/hw_structs.h are used
+ * INFO: In this File hw_structs from HAL/x86/hw_structs.h are used
  */
+#define MASTER_PIC_COMMAND 0x20
+#define MASTER_PiC_DATA 0x21
+#define SLAVE_PIC_COMMAND 0xa0
+#define SLAVE_PiC_DATA 0xa1
+
+#define PIC_INIT 0x11
+#define ICW_4 0x01
+
+#define IRQ_BASE 0x20
 
 struct idt_entry idt[IDT_SIZE];
 
@@ -95,7 +104,12 @@ void init_idt(void)
     idt_set_entry(16, intr_stub_16, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     idt_set_entry(17, intr_stub_17, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     idt_set_entry(18, intr_stub_18, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
-
+    
+    // APIC LVT Error Interrupt
+    idt_set_entry(30, intr_stub_30, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
+    // APIC Spurious Interrupt
+    idt_set_entry(31, intr_stub_31, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
+    
     // IRQ-Handler
     idt_set_entry(32, intr_stub_32, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
     idt_set_entry(33, intr_stub_33, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);

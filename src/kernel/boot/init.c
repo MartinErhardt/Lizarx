@@ -28,9 +28,10 @@
 #include <mm/vheap.h>
 #include <mt/threads.h>
 #include <mt/proc.h>
-#include <drv/hwtime/hwtime.h>
+//#include <drv/hwtime/hwtime.h>
 #include <stdlib.h>
 #include <boot/init.h>
+#include <intr/local_apic.h>
 
 void init(struct multiboot_info * mb_info)
 {
@@ -45,7 +46,7 @@ void init(struct multiboot_info * mb_info)
 	//struct tm* time_is=NULL;
 	struct multiboot_module* modules = (struct multiboot_module*) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob=modules;
-
+	
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
 #ifdef ARCH_X86
 	clrscr(VGA_BLACK,VGA_WHITE);
@@ -55,16 +56,19 @@ void init(struct multiboot_info * mb_info)
 	kprintf("... SUCCESS\n");
 #endif
 	kprintf("[INIT] I: init started\n");
-	
-	mp_init();
-	cpu_caps();
-	
-	
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
-	
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
+	uintptr_t smp_support_ = check_mp();
+	if(smp_support_)
+	{
+		local_apic_init(smp_support_);
+		startup_APs();
+	}
+#endif
+	cpu_caps();
 	
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
