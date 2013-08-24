@@ -22,7 +22,7 @@
 #include <mm/vmm.h>
 #include <hal.h>
 
-#define TRAMPOLINE_SIZE 0x4
+#define TRAMPOLINE_SIZE 0x10
 
 static uintptr_t local_apic_virt;
 
@@ -39,36 +39,40 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 	vmm_mark_used_inallcon(local_apic_virt/PAGE_SIZE);
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
+	//kprintf("reg 0x%x",read_local_apic(LOCAL_APIC_SIV_REG));
+	write_local_apic(LOCAL_APIC_SIV_REG, (read_local_apic(LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
 	write_local_apic(LOCAL_APIC_LE_REG,(read_local_apic(LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
-	write_local_apic(LOCAL_APIC_SIV_REG, (read_local_apic(LOCAL_APIC_LE_REG) & 0xfffffe00) | 31 | 256); // 256 = 1 0000 0000 enable local APIC with the eight bit
+	//kprintf("reg 0x%x",read_local_apic(LOCAL_APIC_SIV_REG));
 }
 void startup_APs()
 {
 	void * trampoline_virt = kvmm_malloc(PAGE_SIZE);
 	memcpy(trampoline_virt, &trampoline_entry_func, TRAMPOLINE_SIZE);
 	uint8_t vector = virt_to_phys(&startup_context, ((uintptr_t)trampoline_virt))/PAGE_SIZE;
-	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector);
-	local_apic_ipi(0x1,6,vector);
+	local_apic_ipi(0x1,6,vector); // try to start processor with APIC id;
+	//while(1);
+	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector); // here I try to start all APs with a single IPI; not sure whether this is possible
 }
 
 static void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector)
 {
 	while ((read_local_apic(LOCAL_APIC_IC_REG) & 0x1000) != 0);
-	write_local_apic(LOCAL_APIC_IC_REG+4,destinationId << 24);
+	write_local_apic((LOCAL_APIC_IC_REG_HI),destinationId << 24);
 	write_local_apic(LOCAL_APIC_IC_REG,0x4000 | (deliveryMode<<8) | vector);
+	
 }
 static void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector)
 {
 	while ((read_local_apic(LOCAL_APIC_IC_REG) & 0x1000) != 0);
-	// 0x6000 = 011b << 18(Destination shorthand = all exclude self)
+	// 0xc0000 = 011b << 18(Destination shorthand = all exclude self)
 	// 0x4000 = 1 << 14 (Level enable if deliverymode != deprecated INIT Level De Assert)
 	write_local_apic(LOCAL_APIC_IC_REG,0x4000 | 0xc0000 | (deliveryMode<<8) | vector);
 }
 static uint32_t read_local_apic(uint32_t reg)
 {
-	return *((volatile uint32_t * )local_apic_virt+reg);
+	return *((volatile uint32_t * )(local_apic_virt+reg));
 }
 static void write_local_apic(uint32_t reg, uint32_t value)
 {
-	*((volatile uint32_t * )local_apic_virt+reg)=value;
+	*((volatile uint32_t * )(local_apic_virt+reg))=value;
 }

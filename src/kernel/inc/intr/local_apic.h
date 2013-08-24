@@ -34,6 +34,7 @@
 #define LOCAL_APIC_IR_REG	0x200 // Interrupt Request rw
 #define LOCAL_APIC_ES_REG	0x280 // Error Status r
 #define LOCAL_APIC_IC_REG	0x300 // Interrupt Command rw
+#define LOCAL_APIC_IC_REG_HI	0x310 // Interrupt Command rw
 #define LOCAL_APIC_LT_REG	0x320 // LVT Timer rw
 #define LOCAL_APIC_LTS_REG	0x330 // LVT Thermal Sensor rw
 #define LOCAL_APIC_LPMCR_REG	0x340 // LVT Performance Monitoring Counters Register rw
@@ -53,7 +54,7 @@
 #define IPI_DESTINATION_SHORTHAND_NONE			0x0
 #define IPI_DESTINATION_SHORTHAND_SELF			0x1
 #define IPI_DESTINATION_SHORTHAND_ALL			0x2
-#define IPI_DESTINATION_SHORTHAND_ALL_EXCLUDE_SELF	0x2
+#define IPI_DESTINATION_SHORTHAND_ALL_EXCLUDE_SELF	0x3
 
 extern void trampoline_entry_func(void);
 
