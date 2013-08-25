@@ -27,4 +27,5 @@ The OS will also use dynamic linked shared objects to minimize Overhead between 
 - Userspace
 - full OS-specific toolchain(including cross-compiler libc and newlib port)
 - Dynamic linker(ld.a)
-- very simple X86_64 port
+- full X86_64 port
+- early SMP support
