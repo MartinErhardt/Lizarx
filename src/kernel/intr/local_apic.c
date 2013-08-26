@@ -20,9 +20,11 @@
 #include<dbg/console.h>
 #include<stdint.h>
 #include <mm/vmm.h>
+#include <mm/gdt.h>
 #include <hal.h>
+#include <boot/init.h>
 
-#define TRAMPOLINE_SIZE 0x10
+#define TRAMPOLINE_SIZE 0x100
 
 static uintptr_t local_apic_virt;
 
@@ -49,14 +51,43 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 }
 void startup_APs()
 {
-	//int z;
+	
 	void * trampoline_virt = kvmm_malloc(PAGE_SIZE);
 	memcpy(trampoline_virt, &trampoline_entry_func, TRAMPOLINE_SIZE);
 	uint8_t vector = virt_to_phys(&startup_context, ((uintptr_t)trampoline_virt))/PAGE_SIZE;
+	
+	uintptr_t trampoline_stack_virt = 0x7000;
+	/*
+	struct gdt_entry * trampoline_gdt = ((struct gdt_entry *)trampoline_stack_virt);
+	
+	memset(trampoline_gdt,0x00000000,8);
+	
+	trampoline_gdt[1].limit = 0xffff;
+	trampoline_gdt[1].base=0;
+	trampoline_gdt[1].accessbyte=GDT_ACCESS_PRESENT | GDT_ACCESS_CODESEG | GDT_ACCESS_SEGMENT;
+	trampoline_gdt[1].limit2=0xf;
+	trampoline_gdt[1].flags=GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT;
+	trampoline_gdt[1].base2=0x00;
+	
+	trampoline_gdt[2].limit = 0xffff;
+	trampoline_gdt[2].base=0;
+	trampoline_gdt[2].accessbyte=GDT_ACCESS_PRESENT | GDT_ACCESS_DATASEG | GDT_ACCESS_SEGMENT;
+	trampoline_gdt[2].limit2=0xf;
+	trampoline_gdt[2].flags=GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT;
+	trampoline_gdt[2].base2=0x00;
+	*/
+	memcpy(((void*)trampoline_stack_virt), &gdt, 0x18);
+	memcpy(((void*)trampoline_stack_virt+0x20), &gdtr, 0x8);
+#ifdef ARCH_X86_64
+	memcpy(((void*)trampoline_stack_virt+0x28), &gdt64, 0x18);
+	memcpy(((void*)trampoline_stack_virt+0x40), &gdtr64, 0x8);
+	memcpy(((void*)trampoline_stack_virt+0x100), &lmode, 0x50);
+#endif
+	memcpy(((void*)trampoline_stack_virt+0x48), &pmode, 0x30);
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_INIT,vector,1);
 	//for(z = 0; z < 0x20000; z++);
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector,0); // try to start processor with APIC id;
-	
+	while(1);
 	//local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector); // here I try to start all APs with a single IPI; not sure whether this is possible
 }
 /*

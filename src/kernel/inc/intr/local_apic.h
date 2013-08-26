@@ -57,7 +57,15 @@
 #define IPI_DESTINATION_SHORTHAND_ALL_EXCLUDE_SELF	0x3
 
 extern void trampoline_entry_func(void);
+extern void gdt(void);
+extern void gdtr(void);
+extern void pmode(void);
 
+#ifdef ARCH_X86_64
+extern void gdt64(void);
+extern void gdtr64(void);
+extern void lmode(void);
+#endif
 void local_apic_init(uintptr_t local_apic_addr_phys);
 void startup_APs();
 

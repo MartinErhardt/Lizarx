@@ -105,6 +105,8 @@ void pmm_init(struct multiboot_info * mb_info)
 	pmm_mark_used(0x0);//0x0000000 is reserved for NULL pointers
 	memset(0x00000000,0x00000000,PAGE_SIZE);
 	pmm_mark_used(0x1);//0x1000 is reserved,because that's,where we tmp map our pagetables to
+	
+	pmm_mark_used(0x7);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	pmm_mark_used(0x104);// That's our Stack which is still the MB Loader
 	pmm_mark_used(0x105);// That's our Stack which is still the MB Loader
 	kprintf("SUCCESS\n");

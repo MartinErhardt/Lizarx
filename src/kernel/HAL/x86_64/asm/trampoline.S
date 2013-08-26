@@ -15,8 +15,106 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+.extern AP_init
+.extern startup_context
 
+.code16
 .global trampoline_entry_func
 trampoline_entry_func:
 	cli
+	mov $0x7f00, %ax
+	mov %ax, %sp
+	
+	xor %ax, %ax
+	mov %ax, %ds
+	
+	lgdt 0x7020
+	mov %cr0, %eax
+	or $0x01, %eax
+	mov %eax, %cr0
+	
+	ljmp $0x08, $0x7048
+.code32
+.global pmode
+pmode:
+	
+	mov $0x10, %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
+	mov %ax, %ss
+	
+	mov startup_context, %eax
+	mov %eax, %cr3
+	
+	lgdt 0x7040
+	
+	mov %cr4, %eax
+	or $0x20, %eax
+	mov %eax, %cr4
+	
+	mov $0xC0000080, %ecx
+	rdmsr
+	or $0x00000100, %eax
+	wrmsr
+	
+	mov %cr0, %eax
+	or $0x80000000, %eax
+	mov %eax, %cr0
+	
+	ljmp $0x08, $0x7100
+.code64
+.global lmode
+lmode:
+	//jmp .
+	mov $AP_init, %rax
+	jmp %rax
 	jmp .
+.global gdt
+gdt:
+	// NULL descriptor
+	.int	0x00000000
+	.int	0x00000000
+	// kernel-code
+	.short	0xffff
+	.short	0x0000
+	.byte	0x00
+	.byte	0x9a
+	.byte	0xcf
+	.byte	0x00
+	// kernel-data
+	.short	0xffff
+	.short	0x0000
+	.byte	0x00
+	.byte	0x92
+	.byte	0xcf
+	.byte	0x00
+.global gdtr
+gdtr:
+	.short	0x17
+	.int	0x7000
+.global gdt64
+gdt64:
+	// NULL descriptor
+	.int	0x00000000
+	.int	0x00000000
+	// kernel-code
+	.short	0xffff
+	.short	0x0000
+	.byte	0x00
+	.byte	0x9a
+	.byte	0xaf
+	.byte	0x00
+	// kernel-data
+	.short	0xffff
+	.short	0x0000
+	.byte	0x00
+	.byte	0x92
+	.byte	0xaf
+	.byte	0x00
+.global gdtr64
+gdtr64:
+	.short	0x18
+	.int	0x7028

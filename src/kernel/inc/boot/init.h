@@ -23,5 +23,5 @@
 void * kernel_elf;
 struct multiboot_module*modules_glob;
 void init(struct multiboot_info *mb_info);
-
+void AP_init();
 #endif

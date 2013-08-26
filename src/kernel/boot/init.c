@@ -69,7 +69,7 @@ void init(struct multiboot_info * mb_info)
 	}
 #endif
 	cpu_caps();
-	
+	//while(1);
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
 	{
@@ -95,5 +95,10 @@ void init(struct multiboot_info * mb_info)
 	//that's for testing purposes
 	//time_is = get_time();
 	enable_intr();
+	while(1);
+}
+void AP_init()
+{
+	//kprintf("hello from AP");
 	while(1);
 }

@@ -48,7 +48,7 @@ void init_gdt(void)
 {
 	struct {
 	    uint16_t limit;
-	    void* pointer;
+	    uint32_t pointer;
 	} __attribute__((packed)) gdtp = {
 #ifdef ARCH_X86
 		.limit = GDT_SIZE * sizeof(struct gdt_entry) - 1,
@@ -56,9 +56,8 @@ void init_gdt(void)
 #ifdef ARCH_X86_64
 		.limit = ( (GDT_SIZE-1) * sizeof(struct gdt_entry) ) + sizeof( struct gdt_tss_entry ) - 1,
 #endif
-	    .pointer = gdtable,
+	    .pointer = ((uintptr_t)gdtable),
 	};
-	
 	kprintf("[GDT] I: init_gdt...");
 	memset(&tss,0x00000000, sizeof(struct tss_t));
 	// We are going to fill in the structs in gdtable
@@ -88,7 +87,7 @@ void init_gdt(void)
 	asm volatile("ltr %%ax" : : "a" (5 << 3));
 #endif
 	kprintf("SUCCESS\n");
-      //while(1);
+	//while(1);
 	// Taskregister neu laden
 }
 #ifdef ARCH_X86_64

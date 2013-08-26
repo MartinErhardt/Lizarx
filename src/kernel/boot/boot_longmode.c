@@ -38,7 +38,6 @@ void init_LM(struct multiboot_info * mb_info)
 	uint32_t esp;
 	asm volatile("mov %esp , %eax;");
 	asm volatile("nop":"=a"(esp));
-	kprintf("                              esp 0x%x  ",esp);
 	asm volatile
 	(
 		/*

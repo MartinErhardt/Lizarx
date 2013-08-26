@@ -30,7 +30,7 @@
 .section .text
 
 // Init ist eine Funktion aus init.c
-.extern init
+.extern init_LM
 
 // _start muss global sein, damit der Linker es findet und als Einsprungspunkt
 // benutzen kann (alle Labels, die nicht global sind, sind nur in dieser Datei
