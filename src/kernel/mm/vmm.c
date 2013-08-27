@@ -29,7 +29,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include <hal.h>
+#include <hw_structs.h>
+#include <macros.h>
+#include <asm_inline.h>
 
 extern const void kernel_start;
 extern const void kernel_end;

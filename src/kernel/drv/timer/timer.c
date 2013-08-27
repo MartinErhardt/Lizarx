@@ -16,12 +16,12 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#include<hal.h>
 #include<drv/timer/timer.h>
 #include<mt/sched.h>
 #include<stdint.h>
 #include<dbg/console.h>
 #include<mt/threads.h>
+#include<cpu.h>
 
 uint32_t time_intrs=0;
 cpu_state* timer_handler(cpu_state* new_cpu)

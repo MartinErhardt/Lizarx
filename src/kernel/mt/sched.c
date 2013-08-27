@@ -18,9 +18,9 @@
 
 #include<mt/sched.h>
 #include<mt/threads.h>
-#include<hal.h>
 #include<dbg/console.h>
 #include<mm/vmm.h>
+#include <cpu.h>
 
 cpu_state* schedule(cpu_state*cpu)
 {

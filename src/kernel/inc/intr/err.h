@@ -17,7 +17,8 @@
  */
 #ifndef ERR_H
 #define ERR_H
-#include<hal.h>
+
+#include<cpu.h>
 
 extern void intr_stub_0(void);
 extern void intr_stub_1(void);

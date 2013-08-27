@@ -23,7 +23,6 @@
 #include <dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
 #include <boot/init.h>
-#include <hal.h>
 /*
  * So far we implement the PMM as a flat Bitmap where each bit indicates one Page's status.
  * 0 = free space

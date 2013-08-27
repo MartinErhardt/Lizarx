@@ -16,7 +16,7 @@
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include<intr/err.h>
-#include<hal.h>
+#include<cpu.h>
 #include<dbg/console.h>
 #include<dbg/stack_trace.h>
 #include<drv/vga-txt_graphics/vram.h>

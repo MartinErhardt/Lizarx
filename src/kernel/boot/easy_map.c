@@ -16,7 +16,8 @@
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <boot/easy_map.h>
-#include <hal.h>
+#include <hw_structs.h>
+#include <macros.h>
 #include <stdint.h>
 #include <mm/pmm.h>
 #include <dbg/console.h>

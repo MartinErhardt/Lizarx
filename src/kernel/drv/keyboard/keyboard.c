@@ -18,8 +18,8 @@
 #include <stdint.h>
 #include <drv/keyboard/keyboard.h>
 #include <dbg/console.h>
-#include <hal.h>
 #include <stdbool.h>
+#include <asm_inline.h>
 
 static void clearkbcbuffer();
 

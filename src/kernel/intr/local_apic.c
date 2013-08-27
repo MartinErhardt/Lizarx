@@ -21,8 +21,9 @@
 #include<stdint.h>
 #include <mm/vmm.h>
 #include <mm/gdt.h>
-#include <hal.h>
 #include <boot/init.h>
+#include <macros.h>
+#include <asm_inline.h>
 
 #define TRAMPOLINE_SIZE 0x100
 
@@ -36,9 +37,11 @@ static void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vecto
 void local_apic_init(uintptr_t local_apic_addr_phys)
 {
 	// read apic id
+	
 	local_apic_virt = vmm_find_freemem(&startup_context, 0x1000, 0x0, KERNEL_SPACE);
 	vmm_map_inallcon(local_apic_addr_phys,local_apic_virt, FLG_IN_MEM  | FLG_WRITABLE);
 	vmm_mark_used_inallcon(local_apic_virt/PAGE_SIZE);
+	
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
 	/*if((read_local_apic(LOCAL_APIC_SIV_REG)&0x100)!=0)
@@ -47,35 +50,16 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 	}*/
 	write_local_apic(LOCAL_APIC_SIV_REG, (read_local_apic(LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
 	write_local_apic(LOCAL_APIC_LE_REG,(read_local_apic(LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
-	//kprintf("reg 0x%x",read_local_apic(LOCAL_APIC_SIV_REG));
 }
 void startup_APs()
 {
-	
+	uint32_t z =0;
 	void * trampoline_virt = kvmm_malloc(PAGE_SIZE);
 	memcpy(trampoline_virt, &trampoline_entry_func, TRAMPOLINE_SIZE);
 	uint8_t vector = virt_to_phys(&startup_context, ((uintptr_t)trampoline_virt))/PAGE_SIZE;
 	
 	uintptr_t trampoline_stack_virt = 0x7000;
-	/*
-	struct gdt_entry * trampoline_gdt = ((struct gdt_entry *)trampoline_stack_virt);
 	
-	memset(trampoline_gdt,0x00000000,8);
-	
-	trampoline_gdt[1].limit = 0xffff;
-	trampoline_gdt[1].base=0;
-	trampoline_gdt[1].accessbyte=GDT_ACCESS_PRESENT | GDT_ACCESS_CODESEG | GDT_ACCESS_SEGMENT;
-	trampoline_gdt[1].limit2=0xf;
-	trampoline_gdt[1].flags=GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT;
-	trampoline_gdt[1].base2=0x00;
-	
-	trampoline_gdt[2].limit = 0xffff;
-	trampoline_gdt[2].base=0;
-	trampoline_gdt[2].accessbyte=GDT_ACCESS_PRESENT | GDT_ACCESS_DATASEG | GDT_ACCESS_SEGMENT;
-	trampoline_gdt[2].limit2=0xf;
-	trampoline_gdt[2].flags=GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT;
-	trampoline_gdt[2].base2=0x00;
-	*/
 	memcpy(((void*)trampoline_stack_virt), &gdt, 0x18);
 	memcpy(((void*)trampoline_stack_virt+0x20), &gdtr, 0x8);
 #ifdef ARCH_X86_64
@@ -83,11 +67,12 @@ void startup_APs()
 	memcpy(((void*)trampoline_stack_virt+0x40), &gdtr64, 0x8);
 	memcpy(((void*)trampoline_stack_virt+0x100), &lmode, 0x50);
 #endif
-	memcpy(((void*)trampoline_stack_virt+0x48), &pmode, 0x30);
+	memcpy(((void*)trampoline_stack_virt+0x48), &pmode, 0xb0);
+	
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_INIT,vector,1);
-	//for(z = 0; z < 0x20000; z++);
+	
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector,0); // try to start processor with APIC id;
-	while(1);
+	for(z = 0; z < 0x90000; z++);
 	//local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector); // here I try to start all APs with a single IPI; not sure whether this is possible
 }
 /*

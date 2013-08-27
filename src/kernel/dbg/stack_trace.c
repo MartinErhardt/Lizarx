@@ -15,7 +15,6 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include<hal.h>
 #include<stdint.h>
 #include<mt/elf.h>
 #include<dbg/console.h>

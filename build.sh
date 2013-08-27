@@ -5,6 +5,7 @@ rm lizarx86.iso
 TOOLCHAIN_DIR=host
 CLONE_TOOLCHAIN="FALSE"
 export ARCH="i386"
+export ARCH2="x86"
 export PROJ_ROOT=$(pwd)
 if [ ! -d $TOOLCHAIN_DIR/buildtools ]
 then
@@ -20,11 +21,9 @@ then
 	cp src/kernel/HAL/x86_64/Makefile src/kernel/Makefile
 	cp src/kernel/HAL/x86_64/kernel.ld src/kernel/kernel.ld
 	cp src/kernel/HAL/x86_64/loader.ld src/kernel/loader.ld
-	cp src/kernel/HAL/x86_64/archdef.h src/kernel/HAL/archdef.h
 else
-	cp src/kernel/HAL/i386/Makefile src/kernel/Makefile
-	cp src/kernel/HAL/i386/kernel.ld src/kernel/kernel.ld
-	cp src/kernel/HAL/i386/archdef.h src/kernel/HAL/archdef.h
+	cp src/kernel/HAL/x86/Makefile src/kernel/Makefile
+	cp src/kernel/HAL/x86/kernel.ld src/kernel/kernel.ld
 fi
 
 if [ "$1" != "--no-toolchain" ] && [ "$2" != "--no-toolchain" ]
@@ -49,6 +48,7 @@ fi
 if [ "$R_ARCH" == "x86_64" ]
 then
 	export ARCH=$R_ARCH
+	export ARCH2=$R_ARCH
 	export TARGET=x86_64-pc-lizarx
 fi
 export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-gcc
@@ -74,12 +74,12 @@ cd ..
 
 mv ./src/kernel/kernel ./bin/boot/kernel
 mv ./src/kernel/LM_Loader ./bin/boot/LM_Loader
-cp ./src/kernel/HAL/$ARCH/menu.lst ./bin/boot/grub/menu.lst
+cp ./src/kernel/HAL/$ARCH2/menu.lst ./bin/boot/grub/menu.lst
 mv ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
 mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
 
-genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH.iso -d int -d int -smp 2 -cpu core2duo
+genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH2.iso bin
+/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH2.iso -d int -d int -smp 2 -cpu core2duo
 date | cat >> ./doc/lines_of_code.txt
 (cloc . --exclude-dir=host/buildtools --exclude-list-file=doc/exclude_cloc.txt | cat >> ./doc/lines_of_code.txt)&exit

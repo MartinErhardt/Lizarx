@@ -22,8 +22,9 @@
 #include<stdint.h>
 #include <string.h>
 #include <intr/idt.h>
-#include <hal.h>
 #include "pmm.h"
+#include <archdef.h>
+#include <hw_structs.h>
 
 #define FLGCOMBAT_KERNEL	FLG_IN_MEM  | FLG_WRITABLE | FLG_WRITECACHING
 

@@ -18,11 +18,9 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include<hal.h>
+#include<cpu.h>
 #include<stdint.h>
 #include<stdbool.h>
-
-
 
 //extern uint32_t time;
 cpu_state* timer_handler(cpu_state* new_cpu);

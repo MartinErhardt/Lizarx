@@ -17,12 +17,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <dbg/console.h>
-#include <hal.h>
 #include <drv/keyboard/keyboard.h>
 #include <drv/timer/timer.h>
 #include <intr/irq.h>
 #include <mt/threads.h>
 #include <mm/gdt.h>
+#include <asm_inline.h>
 
 cpu_state* handle_irq(cpu_state* cpu)
 {

@@ -19,8 +19,8 @@
 #ifndef THREADS_H
 #define THREADS_H
 
+#include<cpu.h>
 #include<stdint.h>
-#include<hal.h>
 #include"proc.h"
 
 #define STDRD_STACKSIZ 0x2000

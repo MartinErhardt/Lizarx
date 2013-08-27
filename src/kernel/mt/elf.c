@@ -19,10 +19,12 @@
 #include<dbg/console.h>
 #include<string.h>
 #include<mm/vmm.h>
-#include<hal.h>
 #include<mt/proc.h>
 #include<mt/threads.h>
 #include<stdlib.h>
+#include <macros.h>
+#include <asm_inline.h>
+
 uintptr_t * get_last_function(void* elf_header, uintptr_t addr)
 {
 	static uintptr_t ret_buf[2];

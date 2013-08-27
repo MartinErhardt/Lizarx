@@ -19,13 +19,10 @@
 #include <mm/gdt.h>
 #include <string.h>
 #include <stdint.h>
-#include <hal.h>
 #include <mm/gdt.h>
+#include <hw_structs.h>
+#include <macros.h>
 
-/*
-#ifndef GDT_FLAG_32_BIT
-	#define GDT_FLAG_32_BIT 0x2
-#endif*/
 /*
  * INFO: In this File macros from HAL/x86/macros.h and hw_structs from HAL/x86/hw_structs.h are used
  */

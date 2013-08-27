@@ -28,10 +28,11 @@
 #include <mm/vheap.h>
 #include <mt/threads.h>
 #include <mt/proc.h>
-//#include <drv/hwtime/hwtime.h>
+#include <smp_capabilities.h>
 #include <stdlib.h>
 #include <boot/init.h>
 #include <intr/local_apic.h>
+#include <cpu.h>
 
 void init(struct multiboot_info * mb_info)
 {
@@ -44,7 +45,7 @@ void init(struct multiboot_info * mb_info)
 	startup_context.highest_paging=0x0;
 	startup_context.mm_tree=0x0;
 	//struct tm* time_is=NULL;
-	struct multiboot_module* modules = (struct multiboot_module*) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
+	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob=modules;
 	
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
@@ -56,20 +57,26 @@ void init(struct multiboot_info * mb_info)
 	kprintf("... SUCCESS\n");
 #endif
 	kprintf("[INIT] I: init started\n");
+	
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
+	
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
+	
 	uintptr_t smp_support_ = check_mp();
+	
 	if(smp_support_)
 	{
+		
 		local_apic_init(smp_support_);
 		startup_APs();
 	}
+	
 #endif
 	cpu_caps();
-	//while(1);
+	
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
 	{
@@ -99,6 +106,6 @@ void init(struct multiboot_info * mb_info)
 }
 void AP_init()
 {
-	//kprintf("hello from AP");
+	cpu_caps();
 	while(1);
 }

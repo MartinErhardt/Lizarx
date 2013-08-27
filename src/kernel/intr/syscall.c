@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include<hal.h>
+#include<cpu.h>
 #include<dbg/console.h>
 #include <drv/vga-txt_graphics/vram.h>
 #include<intr/syscall.h>
@@ -25,6 +25,7 @@
 #include<string.h>
 #include<boot/init.h>
 #include<mt/threads.h>
+
 cpu_state* handle_syscall(cpu_state* cpu)
 {
 	char* copybuf_ptr;

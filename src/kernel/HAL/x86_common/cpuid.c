@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/x86/cpu.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86_common/cpuid.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,82 +15,32 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef X86_CPU_H
-#define X86_CPU_H
+#include <stdint.h>
+#include <string.h>
+#include <dbg/console.h>
+#include <cpu.h>
 
-#include<stdint.h>
-#include<dbg/console.h>
-
-#define REG_FUNCRET 	eax
-#define REG_IP 		eip
-#define REG_DATA0 	edx
-#define REG_DATA1 	ebx
-#define REG_DATA2 	ecx
-#define REG_STACKPTR 	esp
-#define REG_FLAGS 	eflags
-#define INFO_INTR 	intr
-
-#define INIT_STATE(STATE)		STATE->eax=0x0; \
-					STATE->ebx=0x0; \
-					STATE->ecx=0x0; \
-					STATE->edx=0x0; \
-					STATE->esi=0x0; \
-					STATE->edi=0x0; \
-					STATE->ebp=0x0; \
-					STATE->intr=0x0; \
-					STATE->error=0x0; \
-					STATE->eip=0x0; \
-					STATE->cs=0x18 | 0x03; \
-					STATE->ss=0x23; \
-					STATE->esp=0x0; \
-					STATE->eflags=0x202; 
-
-#define SET_IRQ(FLAGS) FLAGS=0x202;
-
-struct cpu_info bsp_info;
-
-typedef struct {
-    // manually secured registers
-    uint32_t   eax;
-    uint32_t   ebx;
-    uint32_t   ecx;
-    uint32_t   edx;
-    uint32_t   esi;
-    uint32_t   edi;
-    uint32_t   ebp;
-
-    uint32_t   intr;
-    uint32_t   error;
-
-    // secured by cpu
-    uint32_t   eip;
-    uint32_t   cs;
-    uint32_t   eflags;
-    uint32_t   esp;
-    uint32_t   ss;
-} cpu_state;
-
-struct cpu_info
+// this function can only be used at the beginning
+void cpu_caps()
 {
-	  uint8_t cpu_info_support;
-	  uint32_t cpu_n;
-	  uint8_t sse_support;
-	  uint8_t sse_2_support;
-	  uint8_t sse_3_support;
-	  uint8_t ssse_3_support;
-	  uint8_t sse_4_1_support;
-	  uint8_t sse_4_2_support;
-	  uint8_t sysenter_exit_support;
-	  uint8_t apic_support;
-	  uint8_t hyperthreading;
-	  char vendor_id[12];
-	  char cpu_name[48];
-	  struct cpu_info * next;
-};
-
-static inline void cpu_caps()
-{
-	uint8_t * cpuid_support =(uint8_t *) 0x1000;
+	uint8_t * cpuid_support =(uint8_t *) 0x7200;
+#ifdef ARCH_X86_64
+	asm volatile(
+	    "pushf;"
+	    "pop %rcx;"
+	    "mov %rcx, %rax;"
+	    "xor $0x200000, %rax;"
+	    "push %rax;"
+	    "popf;"
+	    "pushf;"
+	    "pop %rax;"
+	    "xor %ecx, %eax;"
+	    "je cpuid_unsupported;"
+	    "jmp cpu_supported;"
+	    "cpuid_unsupported: xor %eax, %eax; mov %eax, 0x7200;jmp out;" // FIXME
+	    "cpu_supported: mov $1, %eax; mov %eax, 0x7200; jmp out;"
+	    "out:");
+#else
 	asm volatile(
 	    "pushf;"
 	    "pop %ecx;"
@@ -103,10 +53,12 @@ static inline void cpu_caps()
 	    "xor %ecx, %eax;"
 	    "je cpuid_unsupported;"
 	    "jmp cpu_supported;"
-	    "cpuid_unsupported: xor %eax, %eax; mov %eax, 0x1000;jmp out;"
-	    "cpu_supported: mov $1, %eax; mov %eax, 0x1000; jmp out;"
+	    "cpuid_unsupported: xor %eax, %eax; mov %eax, 0x7200;jmp out;" // FIXME
+	    "cpu_supported: mov $1, %eax; mov %eax, 0x7200; jmp out;"
 	    "out:");
-	if(*cpuid_support){
+#endif
+	if(*cpuid_support)
+	{
 		bsp_info.cpu_info_support=1;
 	}
 	else
@@ -114,17 +66,14 @@ static inline void cpu_caps()
 		return;
 	}
 	memset(&bsp_info, 0x00, sizeof(struct cpu_info));
-	uint32_t func =0x0; 
-	uint32_t ebx =0x0; 
-	uint32_t ecx =0x0; 
-	uint32_t edx = 0x0;
+	uint_t func =0x0; 
+	uint_t ebx =0x0; 
+	uint_t ecx =0x0; 
+	uint_t edx = 0x0;
 	asm volatile( "cpuid" : "=b"(ebx), "=c" (ecx), "=d" (edx) : "a"(func));
 	memcpy(&bsp_info.vendor_id[0],&ebx,4);
 	memcpy(&bsp_info.vendor_id[4],&edx,4);
 	memcpy(&bsp_info.vendor_id[8],&ecx,4);
-	func=0x00000001;
-	asm volatile( "cpuid" : "=b"(ebx), "=c" (ecx), "=d" (edx) : "a"(func));
-	
 	if(!strcmp(&bsp_info.vendor_id[0], "GenuineIntel"))
 	{
 		func = 0x80000002;
@@ -183,8 +132,3 @@ static inline void cpu_caps()
 	}
 	kprintf("\n");
 }
-         /* Ring-0-Segmentregister nicht mehr benutzt*/
-        //.cs  = 0x08,
-	/* Ring-3-Segmentregister */   
-	/* IRQs einschalten (IF = 1) */
-#endif

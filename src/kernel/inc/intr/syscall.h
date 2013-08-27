@@ -17,7 +17,8 @@
  */
 #ifndef SYSCALL_H
 #define SYSCALL_H
-#include<hal.h>
+
+#include<cpu.h>
 
 typedef enum {
     SYS_DRAW,

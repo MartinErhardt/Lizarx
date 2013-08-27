@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/x86/types.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/inc/HAL/x86/cmos.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,28 +16,33 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */ 
-#ifndef X86_TYPES_H
-#define X86_TYPES_H
+#ifndef X86_64_CMOS_H
+#define X86_64_CMOS_H
 
-#define WORD_WIDTH 32
-/*
- * The code below only works with LP32, which is th default on GCC with i386 target
- */
+#include<stdint.h>
+#include"asm_inline.h"
 
-#define UN_64 unsigned long long
-#define UN_32 unsigned int
-#define UN_16 unsigned short
-#define UN_8  unsigned char
+#define BCD_DECODE(x) ((0xf & x) + (10 * (((0xf << 4) & x) >> 4)))
 
-#define N_64 long long
-#define N_32 int
-#define N_16 short
-#define N_8  char
+#define CMOS_PORT_ADDRESS 0x70
+#define CMOS_PORT_DATA    0x71
 
-#define UINT_T UN_32
-#define INT_T N_32
-#define SIZE_T unsigned long
-#define UPTR_T unsigned long
-#define PTR_T long
+static inline uint8_t cmos_read(uint8_t off)
+{
+	uint8_t tmp =0;
+	uint8_t data =0;
+	INB((uint16_t)CMOS_PORT_ADDRESS,tmp)
+	OUTB((uint16_t)CMOS_PORT_ADDRESS,(tmp & 0x80) | (off & 0x7F))
+	INB(CMOS_PORT_DATA,data)
+	return data;
+}
+
+static inline void cmos_write(uint8_t off,uint8_t data)
+{
+	uint8_t tmp =0;
+	INB(CMOS_PORT_ADDRESS,tmp)
+	OUTB(CMOS_PORT_ADDRESS,(tmp & 0x80) | (off & 0x7F))
+	OUTB(CMOS_PORT_DATA,data)
+}
 
 #endif

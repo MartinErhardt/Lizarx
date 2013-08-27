@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/archdef.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/inc/HAL/x86_common/x86.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,9 +15,9 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef ARCHDEF_H
-#define ARCHDEF_H
+#ifndef X86_64_H
+#define X86_64_H
 
-#define ARCH_X86 x86
+#include "./smp_capabilities.h"
 
 #endif

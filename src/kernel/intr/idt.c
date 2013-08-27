@@ -22,7 +22,9 @@
 #include <intr/syscall.h>
 #include <mm/vmm.h>
 #include <stdbool.h>
-#include <hal.h>
+#include <hw_structs.h>
+#include <macros.h>
+#include <asm_inline.h>
 /*
  * INFO: In this File hw_structs from HAL/x86/hw_structs.h are used
  */

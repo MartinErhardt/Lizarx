@@ -5,8 +5,9 @@ SRCS_OPTI = mm/vmm.c \
 	mt/sched.c \
 	mt/proc.c \
 	mt/threads.c \
-	HAL/i386/asm/start_x86.S \
-	HAL/i386/asm/intr_stub_x86.S \
+	HAL/x86/asm/start_x86.S \
+	HAL/x86/asm/intr_stub_x86.S \
+	HAL/x86/asm/trampoline.S \
 	lib/time.c \
 	intr/irq.c \
 	intr/syscall.c \
@@ -20,13 +21,14 @@ SRCS_OPTI = mm/vmm.c \
 	drv/keyboard/keyboard.c \
 	intr/local_apic.c \
 	boot/init.c \
-	HAL/i386/asm/trampoline.S
+	HAL/x86_common/smp_capabilities.c \
+	HAL/x86_common/cpuid.c
 SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c mm/pmm.c
 
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
 OBJS_UNOPTI = $(addsuffix .o,$(basename $(SRCS_UNOPTI)))
 
-CFLAGS = -m32 -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I HAL -fno-tree-loop-distribute-patterns
+CFLAGS = -m32 -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I inc/HAL/x86 -I inc/HAL/x86_common -DARCH_X86=x86 -DARCH=x86 -fno-tree-loop-distribute-patterns 
 
 kernel: $(OBJS_OPTI) $(OBJS_UNOPTI)
 	$(LD_CROSS) $(LDFLAGS) -o $@ $^

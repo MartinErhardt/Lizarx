@@ -17,12 +17,12 @@
  */
 #include<stdint.h>
 #include<mt/threads.h>
-#include<hal.h>
 #include<mt/proc.h>
 #include<stdlib.h>
 #include<mm/vmm.h>
 #include<dbg/console.h>
 #include<mm/gdt.h>
+#include<asm_inline.h>
 
 static uint32_t num_threads = 0;
 

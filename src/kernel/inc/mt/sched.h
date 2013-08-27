@@ -19,7 +19,7 @@
 #ifndef SCHED_H
 #define SCHED_H
 
-#include<hal.h>
+#include<cpu.h>
 
 extern uint32_t tss[32];
 cpu_state* schedule();

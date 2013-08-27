@@ -26,7 +26,6 @@
  
 #include <stdint.h>
 #include <mm/vmm.h>
-#include <hal.h>
 
 #define ELF_MAGIC 0x464C457F
 

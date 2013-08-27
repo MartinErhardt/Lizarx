@@ -17,8 +17,9 @@
  */
 #include<drv/hwtime/hwtime.h>
 #include<time.h>
-#include<hal.h>
 #include<stdlib.h>
+#include<string.h>
+#include<cmos.h>
 
 uint8_t days_per_month[12]=
 {

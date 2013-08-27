@@ -49,8 +49,6 @@ pmode:
 	mov startup_context, %eax
 	mov %eax, %cr3
 	
-	lgdt 0x7040
-	
 	mov %cr4, %eax
 	or $0x20, %eax
 	mov %eax, %cr4
@@ -63,6 +61,8 @@ pmode:
 	mov %cr0, %eax
 	or $0x80000000, %eax
 	mov %eax, %cr0
+	
+	lgdt 0x7040
 	
 	ljmp $0x08, $0x7100
 .code64
@@ -105,16 +105,16 @@ gdt64:
 	.short	0x0000
 	.byte	0x00
 	.byte	0x9a
-	.byte	0xaf
+	.byte	0x2f
 	.byte	0x00
 	// kernel-data
 	.short	0xffff
 	.short	0x0000
 	.byte	0x00
 	.byte	0x92
-	.byte	0xaf
+	.byte	0x2f
 	.byte	0x00
 .global gdtr64
 gdtr64:
-	.short	0x18
+	.short	0x17
 	.int	0x7028

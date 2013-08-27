@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/x86/hw_structs.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/inc/HAL/x86/hw_structs.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -18,35 +18,18 @@
 #ifndef X86_HW_STRUCTS_H
 #define X86_HW_STRUCTS_H
 
+#include<stdint.h>
 #include<mm/pmm.h>
 
-struct tss_t
-{
-    uint32_t reserved;
-    uint64_t rsp0;
-    uint64_t rsp1;
-    uint64_t rsp2;
-    uint64_t reserved2;
-    uint64_t ist1;
-    uint64_t ist2;
-    uint64_t ist3;
-    uint64_t ist4;
-    uint64_t ist5;
-    uint64_t ist6;
-    uint64_t ist7;
-    uint64_t reserved3;
-    uint16_t reserved4;
-    uint16_t iomap;
-} __attribute__((packed));
 //------------------------------------------------------------------GDT-structs--------------------------------------------------------------------
 struct gdt_entry
 {
-	uint16_t limit;
-	uint32_t base :24;
-	uint8_t accessbyte;
-	uint32_t limit2 :4;
-	uint32_t flags :4;
-	uint8_t base2;
+	uint16_t 	limit;
+	uint32_t 	base :24;
+	uint8_t 	accessbyte;
+	uint32_t 	limit2 :4;
+	uint32_t 	flags :4;
+	uint8_t 	base2;
 }__attribute__((packed));
 
 //------------------------------------------------------------------IDT-structs--------------------------------------------------------------------
@@ -56,58 +39,68 @@ struct idt_entry
 	uint16_t selector;
 	uint8_t ist;
 	uint8_t flags;
-	uint64_t isr_offset2 :48;
-	uint32_t reserved;
+	uint16_t isr_offset2;
 }__attribute__((packed));
-
 //-----------------------------------------------------------------Paging-structures---------------------------------------------------------------
-struct vmm_pagemap_level4
-{
-	uint8_t rw_flags; 
-	uint8_t reserved :4;
-	uint64_t pagedirptrtbl_ptr :40;
-	uint16_t NXnfree :12;
-}__attribute__((packed));
-
-struct vmm_pagedir_ptrtbl
-{
-	uint8_t rw_flags; 
-	uint8_t reserved :4;
-	uint64_t pagedir_ptr :40;
-	uint16_t NXnfree :12;
-}__attribute__((packed));
-
 struct vmm_pagedir
 {
 	uint8_t rw_flags; 
 	uint8_t reserved :4;
-	uint64_t pagetbl_ptr :40;
-	uint16_t NXnfree :12;
+	uintptr_t pagetbl_ptr :20;
 }__attribute__((packed));
 
 struct vmm_pagetbl
 {
 	uint8_t rw_flags; 
 	uint8_t reserved :4;
-	uint64_t page_ptr :40;	
-	uint16_t NXnfree :12;
+	uintptr_t page_ptr :20;
 }__attribute__((packed));
 
 struct stack_frame
 {
-	struct stack_frame * base_ptr;
-	uint32_t return_addr;
+        struct stack_frame * base_ptr;
+        uintptr_t return_addr;
 }__attribute__((packed));
-struct gdt_tss_entry
+struct tss_t
 {
-	uint16_t limit;
-	uint32_t base :24;
-	uint8_t accessbyte;
-	uint8_t limit2 :4;
-	uint8_t flags :4;
-	uint64_t base2 :40;
-	uint8_t reserved;
-	uint8_t zero :4;
-	uint32_t reserved2 :20;
+	uint16_t link;
+	uint16_t reserved0;
+	uint32_t esp0;
+	uint16_t ss0;
+	// Everything below is useless!
+	uint16_t reserved1;
+	uint32_t esp1;
+	uint16_t ss1;
+	uint16_t reserved2;
+	uint32_t esp2;
+	uint16_t ss2;
+	uint16_t reserved3;
+	uint32_t cr3;
+	uint32_t eip;
+	uint32_t eflags;
+	uint32_t eax;
+	uint32_t ecx;
+	uint32_t edx;
+	uint32_t ebx;
+	uint32_t esp;
+	uint32_t ebp;
+	uint32_t esi;
+	uint32_t edi;
+	uint16_t es;
+	uint16_t reserved4;
+	uint16_t cs;
+	uint16_t reserved5;
+	uint16_t ss;
+	uint16_t reserved6;
+	uint16_t ds;
+	uint16_t reserved7;
+	uint16_t fs;
+	uint16_t reserved8;
+	uint16_t gs;
+	uint16_t reserved9;
+	uint16_t LDT_desc;
+	uint16_t reserved10;
+	uint16_t trap_bitnreserved;
+	uint16_t IO_Map_addr;
 }__attribute__((packed));
 #endif
