@@ -12,17 +12,20 @@ SRCS_OPTI = mm/vmm.c \
 	intr/irq.c \
 	intr/syscall.c \
 	intr/err.c \
-	intr/idt.c \
+	HAL/x86_common/idt.c \
 	dbg/stack_trace.c \
 	dbg/console.c \
 	drv/timer/timer.c \
 	drv/hwtime/hwtime.c \
 	drv/keyboard/sc2kc.c \
 	drv/keyboard/keyboard.c \
-	intr/local_apic.c \
+	HAL/x86_common/local_apic.c \
 	boot/init.c \
 	HAL/x86_common/smp_capabilities.c \
-	HAL/x86_common/cpuid.c
+	HAL/x86_common/cpuid.c \
+	lib/libOS/find.c \
+	lib/libOS/lock.c \
+	lib/libOS/mmio.c
 SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c mm/pmm.c
 
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
@@ -36,7 +39,7 @@ kernel: $(OBJS_OPTI) $(OBJS_UNOPTI)
 
 $(OBJS_OPTI): EXTRA_FLAGS := -Os
 
-ASFLAGS =-m32 -nostdinc -ffreestanding -I HAL
+ASFLAGS =-m32 -nostdinc -ffreestanding -I HAL -I inc/HAL/x86 -I inc/HAL/x86_common -DARCH_X86=x86 -DARCH=x86
 LDFLAGS =  -Tkernel.ld
 
 %.o: %.c

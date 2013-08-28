@@ -54,7 +54,7 @@ pmode:
 	mov %eax, %cr0
 	
 	mov $AP_init, %eax
-	jmp %eax
+	jmp *%eax
 	jmp .
 .global gdt
 gdt:

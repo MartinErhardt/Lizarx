@@ -16,7 +16,7 @@
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <dbg/console.h>
-#include <intr/idt.h>
+#include <idt.h>
 #include <mm/gdt.h>
 #include <drv/keyboard/keyboard.h>
 #include <boot/multiboot.h>
@@ -31,7 +31,7 @@
 #include <smp_capabilities.h>
 #include <stdlib.h>
 #include <boot/init.h>
-#include <intr/local_apic.h>
+#include <local_apic.h>
 #include <cpu.h>
 
 void init(struct multiboot_info * mb_info)

@@ -81,4 +81,6 @@ struct floating_point * fp;
 struct floating_point * find_floating_pointer_struct();
 uintptr_t check_mp();
 
+uint32_t tsl(uint_t * lock,uint32_t value);
+
 #endif

@@ -21,7 +21,6 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <drv/vga-txt_graphics/vram.h>
-#include <archdef.h>
 
 #define VIDEO_X 80
 #define VIDEO_Y 25

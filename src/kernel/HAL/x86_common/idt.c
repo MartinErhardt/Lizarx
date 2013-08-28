@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/intr/idt.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86_common/idt.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <intr/idt.h>
+#include <idt.h>
 #include <dbg/console.h>
 #include <intr/irq.h>
 #include <intr/err.h>

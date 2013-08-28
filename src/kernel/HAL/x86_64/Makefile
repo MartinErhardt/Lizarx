@@ -21,7 +21,7 @@ SRCS_OPTI = boot/init.c \
 	intr/irq.c \
 	intr/syscall.c \
 	intr/err.c \
-	intr/idt.c \
+	HAL/x86_common/idt.c \
 	mm/gdt.c \
 	dbg/stack_trace.c \
 	dbg/console.c \
@@ -29,9 +29,12 @@ SRCS_OPTI = boot/init.c \
 	drv/hwtime/hwtime.c \
 	drv/keyboard/sc2kc.c \
 	drv/keyboard/keyboard.c \
-	intr/local_apic.c \
+	HAL/x86_common/local_apic.c \
 	HAL/x86_common/smp_capabilities.c \
-	HAL/x86_common/cpuid.c
+	HAL/x86_common/cpuid.c \
+	lib/libOS/find.c \
+	lib/libOS/lock.c \
+	lib/libOS/mmio.c
 SRCS_UNOPTI = lib/stdlib.c \
 	lib/string.c \
 	drv/vga-txt_graphics/vram.c \

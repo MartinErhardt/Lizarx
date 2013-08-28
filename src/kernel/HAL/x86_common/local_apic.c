@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/intr/local_apic.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86_common/local_apic.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,7 +16,7 @@
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include<intr/local_apic.h>
+#include<local_apic.h>
 #include<dbg/console.h>
 #include<stdint.h>
 #include <mm/vmm.h>
@@ -24,13 +24,12 @@
 #include <boot/init.h>
 #include <macros.h>
 #include <asm_inline.h>
+#include <libOS/mmio.h>
 
 #define TRAMPOLINE_SIZE 0x100
 
 static uintptr_t local_apic_virt;
 
-static uint32_t read_local_apic(uint32_t reg);
-static void write_local_apic(uint32_t reg, uint32_t value);
 //static void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode);
 static void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode);
 
@@ -44,12 +43,15 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 	
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
-	/*if((read_local_apic(LOCAL_APIC_SIV_REG)&0x100)!=0)
+	/*if((mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG)&0x100)!=0)
 	{
-		kprintf("reg 0x%x",read_local_apic(LOCAL_APIC_SIV_REG));
+		kprintf("reg 0x%x",mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG));
 	}*/
-	write_local_apic(LOCAL_APIC_SIV_REG, (read_local_apic(LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
-	write_local_apic(LOCAL_APIC_LE_REG,(read_local_apic(LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
+	mmio_write32(local_apic_virt, LOCAL_APIC_SIV_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
+	mmio_write32(local_apic_virt, LOCAL_APIC_LE_REG,(mmio_read32(local_apic_virt,LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (1 << 24));
+	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (0xf << 28));
 }
 void startup_APs()
 {
@@ -78,23 +80,15 @@ void startup_APs()
 /*
 static void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode)
 {
-	while ((read_local_apic(LOCAL_APIC_IC_REG) & 0x1000) != 0);
-	write_local_apic((LOCAL_APIC_IC_REG_HI),destinationId << 24);
-	write_local_apic(LOCAL_APIC_IC_REG,0x4000 | (trigger_mode<<15) | (deliveryMode<<8) | vector);
+	while ((mmio_read32(local_apic_virt,LOCAL_APIC_IC_REG) & 0x1000) != 0);
+	mmio_write32(local_apic_virt, (LOCAL_APIC_IC_REG_HI),destinationId << 24);
+	mmio_write32(local_apic_virt, LOCAL_APIC_IC_REG,0x4000 | (trigger_mode<<15) | (deliveryMode<<8) | vector);
 	
 }*/
 static void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode)
 {
-	while ((read_local_apic(LOCAL_APIC_IC_REG) & 0x1000) != 0);
+	while ((mmio_read32(local_apic_virt, LOCAL_APIC_IC_REG) & 0x1000) != 0);
 	// 0xc0000 = 011b << 18(Destination shorthand = all exclude self)
 	// 0x4000 = 1 << 14 (Level enable if deliverymode != deprecated INIT Level De Assert)
-	write_local_apic(LOCAL_APIC_IC_REG,0x4000 | (trigger_mode<<15) | (deliveryMode<<8) | vector | 0xc0000);
-}
-static uint32_t read_local_apic(uint32_t reg)
-{
-	return *((volatile uint32_t * )(local_apic_virt+reg));
-}
-static void write_local_apic(uint32_t reg, uint32_t value)
-{
-	*((volatile uint32_t * )(local_apic_virt+reg))=value;
+	mmio_write32(local_apic_virt, LOCAL_APIC_IC_REG,0x4000 | (trigger_mode<<15) | (deliveryMode<<8) | vector | 0xc0000);
 }

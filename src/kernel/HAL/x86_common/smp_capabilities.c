@@ -20,29 +20,31 @@
 #include<string.h>
 #include<dbg/console.h>
 #include<smp_capabilities.h>
+#include<libOS/find.h>
 
 // FIXME check checksum
-
+uint32_t tsl(uint_t * lock,uint32_t value)
+{
+	uint_t result=0;
+	asm volatile ("nop" :: "a"(lock),"d"(value));
+	asm volatile ("xchg %edx, %eax ");
+	asm volatile ("nop" : "=a"(result));
+	return result;
+}
 struct floating_point * find_floating_pointer_struct()
 {
-	uintptr_t i;
+	struct floating_point * ptr = NULL;
 	uintptr_t EBDA_ptr = (uintptr_t) (*((uint16_t *) BDA_EBDA_PTR_ADDR)*0x10);
-	for(i=EBDA_ptr; i<=(EBDA_ptr+0x400);i++)
-	{
-		if(*((uint32_t *)i)== _MP_ )
-			return ((struct floating_point *)i);
-	}
 	uintptr_t base_mem = (uintptr_t) ((*((uint16_t *) BDA_BASE_MEM_SIZE)-1)*0x400);
-	for(i=base_mem; i<=(base_mem+0x400);i++)
-	{
-		if(*((uint32_t *)i)== _MP_ )
-			return ((struct floating_point *)i);
-	}
-	for(i=BIOS_ROM_START_ADDR; i<=BIOS_ROM_END_ADDR;i++)
-	{
-		if(*((uint32_t *)i)== _MP_ )
-			return ((struct floating_point *)i);
-	}
+	ptr=((struct floating_point *)find_table(EBDA_ptr,EBDA_ptr+0x400, _MP_));
+	if(ptr)
+		return ptr;
+	ptr=((struct floating_point *)find_table(base_mem,base_mem+0x400, _MP_));
+	if(ptr)
+		return ptr;
+	ptr=((struct floating_point *)find_table(BIOS_ROM_START_ADDR,BIOS_ROM_END_ADDR, _MP_));
+	if(ptr)
+		return ptr;
 	return NULL;
 }
 uintptr_t check_mp()

@@ -70,7 +70,7 @@ pmode:
 lmode:
 	//jmp .
 	mov $AP_init, %rax
-	jmp %rax
+	jmp *%rax
 	jmp .
 .global gdt
 gdt:
