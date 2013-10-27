@@ -70,7 +70,6 @@ cpu_state* dispatch_thread(cpu_state* cpu)
 		curcontext= &startup_context;
 		
 		next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
-		//kprintf("next_contexta 0x%x",next_context);
 		current_thread = first_thread;
 	}
 	else 
@@ -104,7 +103,7 @@ cpu_state* dispatch_thread(cpu_state* cpu)
 	
 	if(current_thread->proc->context!=curcontext)
 	{
-		SET_CONTEXT(next_context);
+		SET_CONTEXT(next_context);;
 	}
 	return cpu;
 }
@@ -139,6 +138,7 @@ int32_t switchto_thread(uint32_t t_id,cpu_state* cpu)
 	if(current_thread->proc!=prev->proc)
 	{
 	    SET_CONTEXT(virt_to_phys(curcontext,(uintptr_t)current_thread->proc->context));
+	    
 	}
 	return 0;
 }
