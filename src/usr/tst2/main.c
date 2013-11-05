@@ -40,7 +40,7 @@ struct bootmod bootmod_lib;
 
 int main(void)
 {
-    while(1); // outcomment to disable shared objects on x86
+   // while(1); // outcomment to disable shared objects on x86
     struct elf_lib main_;
     struct elf_lib lib_;
     bootmod_lib.start=NULL;
@@ -60,11 +60,12 @@ int main(void)
 
     link_lib_against(&main_,&lib_,NULL);
     link_lib_against(&lib_,&main_,NULL);
+   
     foo();
     unsigned long malloced=(unsigned long)malloc(10);
     *((unsigned int*)malloced)= 0xDEADBEEF;
     uprintf(itoa(malloced,16));
-    
+     while(1);
     return 0;
 }
 

@@ -17,11 +17,12 @@
  */
 #include"st_stdlib.h"
 
+
 /**
  * converts a long to a char
  * @return ptr to converted int
  **/
-char * st_itoa(unsigned int n, unsigned int base)
+char * st_itoa(unsigned long n, unsigned int base)
 {
 	static char new_str[16];
 	unsigned int i = 14;

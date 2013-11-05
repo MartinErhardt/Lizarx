@@ -21,12 +21,16 @@ then
 	cp src/kernel/HAL/x86_64/Makefile src/kernel/Makefile
 	cp src/kernel/HAL/x86_64/kernel.ld src/kernel/kernel.ld
 	cp src/kernel/HAL/x86_64/loader.ld src/kernel/loader.ld
+	
+	cp src/usr/arch/x86_64/archdef.h src/usr
 else
 	cp src/kernel/HAL/x86/Makefile src/kernel/Makefile
 	cp src/kernel/HAL/x86/kernel.ld src/kernel/kernel.ld
+	
+	cp src/usr/arch/x86/archdef.h src/usr
 fi
 
-if [ "$1" != "--no-toolchain" ] && [ "$2" != "--no-toolchain" ]
+if [ "$1" != "--no-toolchain" ] && [ "$2" != "--no-toolchain" ] 
 then
 	
 	cd $TOOLCHAIN_DIR
@@ -80,6 +84,6 @@ mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
 
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH2.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH2.iso -d int -d int -smp 8 -cpu core2duo
+/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH2.iso -d int -d int -cpu core2duo
 date | cat >> ./doc/lines_of_code.txt
 (cloc . --exclude-dir=host/buildtools --exclude-list-file=doc/exclude_cloc.txt | cat >> ./doc/lines_of_code.txt)&exit

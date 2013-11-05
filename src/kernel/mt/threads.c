@@ -103,7 +103,7 @@ cpu_state* dispatch_thread(cpu_state* cpu)
 	
 	if(current_thread->proc->context!=curcontext)
 	{
-		SET_CONTEXT(next_context);;
+		SET_CONTEXT(next_context)
 	}
 	return cpu;
 }

@@ -18,6 +18,10 @@
 #ifndef ST_STDINT_H
 #define ST_STDINT_H
 
+#include"../../archdef.h"
+
+#ifdef ARCH_X86
+
 typedef unsigned long long st_uint64_t;
 typedef unsigned long st_uint32_t;
 typedef unsigned short st_uint16_t;
@@ -39,4 +43,29 @@ typedef unsigned long st_uintptr_t;
 typedef unsigned long st_uint_t;
 typedef long st_int_t;
 
+#endif
+#ifdef ARCH_X86_64
+
+typedef unsigned long long st_uint64_t;
+typedef unsigned int st_uint32_t;
+typedef unsigned short st_uint16_t;
+typedef unsigned char st_uint8_t;
+
+typedef long long  st_int64_t;
+typedef int st_int32_t;
+typedef short st_int16_t;
+typedef char st_int8_t;
+
+// size 
+typedef unsigned long long st_size_t;
+
+// Signed pointer-sized integer 
+typedef long long st_intptr_t;
+// Unsigned pointer-sized integer
+typedef unsigned long long st_uintptr_t;
+
+typedef unsigned long long st_uint_t;
+typedef long long st_int_t;
+
+#endif
 #endif

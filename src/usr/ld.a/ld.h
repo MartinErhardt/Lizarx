@@ -42,7 +42,13 @@ struct dynamic
 	struct	elf_rel * dyn_rel;
 	st_int_t	dyn_rel_count;
 	
-	st_int_t * hash;
+	struct	elf_rela * dyn_rela;
+	st_int_t	dyn_rela_count;
+	
+	struct	elf_rela * jmp_rela;
+	st_int_t	jmp_rela_count;
+	
+	st_int32_t * hash;
 	char * str;
 };
 

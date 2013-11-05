@@ -25,6 +25,7 @@
 #include<string.h>
 #include<boot/init.h>
 #include<mt/threads.h>
+#include<macros.h>
 
 cpu_state* handle_syscall(cpu_state* cpu)
 {
@@ -55,17 +56,19 @@ cpu_state* handle_syscall(cpu_state* cpu)
 			cpu->REG_DATA2=bm_size;
 			break;
 		case(SYS_VMM_MALLOC):
-			curcontext=NULL;
-			if(current_thread==NULL)
-			{
-				curcontext= &startup_context;
-			}
-			else
-			{
-				curcontext= current_thread->proc->context;
-			}
+			curcontext=get_cur_context();
 			cpu->REG_DATA0=(uintptr_t)uvmm_malloc(curcontext,cpu->REG_DATA0);
 			
+			break;
+		case(SYS_VMM_FIND):
+			curcontext=get_cur_context();
+			cpu->REG_DATA0=(uintptr_t)vmm_find_freemem(curcontext,cpu->REG_DATA0/PAGE_SIZE,KERNEL_SPACE,0xffffffff);
+			
+			break;
+		case(SYS_VMM_REALLOC):
+			
+			curcontext=get_cur_context();
+			cpu->REG_DATA0=vmm_realloc(curcontext,((void*)cpu->REG_DATA0),cpu->REG_DATA1,FLGCOMBAT_USER);
 			break;
 		default:break;
 	}

@@ -31,7 +31,9 @@ typedef enum {
     SYS_FORKPID,
     SYS_ERROR,
     SYS_GET_BOOTMOD,
-    SYS_VMM_MALLOC
+    SYS_VMM_MALLOC,
+    SYS_VMM_FIND,
+    SYS_VMM_REALLOC
 } syscalls;
 
 extern void intr_stub_48(void);

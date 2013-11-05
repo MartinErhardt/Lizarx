@@ -61,7 +61,11 @@ void init(struct multiboot_info * mb_info)
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
-	
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	

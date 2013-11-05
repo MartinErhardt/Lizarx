@@ -57,6 +57,8 @@ vmm_context * get_cur_context();
 void vmm_mark_used_inallcon(uint_t page);
 int_t vmm_map_inallcon(uintptr_t phys, uintptr_t virt, uint8_t flgs);
 
+void vmm_unmap(vmm_context*context,uintptr_t virt);
+
 void* kvmm_malloc(size_t size);
 void* uvmm_malloc(vmm_context* context,size_t size);
 void* vmm_malloc(vmm_context* context,size_t size, uintptr_t from,uintptr_t to,uint8_t flgs);

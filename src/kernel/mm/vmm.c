@@ -59,8 +59,6 @@ static void vmm_map_kernel(vmm_context* context);
 static void vmm_mark_used(vmm_context*first,uint_t page);
 static void vmm_mark_free(vmm_context* context,uint_t page);
 static int_t vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt ,uint8_t flgs);
-static void vmm_unmap(vmm_context*context,uintptr_t virt);
-
 vmm_context vmm_init(void)
 {
 	kprintf("[VMM] I: vmm_init ...");
@@ -88,14 +86,15 @@ vmm_context vmm_crcontext()
 	memset((void*)new_context.highest_paging,0x00000000,PAGE_SIZE*2);// clear the PgDIR to avoid invalid values
 	memset((void*)new_context.mm_tree,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
 #ifdef ARCH_X86_64
+	uintptr_t highest_paging_phys = virt_to_phys(get_cur_context(),((uintptr_t)new_context.highest_paging));
 	((struct vmm_pagemap_level4 *)new_context.highest_paging)->rw_flags = FLGCOMBAT_USER;
-	((struct vmm_pagemap_level4 *)new_context.highest_paging)->pagedirptrtbl_ptr = (virt_to_phys(get_cur_context(),((uintptr_t)new_context.highest_paging))+PAGE_SIZE)/PAGE_SIZE;
+	((struct vmm_pagemap_level4 *)new_context.highest_paging)->pagedirptrtbl_ptr = (highest_paging_phys+PAGE_SIZE)/PAGE_SIZE;
 	
 	((struct vmm_pagedir_ptrtbl*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE))->rw_flags = FLGCOMBAT_USER;
-	((struct vmm_pagedir_ptrtbl*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE))->pagedir_ptr = (virt_to_phys(get_cur_context(),((uintptr_t)new_context.highest_paging))+PAGE_SIZE+PAGE_SIZE)/PAGE_SIZE;
+	((struct vmm_pagedir_ptrtbl*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE))->pagedir_ptr = (highest_paging_phys+PAGE_SIZE+PAGE_SIZE)/PAGE_SIZE;
 	
 	((struct vmm_pagedir*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE+PAGE_SIZE))->rw_flags = FLGCOMBAT_USER;
-	((struct vmm_pagedir*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE+PAGE_SIZE))->pagetbl_ptr = (virt_to_phys(get_cur_context(),((uintptr_t)new_context.highest_paging))+PAGE_SIZE+PAGE_SIZE+PAGE_SIZE)/PAGE_SIZE;
+	((struct vmm_pagedir*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE+PAGE_SIZE))->pagetbl_ptr = (highest_paging_phys+PAGE_SIZE+PAGE_SIZE+PAGE_SIZE)/PAGE_SIZE;
 #endif
 	vmm_map_kernel(&new_context);
 	return new_context;
@@ -219,7 +218,7 @@ int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 	{
 		if (vmm_is_alloced(context,page+j)==TRUE) 
 		{
-			kprintf("[VMM] E: vmm_realloc says: page 0x%x000 alloiced\n",page +j);
+			//kprintf("[VMM] E: vmm_realloc says: page 0x%x000 alloced\n",page +j);
 			return -1;
 		} 
 	}

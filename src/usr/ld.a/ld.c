@@ -21,63 +21,143 @@
 #include"lib_stat/st_stdlib.h"
 #include"lib_stat/st_string.h"
 #include"lib_stat/st_stdarg.h"
+#include"../archdef.h"
 #include"lib_stat/video.h"
+
 #define SYS_VMM_MALLOC 10 
-static st_uintptr_t st_vmm_malloc(st_size_t);
+#define SYS_VMM_FIND 11
+#define SYS_VMM_REALLOC 12
+
+static st_uintptr_t st_vmm_malloc(st_size_t alloc_size);
+static st_uintptr_t st_vmm_find(st_size_t alloc_size);
+static st_uint_t st_vmm_realloc(st_uintptr_t ptr, st_size_t alloc_size);
 static struct elf_section_header * get_dynamic(struct elf_header* elf);
-static void section_to_dynamic(struct elf_dyn* cur_dyn,
-					   st_int_t dynamic_num,
-					   struct elf_header* elf,
-					   struct dynamic * fill_in);
-static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_elfs,int elf_num);
-static struct elf_symbol * get_sym_by_name(struct dynamic * dyn_struct, char * sym_name);
+static void section_to_dynamic(	struct elf_dyn* cur_dyn,
+				st_int_t dynamic_num,
+				struct elf_header* elf,
+				struct dynamic * fill_in);
+static void resolve_references(struct dynamic * to_resolve,
+			       struct dynamic * all_elfs,int elf_num);
+static struct elf_symbol * get_sym_by_name(struct dynamic * dyn_struct,
+					   char * sym_name);
 static st_uint32_t elf_hash(const unsigned char *name);
+
 static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_elfs,int elf_num)
 {
 	st_uint_t * cur_reloc_field=ST_NULL;
 	struct elf_rel * cur_rel = ST_NULL;
+	struct elf_rela * cur_rela = ST_NULL;
 	int i,j,strndx,symndx;
 	struct elf_symbol * cur_sym=ST_NULL;
-	for(i=0;i<to_resolve->jmp_rel_count;i++)
+	if(to_resolve->jmp_rel != ST_NULL)
 	{
-		cur_rel=&to_resolve->jmp_rel[i];
-		if(ELF_REL_TYPE(cur_rel->info)!=ELF_REL_JMP_SLOT)
+		for(i=0;i<to_resolve->jmp_rel_count;i++)
 		{
-			continue;
-		}
-		cur_reloc_field = (st_uint_t *)(cur_rel->offset+to_resolve->runtime_addr);
-		symndx=ELF_REL_BIND(cur_rel->info);
-		strndx=to_resolve->sym[symndx].name;
-		for(j=0;j<elf_num;j++)
-		{
-			cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
-			if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
+			
+			cur_rel=&to_resolve->jmp_rel[i];
+			
+			if(ELF_REL_TYPE(cur_rel->info)!=ELF_REL_JMP_SLOT)
 			{
-				*cur_reloc_field=cur_sym->value+all_elfs[j].runtime_addr;
-				break;
+				continue;
+			}
+			
+			cur_reloc_field = (st_uint_t *)(cur_rel->offset+to_resolve->runtime_addr);
+			
+			symndx=ELF_REL_BIND(cur_rel->info);
+			strndx=to_resolve->sym[symndx].name;
+			for(j=0;j<elf_num;j++)
+			{
+				cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
+				
+				if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
+				{
+					*cur_reloc_field=cur_sym->value+all_elfs[j].runtime_addr;
+					break;
+				}
+				
+			}
+			
+		}
+	}
+	
+	
+	if(to_resolve->dyn_rel != ST_NULL)
+	{
+		for(i=0;i<to_resolve->dyn_rel_count;i++)
+		{
+			cur_rel=&to_resolve->dyn_rel[i];
+			if(ELF_REL_TYPE(cur_rel->info)!=ELF_REL_GLOB_DATA)
+			{
+				continue;
+			}
+			cur_reloc_field = (st_uint_t *)(cur_rel->offset+to_resolve->runtime_addr);
+			symndx=ELF_REL_BIND(cur_rel->info);
+			strndx=to_resolve->sym[symndx].name;
+			for(j=0;j<elf_num;j++)
+			{
+				cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
+				if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
+				{
+					
+					*cur_reloc_field=cur_sym->value+all_elfs[j].runtime_addr;
+					break;
+				}
 			}
 		}
 	}
-	for(i=0;i<to_resolve->dyn_rel_count;i++)
+	if(to_resolve->jmp_rela != ST_NULL)
 	{
-		cur_rel=&to_resolve->dyn_rel[i];
-		if(ELF_REL_TYPE(cur_rel->info)!=ELF_REL_GLOB_DATA)
+		for(i=0;i<to_resolve->dyn_rela_count;i++)
 		{
-			continue;
-		}
-		cur_reloc_field = (st_uint_t *)(cur_rel->offset+to_resolve->runtime_addr);
-		symndx=ELF_REL_BIND(cur_rel->info);
-		strndx=to_resolve->sym[symndx].name;
-		for(j=0;j<elf_num;j++)
-		{
-			cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
-			if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
+			cur_rela=&to_resolve->jmp_rela[i];
+			if(ELF_REL_TYPE(cur_rela->info)!=ELF_REL_JMP_SLOT)
 			{
-				*cur_reloc_field=cur_sym->value+all_elfs[j].runtime_addr;
-				break;
+				continue;
+			}
+			cur_reloc_field = (st_uint_t *)(cur_rela->offset+to_resolve->runtime_addr);
+			symndx=ELF_REL_BIND(cur_rela->info);
+			strndx=to_resolve->sym[symndx].name;
+			
+			for(j=0;j<elf_num;j++)
+			{
+				cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
+				
+				if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
+				{
+					*cur_reloc_field=cur_sym->value+all_elfs[j].runtime_addr;
+					break;
+				}
 			}
 		}
 	}
+	
+	if(to_resolve->dyn_rela != ST_NULL)
+	{
+		for(i=0;i<to_resolve->dyn_rela_count;i++)
+		{
+			cur_rela=&to_resolve->dyn_rela[i];
+			
+			if(ELF_REL_TYPE(cur_rela->info)!=ELF_REL_GLOB_DATA)
+			{
+				continue;
+			}
+			cur_reloc_field = (st_uint_t *)(cur_rela->offset+to_resolve->runtime_addr);
+			symndx=ELF_REL_BIND(cur_rela->info);
+			strndx=to_resolve->sym[symndx].name;
+			
+			for(j=0;j<elf_num;j++)
+			{
+				
+				cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
+				if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
+				{
+					*cur_reloc_field=cur_sym->value+all_elfs[j].runtime_addr;
+					break;
+				}
+			}
+		}
+	}
+	
 }
 void link_lib_against(struct elf_lib* first_elf, ...)
 {
@@ -115,7 +195,7 @@ void link_lib_against(struct elf_lib* first_elf, ...)
 }
 static struct elf_section_header * get_dynamic(struct elf_header* elf)
 {
-	struct elf_section_header* section_header = (struct elf_section_header*)((st_uintptr_t)elf+(elf)->sh_offset);
+	struct elf_section_header* section_header = (struct elf_section_header*)(((st_uintptr_t)elf)+(elf)->sh_offset);
 	
 	unsigned int i = 0;
 	unsigned int section_num = (elf)->sh_entry_count;
@@ -149,23 +229,41 @@ static void section_to_dynamic(struct elf_dyn* cur_dyn,
 		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_HASH)
 		{
-			fill_in->hash = (st_int_t * )(cur_dyn->un.ptr+fill_in->runtime_addr);
+			fill_in->hash = (st_int32_t * )(cur_dyn->un.ptr+fill_in->runtime_addr);
 		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_JMPREL)
 		{
+#ifdef ARCH_X86
 			fill_in->jmp_rel = (struct	elf_rel * )(cur_dyn->un.ptr+fill_in->runtime_addr);
+#endif
+#ifdef ARCH_X86_64
+			fill_in->jmp_rela = (struct	elf_rela * )(cur_dyn->un.ptr+fill_in->runtime_addr);
+#endif
 		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_REL)
 		{
 			fill_in->dyn_rel = (struct	elf_rel * )(cur_dyn->un.ptr+fill_in->runtime_addr);
 		}
+		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_RELA)
+		{
+			fill_in->dyn_rela = (struct	elf_rela * )(cur_dyn->un.ptr+fill_in->runtime_addr);
+		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_RELSZ)
 		{
 			fill_in->dyn_rel_count = cur_dyn->un.val/sizeof(struct elf_rel);
 		}
+		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_RELASZ)
+		{
+			fill_in->dyn_rela_count = cur_dyn->un.val/sizeof(struct elf_rela);
+		}
 		else if(cur_dyn->type == ELF_DYNAMIC_TYPE_PLTRELSZ)
 		{
+#ifdef ARCH_X86
 			fill_in->jmp_rel_count = cur_dyn->un.val/sizeof(struct elf_rel);
+#endif
+#ifdef ARCH_X86_64
+			fill_in->jmp_rela_count = cur_dyn->un.val/sizeof(struct elf_rela);
+#endif
 		}
 		cur_dyn=(struct elf_dyn*)((st_uintptr_t)(cur_dyn)+sizeof(struct elf_dyn));
 	}
@@ -182,18 +280,31 @@ void * init_shared_lib(void* image, st_size_t size)
 	void * dest=ST_NULL;
 	st_uintptr_t file_dest=0x0;
 	/* Ist es ueberhaupt eine ELF-Datei? */
-	//kprintf("0x%x",(uintptr_t)image);
 	
 	if (header->i_magic != ELF_MAGIC) 
 	{
 		vprintf("[ELF_LOADER] E: init_elf couldn't find valid ELF-Magic!\n");
+		vprintf(st_itoa(((st_uintptr_t)header),16));
 		return ST_NULL;
 	}
+#ifdef ARCH_X86
 	if (header->i_class != ELF_CLASS_32)
 	{
 		vprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
 		return ST_NULL;
 	}
+	if (header->machine != ELF_MACHINE_386)
+	{
+		vprintf("[ELF_LOADER] E: init_elf found elf with invalid target!\n");
+	}
+#endif
+#ifdef ARCH_X86_64
+	if (header->i_class != ELF_CLASS_64)
+	{
+		vprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
+		return ST_NULL;
+	}
+#endif
 	if ((header->i_data != ELF_DATA_LITTLEENDIAN)||(header->version != ELF_DATA_LITTLEENDIAN))
 	{
 		vprintf("[ELF_LOADER] E: init_elf found elf with data != ELF_DATA_LITTLEENDIAN!\n");
@@ -202,10 +313,6 @@ void * init_shared_lib(void* image, st_size_t size)
 	if (header->type != ELF_TYPE_DYN)
 	{
 		vprintf("[ELF_LOADER] E: init_elf found elf with type != ELF_TYPE_EXEC\n");
-	}
-	if (header->machine != ELF_MACHINE_386)
-	{
-		vprintf("[ELF_LOADER] E: init_elf found elf with invalid target!\n");
 	}
 	if (header->i_version != ELF_VERSION_CURRENT)
 	{
@@ -219,18 +326,31 @@ void * init_shared_lib(void* image, st_size_t size)
 	* FIXME Wir erlauben der ELF-Datei hier, jeden beliebigen Speicher zu
 	* ueberschreiben, einschliesslich dem Kernel selbst.
 	*/
-	file_dest = st_vmm_malloc(size);
-	ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
+	
+	ph = (struct elf_program_header*) (((st_uintptr_t) image) + header->ph_offset);
+	for (i = 0; i < header->ph_entry_count; i++, ph++)
+	{
+		if(size<ph->virt_addr)
+			size = ph->virt_addr;
+	}
+	file_dest = st_vmm_find(size);
+	ph = (struct elf_program_header*) (((st_uintptr_t) image) + header->ph_offset);
+	
 	for (i = 0; i < header->ph_entry_count; i++, ph++)
 	{
 		if ((ph->type != ELF_PROGRAM_TYPE_LOAD)&&(ph->type != ELF_PROGRAM_TYPE_DYNAMIC))
 		{
+			
 			continue;
 		}
+		
+		st_vmm_realloc(file_dest+ph->virt_addr,ph->file_size);
 		dest = (void*)(file_dest+ph->virt_addr);
+		
 		void* src = ((char*) image) + ph->offset;
 		
 		st_memset(dest, 0x00000000, ph->mem_size);
+		
 		st_memcpy(dest, src, ph->file_size);
 	}
 	//print_symbols(image,(struct elf_section_header*)((uintptr_t)(image)+header->sh_offset),header->sh_entry_count);
@@ -243,6 +363,23 @@ st_uintptr_t st_vmm_malloc(st_size_t alloc_size)
 	asm volatile ("int $0x30"::"a" (SYS_VMM_MALLOC) );
 	asm volatile("nop" : "=d" (free_space) );
 	return free_space;
+}
+st_uintptr_t st_vmm_find(st_size_t alloc_size)
+{
+	st_uintptr_t free_space;
+	asm volatile( "nop" :: "d" (alloc_size));
+	asm volatile ("int $0x30"::"a" (SYS_VMM_FIND) );
+	asm volatile("nop" : "=d" (free_space) );
+	return free_space;
+}
+st_uint_t st_vmm_realloc(st_uintptr_t ptr, st_size_t alloc_size)
+{
+	st_uint_t suc;
+	asm volatile( "nop" :: "d" (ptr));
+	asm volatile( "nop" :: "b" (alloc_size));
+	asm volatile ("int $0x30"::"a" (SYS_VMM_REALLOC) );
+	asm volatile("nop" : "=d" (suc) );
+	return suc;
 }
 /*
 static size_t elf_get_size(struct elf_header * elf)
@@ -262,49 +399,48 @@ static size_t elf_get_size(struct elf_header * elf)
 }*/
 static st_uint32_t elf_hash(const unsigned char *name)
 {
-    st_uint32_t h = 0, g;
-    
-    while (*name) 
-    {
-        h = (h << 4) + *name++;
-        if ((g = h & 0xf0000000) != 0) 
+	st_uint32_t h = 0, g;
+	while (*name) 
 	{
-            h ^= g >> 24;
-        }
-        h &= ~g;
-    }
-    return h;
+		h = (h << 4) + *name++;
+		
+		if ((g = h & 0xf0000000) != 0) 
+		{
+			h ^= g >> 24;
+		}
+		h &= ~g;
+	}
+	return h;
 }
 static struct elf_symbol * get_sym_by_name(struct dynamic * dyn_struct, char * sym_name) 
 {
-
-    struct elf_symbol * sym;
-    st_int_t * bucket;
-    st_int_t * chain;
-    int		nbucket;
-    //int		nchain;
-    int		x;
-    int		y;
-    
-    // Calcuate the hash value 
-    x = elf_hash(sym_name);
-    // Find the hashes and chains 
-    nbucket = dyn_struct->hash[0];
-    //nchain  = dyn_struct->hash[1];
-    bucket  = &dyn_struct->hash[2];
-    chain   = &dyn_struct->hash[2 + nbucket];
-    
-    y = bucket[x % nbucket];
-    
-    do
-    {
-        sym = &dyn_struct->sym[y];
-        if (!st_strcmp(sym_name, dyn_struct->str + sym->name))
-        {
-            return sym;
-        }
-        y = chain[y];
-    } while (y);
-
-    return ST_NULL;
+	struct elf_symbol * sym;
+	st_int32_t * bucket;
+	st_int32_t * chain;
+	int		nbucket;
+	//int		nchain;
+	int		x;
+	int		y;
+	// Calcuate the hash value 
+	x = elf_hash(sym_name);
+	// Find the hashes and chains 
+	nbucket = dyn_struct->hash[0];
+	//nchain  = dyn_struct->hash[1];
+	bucket  = &dyn_struct->hash[2];
+	chain   = &dyn_struct->hash[2 + nbucket];
+	y = bucket[x % nbucket];
+	
+	do
+	{
+		sym = &dyn_struct->sym[y];
+		if (!st_strcmp(sym_name, dyn_struct->str + sym->name))
+		{
+			return sym;
+		}
+		
+		y = chain[y];
+		
+	} while (y);
+	
+	return ST_NULL;
 }

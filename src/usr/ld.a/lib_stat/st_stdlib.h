@@ -19,6 +19,6 @@
 #define STDLIB_H
 #include"st_stdint.h"
 
-char * st_itoa(unsigned int n, unsigned int base);
+char * st_itoa(unsigned long n, unsigned int base);
 
 #endif
