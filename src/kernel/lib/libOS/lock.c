@@ -20,11 +20,14 @@
 #include"lock.h"
 #include<smp_capabilities.h>
 
-void spinlock_ackquire(uint_t * lock)
+void spinlock_ackquire(uint8_t* lock)
 {
-	while(tsl(lock,LOCK_USED)==LOCK_USED);
+    asm volatile("movb $1, %%cl;"
+        "lock_loop: xorb %%al, %%al;"
+        "lock cmpxchgb %%cl, (%0);"
+        "jnz lock_loop;" : : "D" (lock) : "eax", "ecx");
 }
-void spinlock_release(uint_t * lock)
+void spinlock_release(uint8_t * lock)
 {
-	tsl(lock, LOCK_FREE);
+	*lock = LOCK_FREE;
 }

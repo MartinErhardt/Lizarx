@@ -6,6 +6,7 @@
 #include "../ld.a/ld.h"
 #define SYS_WRITE 0
 #define SYS_GET_BOOTMOD 9
+#define SYS_VMM_MALLOC 10 
 
 #define VGA_BLACK 0x0
 #define VGA_BLUE 0x1
@@ -37,16 +38,31 @@ void get_bootmod(int num, struct bootmod* fill_it);
 
 struct bootmod bootmod_main;
 struct bootmod bootmod_lib;
-
+uintptr_t st_vmm_malloc(st_size_t alloc_size)
+{
+	st_uintptr_t free_space;
+	asm volatile( "nop" :: "d" (alloc_size));
+	asm volatile ("int $0x30"::"a" (SYS_VMM_MALLOC) );
+	asm volatile("nop" : "=d" (free_space) );
+	return free_space;
+}
 int main(void)
 {
-   // while(1); // outcomment to disable shared objects on x86
+     // outcomment to disable shared objects on x86
     struct elf_lib main_;
     struct elf_lib lib_;
     bootmod_lib.start=NULL;
     bootmod_lib.size=0;
     bootmod_main.start=NULL;
     bootmod_main.size=0;
+    uprintf("start");
+    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+    
+    while(1);
     get_bootmod(2,&bootmod_main);
     get_bootmod(1,&bootmod_lib);
     
@@ -62,10 +78,12 @@ int main(void)
     link_lib_against(&lib_,&main_,NULL);
    
     foo();
+    
     unsigned long malloced=(unsigned long)malloc(10);
+    
     *((unsigned int*)malloced)= 0xDEADBEEF;
     uprintf(itoa(malloced,16));
-     while(1);
+    while(1);
     return 0;
 }
 

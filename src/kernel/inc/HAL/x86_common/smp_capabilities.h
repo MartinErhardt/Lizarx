@@ -75,12 +75,14 @@ struct processor_entry
 	uint64_t reserved;
 }__attribute__((packed));
 
+uint_t cores_from_tables;
+
 struct config_table_header * cf_tbl_header;
 struct floating_point * fp;
 
 struct floating_point * find_floating_pointer_struct();
 uintptr_t check_mp();
 
-uint32_t tsl(uint_t * lock,uint32_t value);
+uint_t tsl(uint_t lock,uint_t value);
 
 #endif

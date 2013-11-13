@@ -20,6 +20,7 @@
 #include<stdint.h>
 #include <stdbool.h>
 
+void init_idt_AP();
 void init_idt(void);
 void enable_intr();
 

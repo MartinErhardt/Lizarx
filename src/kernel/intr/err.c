@@ -29,25 +29,28 @@ void handle_exception(cpu_state* cpu)
 	//redscreen(cpu);
 	while(1) 
 	{
-	   // Prozessor anhalten
-	   //asm volatile("cli; hlt");
+	   asm volatile("cli; hlt");
 	}
 }
 void redscreen(cpu_state* cpu)
 {
-	clrscr(VGA_BLACK, VGA_RED);
+	//clrscr(VGA_BLACK, VGA_RED);
 #ifdef ARCH_X86_64
-	kprintfcol_scr(VGA_RED,VGA_BLACK,"A CRITICAL ERROR HAS OCURRED:\n"\
+	uint64_t cr2;
+	asm volatile ("mov %%cr2, %0" : "=r" (cr2) : : "memory");
+	kprintfcol_scr(VGA_RED,VGA_BLACK,"\nA CRITICAL ERROR HAS OCURRED:\n"\
 	    "Error: %d \n"\
+	    "Intr: %d \n"\
 	    "RAX: 0x%x \tRBX: 0x%x \tRCX: 0x%x\tRDX: 0x%x\n"\
 	    "RSI: 0x%x \tRDI: 0x%x\n"\
 	    "RSP: 0x%x \tRBP 0x%x\n"\
 	    "RIP: 0x%x \n"\
 	    "RFLAGS:0x%x\n"\
 	    "R8: 0x%x  \tR9: 0x%x  \tR10 0x%x \tR11 0x%x\n"
-	    "R12 0x%x  \tR13 0x%x  \tR14 0x%x \tR15\n"
-	    "CS: 0x%x  \tSS: 0x%x\n", 
+	    "R12 0x%x  \tR13 0x%x  \tR14 0x%x \tR15 0x%x\n"
+	    "CS: 0x%x  \tSS: 0x%x  \tCR2 0x%x\n", 
 	    cpu->error,
+	    cpu->intr,
 	    cpu->rax, cpu->rbx, cpu->rcx, cpu->rdx,
 	    cpu->rsi, cpu->rdi,
 	    cpu->rsp, cpu->rbp,
@@ -55,25 +58,30 @@ void redscreen(cpu_state* cpu)
 	    cpu->rflags, 
 	    cpu->r8, cpu->r9, cpu->r10, cpu->r11, 
 	    cpu->r12, cpu->r13, cpu->r14, cpu->r15,
-	    cpu->cs, cpu->ss
+	    cpu->cs, cpu->ss, cr2
 	  );
+	
 #endif
 #ifdef ARCH_X86
-	kprintfcol_scr(VGA_RED,VGA_BLACK,"A CRITICAL ERROR HAS OCURRED:\n"\
+	uint32_t cr2;
+	asm volatile ("mov %%cr2, %0" : "=r" (cr2) : : "memory");
+	kprintfcol_scr(VGA_RED,VGA_BLACK,"\nA CRITICAL ERROR HAS OCURRED:\n"\
 	    "Error: %d \n"\
+	    "Intr: %d \n"\
 	    "EAX: 0x%x \tEBX: 0x%x\tECX: 0x%x\tEDX: 0x%x\n"\
 	    "ESI: 0x%x\tEDI: 0x%x\n"\
 	    "ESP: 0x%x\tEBP 0x%x\n"\
 	    "EIP: 0x%x \n"\
 	    "EFLAGS:0x%x\n"\
-	    "CS:  0x%x\tSS: 0x%x\n", 
+	    "CS:  0x%x\tSS: 0x%x\tCR2 0x%x\n", 
+	    cpu->error,
 	    cpu->intr,
 	    cpu->eax, cpu->ebx, cpu->ecx, cpu->edx,
 	    cpu->esi, cpu->edi,
 	    cpu->esi, cpu->ebp,
 	    cpu->eip,
 	    cpu->eflags, 
-	    cpu->cs, cpu->ss
+	    cpu->cs, cpu->ss, cr2
 	  );
 	get_stack_trace(kernel_elf,(uintptr_t)cpu->ebp,(uintptr_t)cpu->eip);
 /*#else

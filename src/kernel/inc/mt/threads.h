@@ -23,7 +23,7 @@
 #include<stdint.h>
 #include"proc.h"
 
-#define STDRD_STACKSIZ 0x2000
+#define STDRD_STACKSIZ 0x3000
 
 struct thread* first_thread;
 struct thread* current_thread;

@@ -23,13 +23,12 @@
 #include<libOS/find.h>
 
 // FIXME check checksum
-uint32_t tsl(uint_t * lock,uint32_t value)
+uint_t tsl(uint_t lock,uint_t value)
 {
-	uint_t result=0;
-	asm volatile ("nop" :: "a"(lock),"d"(value));
-	asm volatile ("xchg %edx, %eax ");
-	asm volatile ("nop" : "=a"(result));
-	return result;
+	asm volatile ("nop" :: "d"(lock),"a"(value));
+	asm volatile ("xchg (%edx), %eax");
+	asm volatile ("nop" : "=a"(value));
+	return value;
 }
 struct floating_point * find_floating_pointer_struct()
 {
@@ -55,7 +54,7 @@ uintptr_t check_mp()
 	cf_tbl_header= (struct config_table_header *)((uintptr_t)fp->config_table);
 	uintptr_t cf_tbl_entry = ((uintptr_t) cf_tbl_header) + sizeof(struct config_table_header);
 	uint32_t i;
-	uint32_t cores=0;
+	
 	for(i=0;i<cf_tbl_header->entry_count;i++)
 	{
 		switch(*((uint8_t *)cf_tbl_entry))
@@ -63,7 +62,7 @@ uintptr_t check_mp()
 			case(ENTRY_TYPE_PROCESSOR):
 				if((((struct processor_entry*) cf_tbl_entry)->cpu_flags) & 0x01)
 				{
-					cores++;
+					cores_from_tables++;
 					//kprintf("local apic 0x%x \n",(((struct processor_entry*) cf_tbl_entry)->local_apic_id));
 				}
 				cf_tbl_entry+=sizeof(struct processor_entry);
@@ -83,6 +82,6 @@ uintptr_t check_mp()
 			default:break;
 		}
 	}
-	kprintf("%dx",cores);
+	kprintf("CPU Cores: %d \n",cores_from_tables);
 	return (uintptr_t)cf_tbl_header->local_apic_ptr;
 }

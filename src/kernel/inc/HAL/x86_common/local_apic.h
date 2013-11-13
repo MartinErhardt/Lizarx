@@ -66,6 +66,9 @@ extern void gdt64(void);
 extern void gdtr64(void);
 extern void lmode(void);
 #endif
+
+uint8_t all_APs_booted;
+
 void local_apic_init(uintptr_t local_apic_addr_phys);
 void startup_APs();
 

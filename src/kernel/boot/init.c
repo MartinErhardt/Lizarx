@@ -33,6 +33,9 @@
 #include <boot/init.h>
 #include <local_apic.h>
 #include <cpu.h>
+#include <libOS/lock.h>
+
+uint32_t cores_booted=1;
 
 void init(struct multiboot_info * mb_info)
 {
@@ -61,6 +64,25 @@ void init(struct multiboot_info * mb_info)
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
+	
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
+	pmm_malloc(0x1);
 	pmm_malloc(0x1);
 	pmm_malloc(0x1);
 	pmm_malloc(0x1);
@@ -110,6 +132,20 @@ void init(struct multiboot_info * mb_info)
 }
 void AP_init()
 {
+	spinlock_ackquire(((uint8_t *)0x7208));
+	
 	cpu_caps();
+	cores_booted++;
+	init_idt_AP();
+	
+	if(cores_booted==cores_from_tables)
+	{
+		spinlock_release(&all_APs_booted);
+	}
+	else
+	{
+		spinlock_release(((uint8_t *)0x7208));
+	}
+	
 	while(1);
 }

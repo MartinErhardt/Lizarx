@@ -68,7 +68,9 @@ cpu_state* handle_syscall(cpu_state* cpu)
 		case(SYS_VMM_REALLOC):
 			
 			curcontext=get_cur_context();
-			cpu->REG_DATA0=vmm_realloc(curcontext,((void*)cpu->REG_DATA0),cpu->REG_DATA1,FLGCOMBAT_USER);
+			
+			if((vmm_realloc(curcontext,((void*)cpu->REG_DATA0),cpu->REG_DATA1,FLGCOMBAT_USER))<0)
+				kprintf("error reallocating");
 			break;
 		default:break;
 	}

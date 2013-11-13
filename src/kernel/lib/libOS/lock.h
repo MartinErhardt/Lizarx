@@ -23,7 +23,7 @@
 #define LOCK_FREE 0
 #define LOCK_USED 1
 
-void spinlock_ackquire(uint_t * lock);
-void spinlock_release(uint_t * lock);
+void spinlock_ackquire(uint8_t * lock);
+void spinlock_release(uint8_t * lock);
 
 #endif

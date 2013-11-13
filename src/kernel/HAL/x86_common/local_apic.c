@@ -25,6 +25,7 @@
 #include <macros.h>
 #include <asm_inline.h>
 #include <libOS/mmio.h>
+#include <libOS/lock.h>
 
 #define TRAMPOLINE_SIZE 0x100
 
@@ -55,11 +56,10 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 }
 void startup_APs()
 {
-	uint32_t z =0;
 	void * trampoline_virt = kvmm_malloc(PAGE_SIZE);
 	memcpy(trampoline_virt, &trampoline_entry_func, TRAMPOLINE_SIZE);
 	uint8_t vector = virt_to_phys(&startup_context, ((uintptr_t)trampoline_virt))/PAGE_SIZE;
-	
+	all_APs_booted=LOCK_USED;
 	uintptr_t trampoline_stack_virt = 0x7000;
 	
 	memcpy(((void*)trampoline_stack_virt), &gdt, 0x18);
@@ -70,12 +70,12 @@ void startup_APs()
 	memcpy(((void*)trampoline_stack_virt+0x100), &lmode, 0x50);
 #endif
 	memcpy(((void*)trampoline_stack_virt+0x48), &pmode, 0xb0);
-	
+	all_APs_booted=LOCK_USED;
+	*((uint8_t *)0x7208)=LOCK_FREE;
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_INIT,vector,1);
 	
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector,0); // try to start processor with APIC id;
-	for(z = 0; z < 0x90000; z++);
-	//local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector); // here I try to start all APs with a single IPI; not sure whether this is possible
+	spinlock_ackquire(&all_APs_booted);
 }
 /*
 static void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode)

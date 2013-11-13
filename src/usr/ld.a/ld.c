@@ -49,6 +49,7 @@ static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_
 	struct elf_rela * cur_rela = ST_NULL;
 	int i,j,strndx,symndx;
 	struct elf_symbol * cur_sym=ST_NULL;
+	vprintf("hi1");
 	if(to_resolve->jmp_rel != ST_NULL)
 	{
 		for(i=0;i<to_resolve->jmp_rel_count;i++)
@@ -79,7 +80,7 @@ static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_
 			
 		}
 	}
-	
+	vprintf("hi2");
 	
 	if(to_resolve->dyn_rel != ST_NULL)
 	{
@@ -96,6 +97,7 @@ static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_
 			for(j=0;j<elf_num;j++)
 			{
 				cur_sym=get_sym_by_name(&all_elfs[j],&to_resolve->str[strndx]);
+				
 				if((cur_sym!=ST_NULL)&&(cur_sym->section_index))
 				{
 					
@@ -105,6 +107,7 @@ static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_
 			}
 		}
 	}
+	
 	if(to_resolve->jmp_rela != ST_NULL)
 	{
 		for(i=0;i<to_resolve->dyn_rela_count;i++)
@@ -157,7 +160,7 @@ static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_
 			}
 		}
 	}
-	
+	vprintf("hi4");
 }
 void link_lib_against(struct elf_lib* first_elf, ...)
 {
@@ -217,6 +220,7 @@ static void section_to_dynamic(struct elf_dyn* cur_dyn,
 {
 	unsigned int i = 0;
 	fill_in->header=elf;
+	vprintf("hi01");
 	for(i=0;i<dynamic_num;i++)
 	{
 		if(cur_dyn->type == ELF_DYNAMIC_TYPE_SYM_TAB)
@@ -348,7 +352,7 @@ void * init_shared_lib(void* image, st_size_t size)
 		dest = (void*)(file_dest+ph->virt_addr);
 		
 		void* src = ((char*) image) + ph->offset;
-		
+		vprintf("hi001");
 		st_memset(dest, 0x00000000, ph->mem_size);
 		
 		st_memcpy(dest, src, ph->file_size);

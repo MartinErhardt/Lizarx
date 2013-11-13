@@ -68,6 +68,7 @@
     pop %r13
     pop %r14
     pop %r15
+    
 .endm
 
 .macro INTR_STUB_ERROR nr

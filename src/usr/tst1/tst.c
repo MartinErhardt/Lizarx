@@ -29,16 +29,16 @@ char * itoa(unsigned int n, unsigned int base);
 //extern "C" void _start();
 int main(void)
 {
-    char hellocpp[]="hello C++ \n";
-    char hellolibc[]="hello libC; sqrt of 4 =";
-    char newline[]="\n";
-    uprintf(&hellocpp[0]);
-    uprintf(&hellolibc[0]);
-    uprintf(itoa(sqrt(4),10));
-    uprintf(&newline[0]);
-
-    while(1);
-    return 0;
+	
+	char hellocpp[]="hello C++ \n";
+	char hellolibc[]="hello libC; sqrt of 4 =";
+	char newline[]="\n";
+	uprintf(&hellocpp[0]);
+	uprintf(&hellolibc[0]);
+	uprintf(itoa(sqrt(4),10));
+	uprintf(&newline[0]);
+	while(1);
+	return 0;
 }
 void uprintf(char* fmt, ...)
 {
