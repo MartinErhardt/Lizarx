@@ -68,8 +68,15 @@ extern void lmode(void);
 #endif
 
 uint8_t all_APs_booted;
+uint8_t apic_ready;
+
+void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode);
+void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode);
+void local_apic_eoi();
 
 void local_apic_init(uintptr_t local_apic_addr_phys);
-void startup_APs();
+void local_apic_init_AP();
 
+void startup_APs();
+void local_apic_init_AP();
 #endif

@@ -68,7 +68,7 @@ pmode:
 .code64
 .global lmode
 lmode:
-	//jmp .
+	cli
 	mov $AP_init, %rax
 	jmp *%rax
 	jmp .

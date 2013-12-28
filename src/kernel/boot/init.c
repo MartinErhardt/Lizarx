@@ -34,6 +34,7 @@
 #include <local_apic.h>
 #include <cpu.h>
 #include <libOS/lock.h>
+#include <intr/irq.h>
 
 uint32_t cores_booted=1;
 
@@ -47,6 +48,7 @@ void init(struct multiboot_info * mb_info)
 	cur_proc = NULL;
 	startup_context.highest_paging=0x0;
 	startup_context.mm_tree=0x0;
+	apic_ready=0x0;
 	//struct tm* time_is=NULL;
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob=modules;
@@ -60,34 +62,11 @@ void init(struct multiboot_info * mb_info)
 	kprintf("... SUCCESS\n");
 #endif
 	kprintf("[INIT] I: init started\n");
-	
+	to_flush=0x0;
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
 	
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
-	pmm_malloc(0x1);
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	
@@ -97,6 +76,8 @@ void init(struct multiboot_info * mb_info)
 	{
 		
 		local_apic_init(smp_support_);
+		cores_booted=1;
+		
 		startup_APs();
 	}
 	
@@ -133,19 +114,38 @@ void init(struct multiboot_info * mb_info)
 void AP_init()
 {
 	spinlock_ackquire(((uint8_t *)0x7208));
-	
-	cpu_caps();
-	cores_booted++;
+	//local_apic_init_AP();
+	uintptr_t stack= ((uintptr_t)kvmm_malloc(0x2000))+0x1ff0;
+	asm volatile("nop":: "a"(stack));
+#ifdef ARCH_X86
+	asm volatile ("mov %eax, %esp" );
+#endif
+#ifdef ARCH_X86_64
+	asm volatile ("mov %rax, %rsp" );
+#endif
 	init_idt_AP();
+	local_apic_init_AP();
+	local_apic_eoi();
+	
+	cores_booted++;
+	cpu_caps();
 	
 	if(cores_booted==cores_from_tables)
 	{
+		//spinlock_lock(&testl);
+		
+		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 28, 0x0);
+		
+		//spinlock_ackquire(&testl);
+		
+		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 28, 0x0);
+		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 29, 0x0);
 		spinlock_release(&all_APs_booted);
 	}
 	else
 	{
 		spinlock_release(((uint8_t *)0x7208));
 	}
-	
+	//enable_intr();
 	while(1);
 }

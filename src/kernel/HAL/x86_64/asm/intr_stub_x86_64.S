@@ -170,10 +170,17 @@ INTR_STUB_EXCEPTION 16
 INTR_STUB_ERROR 17
 
 INTR_STUB_EXCEPTION 18
+
+// Flush TLB
+INTR_STUB_IRQ 28
+
+// APIC Timer
+INTR_STUB_IRQ 29
+
 // APIC Error Interrupt
 .global intr_stub_30
 intr_stub_30:
-	iretq
+	jmp .
 
 // APIC Spurious Interrupt
 .global intr_stub_31

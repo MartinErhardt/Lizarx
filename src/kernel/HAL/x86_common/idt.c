@@ -44,12 +44,12 @@ struct idt_entry idt[IDT_SIZE];
 
 struct
 {
-	  unsigned short int limit;
-	  void* pointer;
+	unsigned short int limit;
+	void* pointer;
 } __attribute__((packed)) idtp = 
 {
-	  .limit = IDT_SIZE * 8 - 1,
-	  .pointer = idt,
+	.limit = IDT_SIZE * 8 - 1,
+	.pointer = idt,
 };
 
 static void idt_set_entry(int i, void (*fn)(), unsigned int selector,
@@ -80,13 +80,13 @@ void init_idt(void)
 	OUTB(MASTER_PiC_DATA, IRQ_BASE);
 	OUTB(MASTER_PiC_DATA, 0x04); // slave at IRQ 2
 	OUTB(MASTER_PiC_DATA, ICW_4);
-
+	
 	// init slave-PIC
 	OUTB(SLAVE_PIC_COMMAND, PIC_INIT);
 	OUTB(SLAVE_PiC_DATA, 0x28); // interruptnumber for IRQ 8
 	OUTB(SLAVE_PiC_DATA, 0x02); // slave at IRQ 2
 	OUTB(SLAVE_PiC_DATA, ICW_4);
-
+	
 	// activate all IRQs(demasc)
 	OUTB(MASTER_PIC_COMMAND, 0x0);
 	OUTB(SLAVE_PIC_COMMAND, 0x0);
@@ -112,6 +112,9 @@ void init_idt(void)
 	idt_set_entry(17, intr_stub_17, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
 	idt_set_entry(18, intr_stub_18, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
 	
+	idt_set_entry(28, intr_stub_28, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
+	idt_set_entry(29, intr_stub_29, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
+	
 	// APIC LVT Error Interrupt
 	idt_set_entry(30, intr_stub_30, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
 	// APIC Spurious Interrupt
@@ -120,7 +123,7 @@ void init_idt(void)
 	// IRQ-Handler
 	idt_set_entry(32, intr_stub_32, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
 	idt_set_entry(33, intr_stub_33, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING0 | IDT_FLAG_PRESENT);
-
+	
 	// Syscall
 	idt_set_entry(48, intr_stub_48, GDT_KERNEL_CODE_SEGMENT, IDT_FLAG_INTERRUPT_GATE | IDT_FLAG_RING3 | IDT_FLAG_PRESENT);
 	asm volatile("lidt %0" : : "m" (idtp));
@@ -132,6 +135,6 @@ void init_idt_AP()
 }
 void enable_intr()
 {
-    ENABLE_INTR
-    kprintf("[IDT] enable_intr ... SUCCESS\n");
+	ENABLE_INTR
+	kprintf("[IDT] enable_intr ... SUCCESS\n");
 };

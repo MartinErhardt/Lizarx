@@ -33,6 +33,8 @@
 #include <macros.h>
 #include <asm_inline.h>
 #include <libOS/lock.h>
+#include <intr/irq.h>
+#include <../x86_common/local_apic.h>
 
 extern const void kernel_start;
 extern const void kernel_end;
@@ -87,8 +89,6 @@ vmm_context vmm_crcontext()
 	.mm_tree=kvmm_malloc(PAGE_SIZE),
 	};
 	
-	spinlock_ackquire(&vmm_lock);
-	
 	memset((void*)new_context.highest_paging,0x00000000,PAGE_SIZE*PAGING_HIER_SIZE);// clear the PgDIR to avoid invalid values
 	memset((void*)new_context.mm_tree,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
 #ifdef ARCH_X86
@@ -108,7 +108,6 @@ vmm_context vmm_crcontext()
 	((struct vmm_pagedir*)(((uintptr_t)new_context.highest_paging)+PAGE_SIZE+PAGE_SIZE))->pagetbl_ptr = (highest_paging_phys+PAGE_SIZE+PAGE_SIZE+PAGE_SIZE)/PAGE_SIZE;
 #endif
 	vmm_map_kernel(&new_context);
-	spinlock_release(&vmm_lock);
 	return new_context;
 }
 
@@ -564,6 +563,11 @@ static int_t vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_
 		return -1;
 	}
 	INVALIDATE_TLB(virt)
+	/*if(apic_ready==1)
+	{
+		to_flush=virt;
+		local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_FIXED, 28, 0x0);
+	}*/
 	page_table[pt_index].rw_flags = flgs;
 	page_table[pt_index].page_ptr=phys/PAGE_SIZE;
 #endif
@@ -679,6 +683,7 @@ static void vmm_map_kernel(vmm_context* context)
 	vmm_context* curcontext=get_cur_context();
 	if(paging_activated)
 	{
+		spinlock_ackquire(&vmm_lock);
 		for(i=0;i<32;i++)
 		{
 			node_virt=vmm_find_freemem(curcontext,1,0x0,KERNEL_SPACE/PAGE_SIZE);
@@ -702,6 +707,7 @@ static void vmm_map_kernel(vmm_context* context)
 				vmm_mark_used(context,i);
 			}
 		}
+		spinlock_release(&vmm_lock);
 	}
 	else
 	{

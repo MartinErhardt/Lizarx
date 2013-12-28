@@ -146,12 +146,15 @@ INTR_STUB_EXCEPTION 16
 INTR_STUB_ERROR 17
 INTR_STUB_EXCEPTION 18
 
-// IRQs
-INTR_STUB_IRQ 32
-INTR_STUB_IRQ 33
+// Flush TLB
+.global intr_stub_28
+intr_stub_28:
+	iret
 
-// Syscall
-INTR_STUB_SYSCALL 48
+// APIC Timer
+.global intr_stub_29
+intr_stub_29:
+	iret
 
 // APIC Error Interrupt
 .global intr_stub_30
@@ -162,3 +165,12 @@ intr_stub_30:
 .global intr_stub_31
 intr_stub_31:
 	iret
+
+// IRQs
+INTR_STUB_IRQ 32
+INTR_STUB_IRQ 33
+
+
+// Syscall
+INTR_STUB_SYSCALL 48
+

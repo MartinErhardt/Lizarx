@@ -19,9 +19,15 @@
 #define IRQ_H
 
 #include<cpu.h>
+extern void intr_stub_28(void);
+extern void intr_stub_29(void);
 
 extern void intr_stub_32(void);
 extern void intr_stub_33(void);
+
+uint_t to_flush;
+
+uint8_t testl;
 
 cpu_state* handle_irq(cpu_state* cpu);
 #endif

@@ -31,17 +31,12 @@
 
 static uintptr_t local_apic_virt;
 
-//static void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode);
-static void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode);
-
 void local_apic_init(uintptr_t local_apic_addr_phys)
 {
 	// read apic id
-	
 	local_apic_virt = vmm_find_freemem(&startup_context, 0x1000, 0x0, KERNEL_SPACE);
 	vmm_map_inallcon(local_apic_addr_phys,local_apic_virt, FLG_IN_MEM  | FLG_WRITABLE);
 	vmm_mark_used_inallcon(local_apic_virt/PAGE_SIZE);
-	
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
 	/*if((mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG)&0x100)!=0)
@@ -53,7 +48,11 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 	
 	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (1 << 24));
 	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (0xf << 28));
+	
+	//mmio_write32(local_apic_virt, LOCAL_APIC_LINT0_REG, 28);
+	apic_ready=1;
 }
+
 void startup_APs()
 {
 	void * trampoline_virt = kvmm_malloc(PAGE_SIZE);
@@ -61,7 +60,6 @@ void startup_APs()
 	uint8_t vector = virt_to_phys(&startup_context, ((uintptr_t)trampoline_virt))/PAGE_SIZE;
 	all_APs_booted=LOCK_USED;
 	uintptr_t trampoline_stack_virt = 0x7000;
-	
 	memcpy(((void*)trampoline_stack_virt), &gdt, 0x18);
 	memcpy(((void*)trampoline_stack_virt+0x20), &gdtr, 0x8);
 #ifdef ARCH_X86_64
@@ -76,16 +74,35 @@ void startup_APs()
 	
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_STARTUP,vector,0); // try to start processor with APIC id;
 	spinlock_ackquire(&all_APs_booted);
+	
 }
-/*
-static void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode)
+void local_apic_eoi()
+{
+	mmio_write32(local_apic_virt, LOCAL_APIC_EOI_REG, 0x000000);
+	mmio_write32(local_apic_virt, LOCAL_APIC_EOI_REG+4, 0);
+}
+void local_apic_init_AP()
+{
+	if((rdmsr(0x1b)&0x800)==0)
+		wrmsr(0x1b, 0x800);
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_SIV_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
+	mmio_write32(local_apic_virt, LOCAL_APIC_LE_REG,(mmio_read32(local_apic_virt,LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (1 << 24));
+	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (0xf << 28));
+	
+	//mmio_write32(local_apic_virt, LOCAL_APIC_LINT0_REG, 28);
+}
+
+void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode)
 {
 	while ((mmio_read32(local_apic_virt,LOCAL_APIC_IC_REG) & 0x1000) != 0);
 	mmio_write32(local_apic_virt, (LOCAL_APIC_IC_REG_HI),destinationId << 24);
 	mmio_write32(local_apic_virt, LOCAL_APIC_IC_REG,0x4000 | (trigger_mode<<15) | (deliveryMode<<8) | vector);
 	
-}*/
-static void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode)
+}
+void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode)
 {
 	while ((mmio_read32(local_apic_virt, LOCAL_APIC_IC_REG) & 0x1000) != 0);
 	// 0xc0000 = 011b << 18(Destination shorthand = all exclude self)

@@ -46,10 +46,15 @@ void pmm_init(struct multiboot_info * mb_info)
 	struct multiboot_mmap* mmap = (void *)((uintptr_t)(mb_info->mbs_mmap_addr));
 	struct multiboot_mmap* mmap_end = (void*)
 	    ((uintptr_t) (mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length));
+	
+	uint64_t addr_mark_manual_until_that=0;
+	uint64_t addr_mark_manual_after_that=0;
+	uint64_t addr = 0;
+	uint64_t end_addr = 0;
+	
 	/* by default everything is reserved */
 	memset(&physbitmap, 0x00000000, sizeof(physbitmap));
 	kprintf("[PMM] I: pmm_init ... ");
-	
 	/*
 	* Here we look in the memory map for free space
 	*/
@@ -61,20 +66,59 @@ void pmm_init(struct multiboot_info * mb_info)
 			 * We and the addresses with 0xffffffff to prevent a buffer overflow
 			 * FIXME our Bitmap only covers a 32 bit address space
 			 */
-			uint64_t addr = mmap->base;
-			uint64_t end_addr = addr + mmap->length;
-			while ((addr/PAGE_SIZE < end_addr/PAGE_SIZE)&&(addr<0x100000000)) 
+			addr = mmap->base;
+			end_addr = addr + mmap->length;
+			if(addr%PAGE_SIZE)
+				addr=((addr/PAGE_SIZE)+1)*PAGE_SIZE;
+			if(end_addr%PAGE_SIZE)
+				end_addr=((end_addr/PAGE_SIZE)-1)*PAGE_SIZE;
+			
+			addr_mark_manual_until_that=(((addr/PAGE_SIZE)/32)*32);
+			addr_mark_manual_after_that=(((end_addr/PAGE_SIZE)/32)*32);
+			if(addr_mark_manual_until_that<addr)
+				addr_mark_manual_until_that=((((addr/PAGE_SIZE)/32)+1)*32);
+			if(addr_mark_manual_after_that<addr)
+				addr_mark_manual_after_that=((((end_addr/PAGE_SIZE)/32)+1)*32);
+			
+			if(addr_mark_manual_after_that==addr_mark_manual_until_that)
+			{
+				/* 
+				* We and the addresses with 0xffffffff to prevent a buffer overflow
+				* FIXME our Bitmap only covers a 32 bit address space
+				*/
+				while ((addr/PAGE_SIZE < end_addr/PAGE_SIZE)&&(addr<0x100000000)) 
+				{
+					pmm_free(((uint32_t)addr)/PAGE_SIZE);
+					addr += PAGE_SIZE;
+				}
+				goto cont;
+			}
+			
+			while ((addr/PAGE_SIZE < addr_mark_manual_until_that)&&(addr<0x100000000)) 
+			{
+				pmm_free(((uint32_t)addr)/PAGE_SIZE);
+				addr += PAGE_SIZE;
+			}
+			
+			while ((addr/PAGE_SIZE < addr_mark_manual_after_that)&&(addr<0x100000000)) 
+			{
+				physbitmap[((uint32_t)addr) / PAGE_SIZE / 32] = 0xffffffff;
+				addr += PAGE_SIZE*32;
+			}
+			while ((addr/PAGE_SIZE <= end_addr/PAGE_SIZE)&&(addr<0x100000000)) 
 			{
 				pmm_free(((uint32_t)addr)/PAGE_SIZE);
 				addr += PAGE_SIZE;
 			}
 		}
+cont:
 		mmap++;
 	}
+	
 	/* 
 	 * here we mark the kernel as used
 	 */
-	uintptr_t addr = (uintptr_t) &kernel_start;
+	addr = (uintptr_t) &kernel_start;
 	
 	while (addr < (uintptr_t) &kernel_end) 
 	{
@@ -105,7 +149,7 @@ void pmm_init(struct multiboot_info * mb_info)
 	memset(0x00000000,0x00000000,PAGE_SIZE);
 	pmm_mark_used(0x1);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	
-	pmm_mark_used(0x7);//0x1000 is reserved,because that's,where we tmp map our pagetables to
+	pmm_mark_used(0x7);// Trampoline space
 	pmm_mark_used(0x104);// That's our Stack which is still the MB Loader
 	pmm_mark_used(0x105);// That's our Stack which is still the MB Loader
 	kprintf("SUCCESS\n");
@@ -125,7 +169,6 @@ uint_t pmm_malloc_4k(void)
 			pmm_mark_used(i);
 			return i;
 		}
-	      
 	}
 	kprintf("[PMM] E: pmm_malloc_4k found no free memory");
 	/* Scheint wohl nichts frei zu sein... */
@@ -136,7 +179,7 @@ uint_t pmm_malloc(uint_t pages)
 	int i, j,k;
 	for (i = 0; i < BITMAP_SIZE*32-pages; i++) 
 	{
-mark:
+mark:	
 		for(j=0;j<pages;j++)
 		{
 			if (pmm_is_alloced(i+j)==TRUE) 

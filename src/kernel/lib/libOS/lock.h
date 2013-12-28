@@ -25,5 +25,5 @@
 
 void spinlock_ackquire(uint8_t * lock);
 void spinlock_release(uint8_t * lock);
-
+void spinlock_lock(uint8_t * lock);
 #endif
