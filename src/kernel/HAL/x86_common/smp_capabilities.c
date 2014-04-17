@@ -63,8 +63,6 @@ uintptr_t check_mp()
 				if((((struct processor_entry*) cf_tbl_entry)->cpu_flags) & 0x01)
 				{
 					cores_from_tables++;
-					kprintf("apic_id:%d",((struct processor_entry*) cf_tbl_entry)->local_apic_id);
-					//kprintf("local apic 0x%x \n",(((struct processor_entry*) cf_tbl_entry)->local_apic_id));
 				}
 				cf_tbl_entry+=sizeof(struct processor_entry);
 				break;

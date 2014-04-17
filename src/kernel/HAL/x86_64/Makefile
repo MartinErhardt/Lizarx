@@ -59,6 +59,7 @@ SRCS_LOADER = HAL/x86_64/asm/start_x86_64.S \
 	lib/string.c \
 	mm/gdt.c \
 	drv/vga-txt_graphics/vram.c \
+	lib/libOS/lock.c \
 	dbg/console.c
 OBJS_LOADER = $(addsuffix 32.o,$(basename $(SRCS_LOADER)))
 $(OBJS_LOADER): LOADER_FLAGS := -m32
@@ -67,6 +68,6 @@ LM_Loader: $(OBJS_LOADER)
 	$(LD32_CROSS) -Tloader.ld  -o $@ $^
 
 %32.o: %.c
-	$(CC_CROSS) $(CFLAGS) $(LOADER_FLAGS)  -o $@ -c $<
+	$(CC_CROSS) $(CFLAGS) $(LOADER_FLAGS) -DLOADER -o $@ -c $<
 %32.o: %.S
 	$(CC_CROSS) $(ASFLAGS) $(LOADER_FLAGS)  -o $@ -c $<

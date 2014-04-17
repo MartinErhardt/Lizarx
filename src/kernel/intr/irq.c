@@ -25,16 +25,16 @@
 #include <asm_inline.h>
 #include <local_apic.h>
 #include <libOS/lock.h>
+#include<mt/sched.h>
 
-cpu_state* handle_irq(cpu_state* cpu)
+struct cpu_state* handle_irq(struct cpu_state* cpu)
 {
 	if (cpu->INFO_INTR == 28)
 	{
-		kprintf("hoo");
-		//INVALIDATE_TLB(to_flush)
+		cpu = schedule(cpu);
+		
+		
 		local_apic_eoi();
-		spinlock_release(&testl);
-		return cpu;
 	}
 #ifdef ARCH_X86
 	if (cpu->INFO_INTR >= 0x28) 
@@ -47,14 +47,8 @@ cpu_state* handle_irq(cpu_state* cpu)
 		kbc_handler(0x21);
 	}
 #endif
-	if (cpu->INFO_INTR == 0x20)
-	{
-		cpu = timer_handler(cpu);
-	}
-	/*else
-	{
-		kprintf("hi");
-	}*/
+
+		
 	// EOI an Master-PIC
 	OUTB(0x20, 0x20)
 	return cpu;

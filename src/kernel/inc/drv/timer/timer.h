@@ -22,7 +22,6 @@
 #include<stdint.h>
 #include<stdbool.h>
 
-//extern uint32_t time;
-cpu_state* timer_handler(cpu_state* new_cpu);
+struct cpu_state * timer_handler(struct cpu_state* new_cpu);
 
 #endif

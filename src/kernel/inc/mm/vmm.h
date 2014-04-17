@@ -34,7 +34,7 @@
 #define KERNEL_SPACE 	0x4000000 //= 67 MB
 
 #ifdef ARCH_X86_64
-typedef struct vmm_pagemap_level4 * highest_paging_struct;
+typedef struct vmm_paging_entry * highest_paging_struct;
 #endif
 
 #ifdef ARCH_X86

@@ -176,17 +176,10 @@ INTR_STUB_IRQ 28
 
 // APIC Timer
 INTR_STUB_IRQ 29
-
-// APIC Error Interrupt
-.global intr_stub_30
-intr_stub_30:
-	jmp .
-
-// APIC Spurious Interrupt
-.global intr_stub_31
-intr_stub_31:
-	iretq
-
+// APIC Error
+INTR_STUB_IRQ 30
+//APIC Spurious interrupt
+INTR_STUB_IRQ 31
 // IRQs
 INTR_STUB_IRQ 32
 INTR_STUB_IRQ 33

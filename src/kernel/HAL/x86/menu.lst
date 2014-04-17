@@ -12,5 +12,7 @@ module /boot/kernel
 module /boot/SO_example_lib.mod
 module /boot/SO_example_main.mod
 module /boot/proc1.mod
+module /boot/proc2.mod
+module /boot/proc3.mod
 
 boot

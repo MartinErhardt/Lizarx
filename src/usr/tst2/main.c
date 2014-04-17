@@ -48,6 +48,7 @@ uintptr_t st_vmm_malloc(st_size_t alloc_size)
 }
 int main(void)
 {
+    
      // outcomment to disable shared objects on x86
     struct elf_lib main_;
     struct elf_lib lib_;
@@ -56,13 +57,14 @@ int main(void)
     bootmod_main.start=NULL;
     bootmod_main.size=0;
     uprintf("start");
+    while(1);
     *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
     *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
     *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
     *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
     *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
     
-    while(1);
+    
     get_bootmod(2,&bootmod_main);
     get_bootmod(1,&bootmod_lib);
     
@@ -83,6 +85,7 @@ int main(void)
     
     *((unsigned int*)malloced)= 0xDEADBEEF;
     uprintf(itoa(malloced,16));
+    uprintf("\n");
     while(1);
     return 0;
 }

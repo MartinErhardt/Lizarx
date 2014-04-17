@@ -26,33 +26,54 @@
 #include <asm_inline.h>
 #include <libOS/mmio.h>
 #include <libOS/lock.h>
+#include <cpu.h>
 
 #define TRAMPOLINE_SIZE 0x100
 
-static uintptr_t local_apic_virt;
+#define LAPIC_TIMER_PERIODIC                            0x00020000
+#define LAPIC_MASKED                                    0x00010000
 
+#define INITIAL_COUNT_VALUE (78125*40)
+
+uintptr_t local_apic_virt=0x0;
+static void local_apic_init_timer();
+uint32_t tmp;
 void local_apic_init(uintptr_t local_apic_addr_phys)
 {
 	// read apic id
-	local_apic_virt = vmm_find_freemem(&startup_context, 0x1000, 0x0, KERNEL_SPACE);
-	vmm_map_inallcon(local_apic_addr_phys,local_apic_virt, FLG_IN_MEM  | FLG_WRITABLE);
-	vmm_mark_used_inallcon(local_apic_virt/PAGE_SIZE);
+	uintptr_t local_apic_virt_infunc = vmm_find_freemem(&startup_context, 0x1000, 0x0, KERNEL_SPACE);
+	vmm_map_inallcon(local_apic_addr_phys,local_apic_virt_infunc, FLG_IN_MEM  | FLG_WRITABLE);
+	vmm_mark_used_inallcon(local_apic_virt_infunc/PAGE_SIZE);
+	local_apic_virt = local_apic_virt_infunc;
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
 	/*if((mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG)&0x100)!=0)
 	{
 		kprintf("reg 0x%x",mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG));
 	}*/
-	mmio_write32(local_apic_virt, LOCAL_APIC_SIV_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
+	mmio_write32(local_apic_virt, LOCAL_APIC_SIV_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG) & 0xfffffe00) | 31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
 	mmio_write32(local_apic_virt, LOCAL_APIC_LE_REG,(mmio_read32(local_apic_virt,LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
 	
-	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (1 << 24));
-	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (0xf << 28));
-	
-	//mmio_write32(local_apic_virt, LOCAL_APIC_LINT0_REG, 28);
+	local_apic_init_timer();
+	//
 	apic_ready=1;
 }
-
+struct cpu_info * get_cur_cpu()
+{
+	if(local_apic_virt==0x0)
+	{
+		return &bsp_info;
+	}
+	uint64_t apic_id = (mmio_read32(local_apic_virt,LOCAL_APIC_ID_REG)>>24);
+	struct cpu_info * cur_cpu = &bsp_info;
+	
+	do {
+		
+		if (cur_cpu->apic_id==apic_id) return cur_cpu;
+		cur_cpu=cur_cpu->next;
+	}while(cur_cpu!=NULL);
+	return NULL;
+}
 void startup_APs()
 {
 	void * trampoline_virt = kvmm_malloc(PAGE_SIZE);
@@ -83,18 +104,80 @@ void local_apic_eoi()
 }
 void local_apic_init_AP()
 {
+	
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
 	
-	mmio_write32(local_apic_virt, LOCAL_APIC_SIV_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG) & 0xfffffe00) | 0x31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
+	mmio_write32(local_apic_virt, LOCAL_APIC_SIV_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG) & 0xfffffe00) | 31 | 0x100); // 256 = 1 0000 0000 enable local APIC with the eight bit
 	mmio_write32(local_apic_virt, LOCAL_APIC_LE_REG,(mmio_read32(local_apic_virt,LOCAL_APIC_LE_REG) & 0xfffeef00) | 30);
-	
-	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (1 << 24));
-	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (0xf << 28));
-	
-	//mmio_write32(local_apic_virt, LOCAL_APIC_LINT0_REG, 28);
+	local_apic_init_timer();
 }
-
+static void local_apic_init_timer()
+{
+	/*uint8_t in=0;
+	uint32_t in32=0;
+	uint32_t cpubusfreq;
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_DF_REG, 0xffffffff);
+	mmio_write32(local_apic_virt, LOCAL_APIC_LD_REG, (mmio_read32(local_apic_virt,LOCAL_APIC_IC_REG)&0x00ffffff)|1);
+	mmio_write32(local_apic_virt, LOCAL_APIC_LT_REG,APIC_DISABLE);
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_LINT0_REG, APIC_DISABLE);
+	mmio_write32(local_apic_virt, LOCAL_APIC_LINT1_REG, APIC_DISABLE);
+	mmio_write32(local_apic_virt, LOCAL_APIC_TP_REG, 0);
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_LPMCR_REG, APIC_NMI);
+	*/
+	mmio_write32(local_apic_virt, LOCAL_APIC_LT_REG, LAPIC_TIMER_PERIODIC | 28);
+	mmio_write32(local_apic_virt, LOCAL_APIC_ICNT_REG, INITIAL_COUNT_VALUE/100);
+	mmio_write32(local_apic_virt, LOCAL_APIC_DC_REG, 0xa);
+	/*
+	if((get_cur_cpu()==&bsp_info))
+	{	
+		//map APIC timer to an interrupt, and by that enable it in one-shot mode
+		mmio_write32(local_apic_virt, LOCAL_APIC_LT_REG, 28);
+		//set up divide value to 16
+		mmio_write32(local_apic_virt, LOCAL_APIC_DC_REG, 0x03);
+		
+		INB(0x61, in);
+		OUTB(0x61,((in&0xFD)|1));
+		OUTB(0x43,0xB2)       // Switch to Mode 0, if you get problems!!!
+		//1193180/100 Hz = 11931 = 2e9bh
+		OUTB(0x42,0x9B)		//LSB
+		INB(0x60, in)	//short delay
+		OUTB(0x42,0x2E)		//MSB
+		IN(0x61,in32)
+		tmp=(uint32_t)in&0xFE;
+		OUTB(0x61,(uint8_t)tmp)		//gate low
+		OUTB(0x61,(((uint8_t)tmp)|1))		//gate high
+		//reset APIC timer (set counter to -1)
+		mmio_write32(local_apic_virt, LOCAL_APIC_ICNT_REG,0xFFFFFFFF);
+		//kprintf("hey");
+		//now wait until PIT counter reaches zero
+		do{
+			INB(0x61, in);
+			
+			//if((get_cur_cpu()==&bsp_info) && (!(in&0x20)))
+			//	kprintf(" waiting ...");
+		}
+		while(!(in&0x20));
+		//kprintf("hey");
+		//stop APIC timer
+		mmio_write32(local_apic_virt, LOCAL_APIC_LT_REG, APIC_DISABLE);
+		
+		//now do the math...
+		cpubusfreq=(0xFFFFFFFF-mmio_read32(local_apic_virt,LOCAL_APIC_CC_REG)+1)*16*100;
+		
+		tmp=cpubusfreq/10/16;
+	}
+	
+	//sanity check, now tmp holds appropriate number of ticks, use it as APIC timer counter initializer
+	mmio_write32(local_apic_virt, LOCAL_APIC_ICNT_REG, (tmp<16?16:tmp));
+	//finally re-enable timer in periodic mode
+	mmio_write32(local_apic_virt, LOCAL_APIC_LT_REG, 28|0x20000);
+	
+	mmio_write32(local_apic_virt, LOCAL_APIC_DC_REG, 0x03);*/
+}
 void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode)
 {
 	while ((mmio_read32(local_apic_virt,LOCAL_APIC_IC_REG) & 0x1000) != 0);

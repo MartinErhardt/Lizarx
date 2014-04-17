@@ -23,16 +23,16 @@
 #include<boot/init.h>
 #include<stdlib.h>
 
-void handle_exception(cpu_state* cpu)
+void handle_exception(struct cpu_state* cpu)
 {
-	kprintf("err");
+	kprintf("\nerr\n");
 	//redscreen(cpu);
 	while(1) 
 	{
 	   asm volatile("cli; hlt");
 	}
 }
-void redscreen(cpu_state* cpu)
+void redscreen(struct cpu_state* cpu)
 {
 	//clrscr(VGA_BLACK, VGA_RED);
 #ifdef ARCH_X86_64

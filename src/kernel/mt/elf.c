@@ -116,8 +116,8 @@ int32_t init_elf(void* image)
 	    kprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
 	    return -1;
 	}
-	new_proc=create_proc();
-	create_thread((void*) header->entry,new_proc->p_id);
+	new_proc = create_proc();
+	
 	/*
 	* Alle Program Header durchgehen und den Speicher an die passende Stelle
 	* kopieren.
@@ -149,6 +149,7 @@ int32_t init_elf(void* image)
 		//
 		SET_CONTEXT(curpd_phys);
 	}
+	create_thread((void*) header->entry,new_proc->p_id);
 	//while(1);
 	//print_symbols(image,(struct elf_section_header*)((uintptr_t)(image)+header->sh_offset),header->sh_entry_count);
 	return 0;

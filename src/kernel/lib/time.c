@@ -28,14 +28,7 @@
 
 clock_t clock (void)
 {
-	if(current_thread!=NULL)
-	{
-		return -1;
-	}
-	else
-	{
-		return -1;
-	}
+	return -1;
 }/*
 double difftime (time_t end, time_t beginning)
 {

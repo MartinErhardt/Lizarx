@@ -29,5 +29,6 @@ uint_t to_flush;
 
 uint8_t testl;
 
-cpu_state* handle_irq(cpu_state* cpu);
+struct cpu_state* handle_irq(struct cpu_state* cpu);
+
 #endif

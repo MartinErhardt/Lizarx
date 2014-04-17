@@ -19,11 +19,30 @@
 #include <string.h>
 #include <dbg/console.h>
 #include <cpu.h>
-
+#include <libOS/mmio.h>
+#include <local_apic.h>
+#include <mm/vheap.h>
+uint8_t bsp_filled=0;
 // this function can only be used at the beginning
 void cpu_caps()
 {
 	uint8_t * cpuid_support =(uint8_t *) 0x7200;
+	struct cpu_info * this_cpu = &bsp_info;
+	while(this_cpu->next!=NULL) 
+	{
+		this_cpu = this_cpu->next;
+	};
+	if(bsp_filled)
+	{
+		this_cpu->next=kmalloc(sizeof(struct cpu_info));
+		memset((void*)(this_cpu->next), 0x00, sizeof(struct cpu_info));
+		this_cpu=this_cpu->next;
+	}
+	else
+	{ 
+		bsp_filled=1;
+		memset((void*)(this_cpu->next), 0x00, sizeof(struct cpu_info));
+	}
 #ifdef ARCH_X86_64
 	asm volatile(
 	    "pushf;"
@@ -59,42 +78,43 @@ void cpu_caps()
 #endif
 	if(*cpuid_support)
 	{
-		bsp_info.cpu_info_support=1;
+		this_cpu->cpu_info_support=1;
 	}
 	else
 	{
 		return;
 	}
-	memset(&bsp_info, 0x00, sizeof(struct cpu_info));
+	
 	uint_t func =0x0; 
 	uint_t ebx =0x0; 
 	uint_t ecx =0x0; 
 	uint_t edx = 0x0;
 	asm volatile( "cpuid" : "=b"(ebx), "=c" (ecx), "=d" (edx) : "a"(func));
-	memcpy(&bsp_info.vendor_id[0],&ebx,4);
-	memcpy(&bsp_info.vendor_id[4],&edx,4);
-	memcpy(&bsp_info.vendor_id[8],&ecx,4);
-	if(!strcmp(&bsp_info.vendor_id[0], "GenuineIntel"))
+	memcpy(&this_cpu->vendor_id[0],&ebx,4);
+	memcpy(&this_cpu->vendor_id[4],&edx,4);
+	memcpy(&this_cpu->vendor_id[8],&ecx,4);
+	kprintf(&this_cpu->vendor_id[0]);
+	if(!strcmp(&this_cpu->vendor_id[0], "GenuineIntel"))
 	{
 		func = 0x80000002;
 		asm volatile( "cpuid" : "=a"(func), "=b"(ebx), "=c" (ecx), "=d" (edx) : "a"(func));
-		memcpy(&bsp_info.cpu_name[0],&func,4);
-		memcpy(&bsp_info.cpu_name[4],&ebx,4);
-		memcpy(&bsp_info.cpu_name[8],&ecx,4);    
-		memcpy(&bsp_info.cpu_name[12],&edx,4);  
+		memcpy(&this_cpu->cpu_name[0],&func,4);
+		memcpy(&this_cpu->cpu_name[4],&ebx,4);
+		memcpy(&this_cpu->cpu_name[8],&ecx,4);    
+		memcpy(&this_cpu->cpu_name[12],&edx,4);  
 		func = 0x80000003;
 		asm volatile( "cpuid" : "=a"(func), "=b"(ebx), "=c" (ecx), "=d" (edx) : "a"(func));
-		memcpy(&bsp_info.cpu_name[16],&func,4);
-		memcpy(&bsp_info.cpu_name[20],&ebx,4);
-		memcpy(&bsp_info.cpu_name[24],&ecx,4);    
-		memcpy(&bsp_info.cpu_name[28],&edx,4);  
+		memcpy(&this_cpu->cpu_name[16],&func,4);
+		memcpy(&this_cpu->cpu_name[20],&ebx,4);
+		memcpy(&this_cpu->cpu_name[24],&ecx,4);    
+		memcpy(&this_cpu->cpu_name[28],&edx,4);  
 		func = 0x80000004;
 		asm volatile( "cpuid" : "=a"(func), "=b"(ebx), "=c" (ecx), "=d" (edx) : "a"(func));
-		memcpy(&bsp_info.cpu_name[32],&func,4);
-		memcpy(&bsp_info.cpu_name[36],&ebx,4);
-		memcpy(&bsp_info.cpu_name[40],&ecx,4);    
-		memcpy(&bsp_info.cpu_name[44],&edx,4);  
-		kprintf(&bsp_info.cpu_name[0]);
+		memcpy(&this_cpu->cpu_name[32],&func,4);
+		memcpy(&this_cpu->cpu_name[36],&ebx,4);
+		memcpy(&this_cpu->cpu_name[40],&ecx,4);    
+		memcpy(&this_cpu->cpu_name[44],&edx,4);  
+		kprintf(&this_cpu->cpu_name[0]);
 		kprintf("\n");
 	}
 	func=0x00000001;
@@ -102,33 +122,38 @@ void cpu_caps()
 	kprintf("cpuid_flags: ");
 	if(edx&0x2000000)
 	{
-		bsp_info.sse_support=1;
+		this_cpu->sse_support=1;
 		kprintf(", sse_1");
 	}
 	if(edx&0x4000000)
 	{
-		bsp_info.sse_support=1;
+		this_cpu->sse_support=1;
 		kprintf(", sse_2");
 	}
 	if(ecx&0x1)
 	{
-		bsp_info.sse_3_support=1;
+		this_cpu->sse_3_support=1;
 		kprintf(", sse3");
 	}
 	if(ecx&0x200)
 	{
-		bsp_info.ssse_3_support=1;
+		this_cpu->ssse_3_support=1;
 		kprintf(", ssse3");
 	}
 	if(ecx&0x80000)
 	{
-		bsp_info.sse_4_1_support=1;
+		this_cpu->sse_4_1_support=1;
 		kprintf(", sse_4.1");
 	}
-	if((!strcmp(&bsp_info.vendor_id[0], "GenuineIntel"))&&(ecx&0x100000))
+	if((!strcmp(&this_cpu->vendor_id[0], "GenuineIntel"))&&(ecx&0x100000))
 	{
-		bsp_info.sse_4_2_support=1;
+		this_cpu->sse_4_2_support=1;
 		kprintf(", sse_4.2");
 	}
+	this_cpu->apic_id=(mmio_read32(local_apic_virt,LOCAL_APIC_ID_REG)>>24);
+	this_cpu->is_no_thread=1;
+	/*this_cpu->current_thread=NULL;
+	this_cpu->first_thread=NULL;
+	this_cpu->thread_count=0;*/
 	kprintf("\n");
 }

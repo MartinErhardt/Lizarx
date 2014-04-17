@@ -23,6 +23,10 @@
 #include<dbg/console.h>
 #include<mm/gdt.h>
 #include<asm_inline.h>
+#include<libOS/lock.h>
+#include<smp_capabilities.h>
+#include<cpu.h>
+#include<../x86_common/local_apic.h>
 
 static uint32_t num_threads = 0;
 
@@ -31,8 +35,14 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	struct proc* in_proc=get_proc(p_id);
 	struct thread* new_t=(struct thread*)malloc(sizeof(struct thread));
 	
-	cpu_state* new_state=(cpu_state*)malloc(0xb0);
+	struct cpu_state* new_state=(struct cpu_state*)malloc(sizeof(struct cpu_state));
+	
+	total_thread_count++;
+	
+	struct cpu_info * cpu = get_best_cpu();
+	
 	uint8_t* user_stack 	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
+	
 	if(in_proc==NULL)
 	{
 	    kprintf("couldn't get pid");
@@ -41,22 +51,100 @@ int32_t create_thread(void* entry,uint32_t p_id)
 	num_threads++;
 	
 	INIT_STATE(new_state);
+	spinlock_ackquire(&multi_threading_lock);
 	new_state->REG_IP = (uintptr_t) entry;
-	new_state->REG_STACKPTR= (uintptr_t) user_stack+STDRD_STACKSIZ -0x20 ;
+	new_state->REG_STACKPTR= (uintptr_t) user_stack+STDRD_STACKSIZ -0x8 ;
 	
 	new_t->t_id=num_threads;
 	new_t->state = new_state;
-	new_t->user_stack 	= user_stack;
+	new_t->user_stack = user_stack;
 	new_t->proc=in_proc;
-	new_t->next=first_thread;
-	first_thread = new_t;
+	new_t->next=cpu->first_thread;
+	cpu->first_thread = new_t;
+	cpu->thread_count++;
+	cpu->is_no_thread = 0;
+	spinlock_release(&multi_threading_lock);
 	return 0;
 }
-cpu_state* dispatch_thread(cpu_state* cpu)
+struct cpu_info * get_best_cpu()
+{
+	uint32_t average_thread_count=(total_thread_count*10)/cores_from_tables;// 1: 2 2: 5
+	struct cpu_info * this_cpu = &bsp_info;
+	struct cpu_info * best_fit = &bsp_info;
+	int32_t best_fit_diff = (((&bsp_info)->thread_count+1)*10)-average_thread_count;// 1: 12 2: 15
+	int32_t diff_with_process;
+	if(best_fit_diff<0)
+			best_fit_diff = best_fit_diff*(-1);
+	spinlock_ackquire(&multi_threading_lock);
+	while(this_cpu!=NULL) 
+	{
+		diff_with_process = ((this_cpu->thread_count+1)*10)-average_thread_count; // 1.1: 8 2.1: 8 1.2: 15 2.2: 5
+		
+		if(diff_with_process<0)
+			diff_with_process = diff_with_process*(-1);
+		//kprintf("diff_with_process 0x%x\n",diff_with_process);
+		if(diff_with_process<best_fit_diff)
+		{
+			best_fit = this_cpu;
+			best_fit_diff = diff_with_process;
+		}
+		this_cpu=this_cpu->next;
+	}
+	spinlock_release(&multi_threading_lock);
+	return best_fit;
+}
+struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move)
+{
+	this_cpu->thread_count--;
+	uint32_t average_thread_count=(total_thread_count*10)/cores_from_tables;
+	struct cpu_info * best_fit = this_cpu; 
+	struct cpu_info * cur_cpu = &bsp_info;
+	int32_t best_fit_diff = (((&bsp_info)->thread_count+1)*10)-average_thread_count;// 1: 12 2: 15
+	int32_t diff_with_thread;
+	struct thread * last_thread = this_cpu->first_thread;
+	if(best_fit_diff<0)
+			best_fit_diff = best_fit_diff*(-1);
+	while(cur_cpu->next!=NULL) 
+	{
+		cur_cpu=cur_cpu->next;
+		diff_with_thread = ((cur_cpu->thread_count+1)*10)-average_thread_count;
+		if(diff_with_thread<0)
+			diff_with_thread = diff_with_thread*(-1);
+		if(diff_with_thread<best_fit_diff)
+		{
+			best_fit_diff = diff_with_thread;
+			best_fit = cur_cpu;
+		}
+	}
+	if(best_fit!=this_cpu)
+	{
+		if(last_thread!=to_move)
+		{
+			while( (last_thread->next != to_move)&&(last_thread->next!=NULL) )
+			{
+				last_thread = last_thread->next;
+			}
+			last_thread->next = to_move->next;
+		}
+		else
+		{
+			kprintf("hi");
+			this_cpu->is_no_thread=1;
+			this_cpu->first_thread=NULL;
+		}
+		
+		to_move->next = best_fit->first_thread;
+		best_fit->first_thread = to_move;
+		//cur_cpu->first_thread=
+	}
+	this_cpu->thread_count++;
+	return best_fit;
+}
+struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 {
 	vmm_context* curcontext=NULL;
 	uintptr_t next_context= 0x0;
-
+	struct cpu_info * this_cpu = get_cur_cpu();
 	/*
 	* Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
 	* gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
@@ -65,51 +153,59 @@ cpu_state* dispatch_thread(cpu_state* cpu)
 	/*
 	* Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
 	*/
-	if (current_thread == NULL) 
-	{
-		curcontext= &startup_context;
-		
-		next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
-		current_thread = first_thread;
-	}
-	else 
-	{
-		curcontext= current_thread->proc->context;
-		//kprintf("ss=0x%x cs=0x%x eflags=0x%x",cpu->ss,cpu->cs,cpu->REG_FLAGS);
-		
-		*current_thread->state = *cpu;
-		
-		if(current_thread->next != NULL)
+	spinlock_ackquire(&this_cpu->is_no_thread);
+	spinlock_release(&this_cpu->is_no_thread);
+	
+	//if(this_cpu->apic_id!=0)
+	//	while(1);
+	spinlock_ackquire(&multi_threading_lock);
+	do {
+		if (this_cpu->current_thread == NULL)
 		{
-			next_context = virt_to_phys(curcontext,(uintptr_t)current_thread->next->proc->context->highest_paging);
-			//kprintf("next_contextc 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
-			current_thread = current_thread->next;
+			curcontext= &startup_context;
+			next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->first_thread->proc->context->highest_paging);
+			//kprintf("next con: 0x%x apic_id 0x%x\n",next_context,this_cpu->apic_id);
+			this_cpu->current_thread = this_cpu->first_thread;
 		}
 		else 
 		{
-			next_context = virt_to_phys(curcontext,(uintptr_t)first_thread->proc->context->highest_paging);
-			//kprintf("next_contextaa 0x%x real context 0x%x",next_context,(uintptr_t) first_thread->proc->context->pd);
-			current_thread = first_thread;
+			curcontext= this_cpu->current_thread->proc->context;
+			
+			*this_cpu->current_thread->state = *cpu;
+			
+			if(this_cpu->current_thread->next != NULL)
+			{
+				next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->current_thread->next->proc->context->highest_paging);
+				this_cpu->current_thread = this_cpu->current_thread->next;
+			}
+			else 
+			{
+				next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->first_thread->proc->context->highest_paging);
+				this_cpu->current_thread = this_cpu->first_thread;
+			}
 		}
 	}
-#ifdef ARCH_X86
-	current_thread->state->ss = 0x23;
-	tss.esp0 = ((uintptr_t) cpu)+sizeof(cpu_state);
+	while(move_if_it_make_sense(this_cpu,this_cpu->current_thread)!=this_cpu);
+	spinlock_ackquire(&this_cpu->is_no_thread);
+	spinlock_release(&this_cpu->is_no_thread);
+#ifdef ARCH_X86								// #WHY
+	this_cpu->current_thread->state->ss = 0x23;
+	tss.esp0 = ((uintptr_t) cpu)+sizeof(struct cpu_state);
 #endif
 	/* Prozessorzustand des neuen Tasks aktivieren */
-	cpu = current_thread->state;
-	//cpu->rsp= current_thread->state->rsp;
-	cur_proc=current_thread->proc;
-	
-	if(current_thread->proc->context!=curcontext)
+	cpu = this_cpu->current_thread->state;
+	this_cpu->cur_proc=this_cpu->current_thread->proc;
+	if(this_cpu->current_thread->proc->context!=curcontext)
 	{
 		SET_CONTEXT(next_context)
-	}
+	} 
+	//kprintf("id: %x",this_cpu->apic_id);
+	spinlock_release(&multi_threading_lock);
 	return cpu;
 }
-int32_t switchto_thread(uint32_t t_id,cpu_state* cpu)
+int32_t switchto_thread(uint32_t t_id,struct cpu_state* cpu)
 {
-
+/*
 	struct thread*prev=current_thread;
 	struct thread*switch_to=get_thread(t_id);
 	vmm_context* curcontext=get_cur_context();
@@ -118,30 +214,30 @@ int32_t switchto_thread(uint32_t t_id,cpu_state* cpu)
 	{
 	    return -1;
 	}
-	/*
-	* Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
-	* gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
-	* wir spaeter nicht wieder.
-	*/
-	/*
-	* Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
-	*/
+	
+	// Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
+	// gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
+	// wir spaeter nicht wieder.
+	
+	
+	// Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
+	
 	current_thread->state = cpu;
 	current_thread = switch_to;
 	
-	/* Prozessorzustand des neuen Tasks aktivieren */
+	// Prozessorzustand des neuen Tasks aktivieren 
 	cpu = current_thread->state;
-#ifdef ARCH_X86
 	current_thread->state->ss = 0x23;
 	tss.esp0 = ((uintptr_t) cpu)+sizeof(cpu_state);
-#endif
+	
 	if(current_thread->proc!=prev->proc)
 	{
 	    SET_CONTEXT(virt_to_phys(curcontext,(uintptr_t)current_thread->proc->context));
 	    
-	}
+	}*/
 	return 0;
 }
+/*
 struct thread* get_thread(uint32_t t_id)
 {
 	struct thread* cur=first_thread;
@@ -158,3 +254,4 @@ struct thread* get_thread(uint32_t t_id)
 	}
 	return NULL;
 }
+*/

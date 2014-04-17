@@ -26,8 +26,9 @@
 #include<boot/init.h>
 #include<mt/threads.h>
 #include<macros.h>
+#include<libOS/lock.h>
 
-cpu_state* handle_syscall(cpu_state* cpu)
+struct cpu_state* handle_syscall(struct cpu_state* cpu)
 {
 	char* copybuf_ptr;
 	uint8_t font;
@@ -39,8 +40,9 @@ cpu_state* handle_syscall(cpu_state* cpu)
 			
 			copybuf_ptr =(void*)cpu->REG_DATA1;
 			font = (uint8_t)cpu->REG_DATA0;
+			spinlock_ackquire(&console_lock);
 			kprintfcol_scr((font>>4),font,copybuf_ptr);
-			
+			spinlock_release(&console_lock);
 			break;
 		case(SYS_INFO): break;
 		case(SYS_GETTID):break;

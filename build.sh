@@ -82,8 +82,10 @@ cp ./src/kernel/HAL/$ARCH2/menu.lst ./bin/boot/grub/menu.lst
 mv ./src/usr/tst2/SO_example_main.elf ./bin/boot/SO_example_main.mod
 mv ./src/usr/tst2/libSO_example_lib.so ./bin/boot/SO_example_lib.mod
 mv ./src/usr/tst1/tst1.elf ./bin/boot/proc1.mod
+mv ./src/usr/tst3/tst1.elf ./bin/boot/proc2.mod
+mv ./src/usr/tst4/tst1.elf ./bin/boot/proc3.mod
 
 genisoimage -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 -boot-info-table -o lizarx-$ARCH2.iso bin
-/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH2.iso -d int -d int -smp 4 -cpu core2duo
+/usr/bin/qemu-system-x86_64 -cdrom lizarx-$ARCH2.iso -d int -smp 4 -cpu core2duo
 date | cat >> ./doc/lines_of_code.txt
 (cloc . --exclude-dir=host/buildtools --exclude-list-file=doc/exclude_cloc.txt | cat >> ./doc/lines_of_code.txt)&exit

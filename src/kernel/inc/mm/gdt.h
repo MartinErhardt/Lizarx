@@ -19,6 +19,7 @@
 #define GDT_H
 
 #include <stdint.h>
+#include <hw_structs.h>
 
 //--------------------------------------------------------------------------GDT--------------------------------------------------------------------
 #define GDT_SIZE 6
@@ -49,7 +50,11 @@
 #define GDT_FLAG_4KUNIT      0x08
 struct tss_t tss;
 
-void gdt_set_entry(unsigned char i,unsigned int limit,unsigned int base,unsigned char accessbyte,unsigned char flags);
+#ifndef LOADER
+void init_gdt_AP(void);
+#endif
+
+void gdt_set_entry(struct gdt_entry * gdttable_tofill,uint8_t i,uint16_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags);
 void init_gdt(void);
 #ifdef ARCH_X86_64
 void setup_tss();

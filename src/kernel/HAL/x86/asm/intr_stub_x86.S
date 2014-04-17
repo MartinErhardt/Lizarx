@@ -146,10 +146,9 @@ INTR_STUB_EXCEPTION 16
 INTR_STUB_ERROR 17
 INTR_STUB_EXCEPTION 18
 
+
 // Flush TLB
-.global intr_stub_28
-intr_stub_28:
-	iret
+INTR_STUB_IRQ 28
 
 // APIC Timer
 .global intr_stub_29

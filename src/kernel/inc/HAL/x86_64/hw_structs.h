@@ -93,6 +93,16 @@ struct vmm_pagetbl
 	uint16_t NXnfree :12;
 }__attribute__((packed));
 
+// new paging structure
+
+struct vmm_paging_entry
+{
+	uint8_t rw_flags; 
+	uint8_t reserved :4;
+	uint64_t next_paging_layer :40;
+	uint16_t NXnfree :12;
+}__attribute__((packed));
+
 struct stack_frame
 {
 	struct stack_frame * base_ptr;

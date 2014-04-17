@@ -35,17 +35,13 @@
 #include <cpu.h>
 #include <libOS/lock.h>
 #include <intr/irq.h>
+#include <asm_inline.h>
 
 uint32_t cores_booted=1;
-
 void init(struct multiboot_info * mb_info)
 {
 	// initialize global variables
 	uint32_t i;
-	first_thread = NULL;
-	current_thread = NULL;
-	first_proc = NULL;
-	cur_proc = NULL;
 	startup_context.highest_paging=0x0;
 	startup_context.mm_tree=0x0;
 	apic_ready=0x0;
@@ -65,6 +61,7 @@ void init(struct multiboot_info * mb_info)
 	to_flush=0x0;
 	pmm_init(mb_info);
 	vmm_init();
+	
 	vheap_init();
 	
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
@@ -77,20 +74,21 @@ void init(struct multiboot_info * mb_info)
 		
 		local_apic_init(smp_support_);
 		cores_booted=1;
+		cpu_caps();
 		
 		startup_APs();
 	}
 	
 #endif
-	cpu_caps();
-	
 	kprintf("[INIT] I: init loads Bootmods...");
+	
 	if(mb_info->mbs_mods_count ==0)
 	{
-	    //kprintf("FAILED No Programs found\n");
+	    kprintf("FAILED No Programs found\n");
 	}
 	else
 	{
+	  
 		for(i=2;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
 		{
 			if(init_elf((void*) (uintptr_t)modules[i].mod_start))
@@ -98,6 +96,7 @@ void init(struct multiboot_info * mb_info)
 				kprintf("FAILED with mod: %d",i);
 			}
 		}
+		
 	}
 	kprintf(" SUCCESS\n");
 #ifdef ARCH_X86_64
@@ -106,9 +105,12 @@ void init(struct multiboot_info * mb_info)
 	
 	setup_tss();
 #endif
+	//kprintf("dispatch_thread at0x%x",&(dispatch_thread));
+	//kprintf("intr_stub_28 at0x%x",&(intr_stub_28));
 	//that's for testing purposes
 	//time_is = get_time();
 	enable_intr();
+	
 	while(1);
 }
 void AP_init()
@@ -123,10 +125,11 @@ void AP_init()
 #ifdef ARCH_X86_64
 	asm volatile ("mov %rax, %rsp" );
 #endif
+	init_gdt_AP();
 	init_idt_AP();
-	local_apic_init_AP();
-	local_apic_eoi();
 	
+	local_apic_eoi();
+	local_apic_init_AP();
 	cores_booted++;
 	cpu_caps();
 	
@@ -140,12 +143,16 @@ void AP_init()
 		
 		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 28, 0x0);
 		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 29, 0x0);
+		//enable_intr();
 		spinlock_release(&all_APs_booted);
 	}
 	else
 	{
+		//
 		spinlock_release(((uint8_t *)0x7208));
 	}
-	//enable_intr();
+	
+	ENABLE_INTR
+	
 	while(1);
 }

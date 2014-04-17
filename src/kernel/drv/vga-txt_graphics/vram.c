@@ -61,20 +61,43 @@ void kputs(const char* s,atrbyt font)
 void kput(uint8_t chr, atrbyt font)
 {
 	figure fig={chr, font};
-	if((scr_enb==TRUE)&&(cury==VIDEO_Y)){
-		scroll(1);
-	}
-	if((curx>=VIDEO_X)||(chr =='\n')){// Test
-	      newline();
+	uint16_t* adr=0;
+	if((curx>=VIDEO_X)&&(cury<(VIDEO_Y-1)))// Test
+		newline();
+	if(chr =='\n')
+	{
+		newline();
 		return;
-	} 
+	}
+	if((scr_enb==TRUE)&&(cury==VIDEO_Y )){
+		scroll(1);
+		cury--;
+		curx=0;
+	}
+	else if((scr_enb==TRUE)&& (cury==(VIDEO_Y-1)) && (curx==VIDEO_X) )
+	{
+		scroll(1);
+		curx=0;
+	}
 	if(chr == '\t')
 	{
 		curx = curx - curx%8 +8;
 		return;
 	}
+	if(chr == '\b')
+	{
+		if(curx==0)
+		{
+			//cury--;
+			//curx = VIDEO_X-1;
+		}
+		else{ curx--;}
+		uint16_t* adr = (uint16_t*) (video+(cury * VIDEO_X) + curx);
+		memmove(adr,0x0,2);
+		return;
+	}
 	// berechnen der Adresse
-	uint16_t* adr = (uint16_t*) (video+(cury * VIDEO_X) + curx);  // eine Multiplikation mit 2 darf hier nicht erfolgen, da off vom type uint16_t ist
+	adr = (uint16_t*) (video+(cury * VIDEO_X) + curx);  // eine Multiplikation mit 2 darf hier nicht erfolgen, da off vom type uint16_t ist
 	
 	// setzen des zeichens
 	memmove(adr,&fig,sizeof(fig));
@@ -200,5 +223,4 @@ static void scroll(uint8_t by)
 	size_t size_of_copy=vram_size-off;
 	memmove(video,(uint32_t*)((uintptr_t)video+off),size_of_copy);
 	memset((uint32_t*)((uintptr_t)video+size_of_copy),0x0,off);//FIXME 0x0 can be something else than the backgroundcol
-	cury=cury-by;
 }

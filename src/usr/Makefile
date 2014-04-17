@@ -9,6 +9,8 @@ all: ld.a user clean
 user:
 	$(MAKE) -C tst1
 	$(MAKE) -C tst2
+	$(MAKE) -C tst3
+	$(MAKE) -C tst4
 
 ld.a: $(OBJS_DLD)
 	$(AR_CROSS) rcs ld.a/libdld.a $(OBJS_DLD)

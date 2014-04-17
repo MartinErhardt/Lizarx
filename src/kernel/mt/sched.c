@@ -22,7 +22,7 @@
 #include<mm/vmm.h>
 #include <cpu.h>
 
-cpu_state* schedule(cpu_state*cpu)
+struct cpu_state* schedule(struct cpu_state*cpu)
 {
 	cpu = dispatch_thread(cpu);
 	return cpu;

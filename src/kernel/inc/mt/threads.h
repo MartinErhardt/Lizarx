@@ -25,11 +25,12 @@
 
 #define STDRD_STACKSIZ 0x3000
 
-struct thread* first_thread;
-struct thread* current_thread;
+uint8_t multi_threading_lock;
+uint32_t total_thread_count;
 
-struct thread {
-	cpu_state *	state;
+struct thread
+{
+	struct cpu_state * state;
 	uint32_t	t_id;
 	uint8_t*	user_stack;
 	struct proc*	proc;
@@ -37,9 +38,11 @@ struct thread {
 };
 
 int32_t create_thread(void* entry,uint32_t p_id);
+struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move);
+struct cpu_info * get_best_cpu();
 
-cpu_state* dispatch_thread(cpu_state* cpu);
-int32_t switchto_thread(uint32_t t_id,cpu_state* cpu);
+struct cpu_state * dispatch_thread(struct cpu_state* cpu);
+int32_t switchto_thread(uint32_t t_id,struct cpu_state* cpu);
 struct thread* get_thread(uint32_t t_id);
 
 #endif

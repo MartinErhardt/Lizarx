@@ -32,7 +32,6 @@ struct proc {
     struct proc*next;
 };
 struct proc* first_proc;
-struct proc* cur_proc;
 
 struct proc* create_proc();
 struct proc* get_proc(uint32_t p_id);

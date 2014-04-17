@@ -21,7 +21,6 @@
 
 #include<cpu.h>
 
-extern uint32_t tss[32];
-cpu_state* schedule();
+struct cpu_state* schedule();
 
 #endif

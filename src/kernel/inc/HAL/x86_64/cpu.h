@@ -22,6 +22,7 @@
 #include<stdint.h>
 #include<dbg/console.h>
 #include<string.h>
+#include<mt/threads.h>
 
 #define REG_FUNCRET 	rax
 #define REG_IP 		rip
@@ -57,7 +58,7 @@
 
 struct cpu_info bsp_info;
 
-typedef struct {
+struct cpu_state{
     // manually secured registers
     uint64_t   rax;
     uint64_t   rbx;
@@ -85,12 +86,13 @@ typedef struct {
     uint64_t   rflags;
     uint64_t   rsp;
     uint64_t   ss;
-} cpu_state;
+};
 
 struct cpu_info
 {
 	  uint8_t cpu_info_support;
 	  uint32_t cpu_n;
+	  uint32_t apic_id;
 	  uint8_t sse_support;
 	  uint8_t sse_2_support;
 	  uint8_t sse_3_support;
@@ -102,6 +104,11 @@ struct cpu_info
 	  uint8_t hyperthreading;
 	  char vendor_id[12];
 	  char cpu_name[48];
+	  struct thread * first_thread;
+	  struct thread * current_thread;
+	  uint32_t thread_count;
+	  uint8_t is_no_thread;
+	  struct proc * cur_proc;
 	  struct cpu_info * next;
 };
 void cpu_caps();

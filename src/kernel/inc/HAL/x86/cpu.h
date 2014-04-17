@@ -49,7 +49,7 @@
 
 struct cpu_info bsp_info;
 
-typedef struct {
+struct cpu_state{
     // manually secured registers
     uint32_t   eax;
     uint32_t   ebx;
@@ -68,12 +68,13 @@ typedef struct {
     uint32_t   eflags;
     uint32_t   esp;
     uint32_t   ss;
-} cpu_state;
+};
 
 struct cpu_info
 {
 	  uint8_t cpu_info_support;
 	  uint32_t cpu_n;
+	  uint32_t apic_id;
 	  uint8_t sse_support;
 	  uint8_t sse_2_support;
 	  uint8_t sse_3_support;
@@ -85,6 +86,11 @@ struct cpu_info
 	  uint8_t hyperthreading;
 	  char vendor_id[12];
 	  char cpu_name[48];
+	  struct thread * first_thread;
+	  struct thread * current_thread;
+	  uint32_t thread_count;
+	  uint8_t is_no_thread;
+	  struct proc * cur_proc;
 	  struct cpu_info * next;
 };
 

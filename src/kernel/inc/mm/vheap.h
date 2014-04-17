@@ -20,6 +20,8 @@
 
 #include<stdint.h>
 
+uint8_t heap_lock;
+
 void vheap_init();
 void* kmalloc(size_t size);
 void* kcalloc(size_t size);

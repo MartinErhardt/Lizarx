@@ -24,9 +24,9 @@
 #include<cpu.h>
 
 uint32_t time_intrs=0;
-cpu_state* timer_handler(cpu_state* new_cpu)
+struct cpu_state* timer_handler(struct cpu_state* new_cpu)
 {
 	time_intrs++;
-	cpu_state* state = schedule(new_cpu);
+	struct cpu_state* state = schedule(new_cpu);
 	return state;
 }

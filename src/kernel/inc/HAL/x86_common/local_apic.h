@@ -56,6 +56,11 @@
 #define IPI_DESTINATION_SHORTHAND_ALL			0x2
 #define IPI_DESTINATION_SHORTHAND_ALL_EXCLUDE_SELF	0x3
 
+#define APIC_DISABLE	0x10000
+#define APIC_NMI	(4<<8)
+
+uintptr_t local_apic_virt;
+
 extern void trampoline_entry_func(void);
 extern void gdt(void);
 extern void gdtr(void);
@@ -69,6 +74,8 @@ extern void lmode(void);
 
 uint8_t all_APs_booted;
 uint8_t apic_ready;
+
+struct cpu_info * get_cur_cpu();
 
 void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode);
 void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode);

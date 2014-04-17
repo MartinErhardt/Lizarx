@@ -19,18 +19,6 @@
 #include<stdint.h>
 #include"lock.h"
 #include<smp_capabilities.h>
-
-void spinlock_ackquire(uint8_t* lock)
-{
-    asm volatile(
-        "spin_lock: cmpb $0,(%0);"
-	"je get_lock;"
-	"pause;"
-	"jmp spin_lock;"
-        "get_lock: movb $1, %%cl;"
-		"lock cmpxchgb %%cl, (%0);"
-		"jne spin_lock;" : : "D" (lock) : "eax", "ecx");
-}
 void spinlock_release(uint8_t * lock)
 {
 	*lock = LOCK_FREE;
