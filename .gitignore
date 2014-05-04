@@ -1,7 +1,10 @@
 # don't version backups
 *.bak
-*.kate-swp
-*.kate.swp
+*.swn
+*.swo
+*.swp
+*.swm
+
 *.directory
 *~
 # or binaries

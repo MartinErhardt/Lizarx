@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 #include <stdarg.h>
-
+#include <libOS/lock.h>
 // Aufschlüsselung des Attribut-Bytes vom Text Modus
 typedef struct 
 {
@@ -35,7 +35,7 @@ typedef struct{
     atrbyt font;
     
 }__attribute__((packed)) figure;
-uint8_t console_lock;
+lock_t console_lock;
 
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1

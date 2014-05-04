@@ -23,8 +23,6 @@
 #include<stdint.h>
 #include"proc.h"
 
-#define STDRD_STACKSIZ 0x3000
-
 uint8_t multi_threading_lock;
 uint32_t total_thread_count;
 
@@ -33,11 +31,11 @@ struct thread
 	struct cpu_state * state;
 	uint32_t	t_id;
 	uint8_t*	user_stack;
-	struct proc*	proc;
-	struct thread*	next;
+	struct proc *	proc;
+	struct thread *	next;
 };
 
-int32_t create_thread(void* entry,uint32_t p_id);
+int32_t create_thread(void* entry, struct proc * in_proc);
 struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move);
 struct cpu_info * get_best_cpu();
 

@@ -16,16 +16,21 @@ The OS will also use dynamic linked shared objects to minimize Overhead between 
 
 ./build.sh --no-toolchain --arch-x86_64 # builds Lizarx without toolchain for x86_64 target(use this, when you made small changes outside the toolchain )
 
-### Implemented features
+### Features
 
-- GDT
-- IDT
-- PMM
-- VMM
-- Multitasking
-- Multithreading(no pthreads wrapper yet and also not tested, but supposed to work)
-- Userspace
-- full OS-specific toolchain(including cross-compiler libc and newlib port)
-- Dynamic linker(ld.a)
-- full X86_64 port
-- early SMP support
+- [x] GDT
+- [x] IDT
+- [x] PMM
+- [x] VMM
+- [x] Multitasking
+- [x] Multithreading(no pthreads wrapper yet and also not tested, but supposed to work)
+- [x] Userspace
+- [x] full OS-specific toolchain(including cross-compiler libc and newlib port)
+- [x] Dynamic linker(ld.a)
+- [x] full X86_64 port
+- [x] basic SMP support(including SMP scheduling)
+- [x] SYSCALL/SYSRET syscall(x86_64 only)
+- [ ] VFS in C++
+- [ ] tmpFS (should be a shared library of the VFS)
+- [ ] unix like shell in C++ with OO semantics
+- [ ] don't know yet :D

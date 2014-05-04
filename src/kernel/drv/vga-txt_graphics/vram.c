@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <drv/vga-txt_graphics/vram.h>
+#include <asm_inline.h>
 
 #define VIDEO_X 80
 #define VIDEO_Y 25
@@ -31,11 +32,11 @@
 // Pointer zum VRAM
 static uint16_t* video = (uint16_t*) 0xB8000;
 static size_t vram_size =sizeof(figure)*VIDEO_Y*VIDEO_X;
-static uint8_t curx = 0;
-static uint8_t cury = 0;
+uint8_t curx = 0;
+uint8_t cury = 0;
 // printed chars
-static uint32_t kprintf_res = 0;
-static bool scr_enb = TRUE;
+uint32_t kprintf_res = 0;
+bool scr_enb = TRUE;
 
 static void scroll(uint8_t by);
 
@@ -170,10 +171,15 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 {
 	const char* s;
 	uint_t n;
+	//const char a= 'a';
+	//const char b= 'b';
 	kprintf_res = 0;
+	spinlock_ackquire(&console_lock);
+	//OUTB(0x3f8, a );
 	while (*fmt) {
 		// serial console(only QEMU)
-		//OUTB(0x3f8, *fmt)
+	//	OUTB(0x3f8, *fmt);
+		
 		if (*fmt == '%') 
 		{
 			fmt++;
@@ -214,6 +220,8 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 out:
 	va_end(appar);
 	drawcurs();
+	spinlock_release(&console_lock);
+	//OUTB(0x3f8, b );
 	return kprintf_res;
 }
 //FIXME puffer awayscrolled chars to scroll-back later

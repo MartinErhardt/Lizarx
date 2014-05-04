@@ -1,6 +1,6 @@
 SRCS_OPTI = mm/vmm.c \
 	mm/vheap.c \
-	mm/gdt.c \
+	HAL/x86_common/gdt.c \
 	mt/elf.c \
 	mt/sched.c \
 	mt/proc.c \

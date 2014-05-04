@@ -22,6 +22,8 @@
 .extern save_cpu
 .extern restore_cpu
 
+#include<macros.h>
+
 .macro SAVE_CPU
     // save CPU
     push %ebp
@@ -32,14 +34,14 @@
     push %ebx
     push %eax
     
-    // Kernel-Datensegmente laden
-    mov $0x10, %ax
+    // load Kernel data segment
+    mov $(KERNEL_DATA_SEG_N<<3), %ax
     mov %ax, %ds
     mov %ax, %es
 .endm
 .macro RESTORE_CPU
-    // User-Datensegmente laden
-    mov $0x23, %ax
+    // load User data segment
+    mov $((USER_DATA_SEG_N<<3)|3), %ax
     mov %ax, %ds
     mov %ax, %es
     
@@ -64,7 +66,7 @@ intr_stub_\nr:
     add $4, %esp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // pop number
     add $8, %esp
 
     iret
@@ -82,7 +84,7 @@ intr_stub_\nr:
     add $4, %esp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $8, %esp
 
     iret
@@ -100,7 +102,7 @@ intr_stub_\nr:
     mov %eax, %esp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $8, %esp
 
     iret
@@ -119,7 +121,7 @@ intr_stub_\nr:
     mov %eax, %esp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $8, %esp
 
     iret

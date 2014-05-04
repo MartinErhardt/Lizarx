@@ -54,7 +54,6 @@ uintptr_t check_mp()
 	cf_tbl_header= (struct config_table_header *)((uintptr_t)fp->config_table);
 	uintptr_t cf_tbl_entry = ((uintptr_t) cf_tbl_header) + sizeof(struct config_table_header);
 	uint32_t i;
-	cores_from_tables=0;
 	for(i=0;i<cf_tbl_header->entry_count;i++)
 	{
 		switch(*((uint8_t *)cf_tbl_entry))

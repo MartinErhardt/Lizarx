@@ -2,6 +2,8 @@
 #include<stdint.h>
 #include<string.h>
 #include<stdlib.h>
+#include"../archdef.h"
+#include"../asm_inline.h"
 
 #define SYS_WRITE 0
 #define SYS_ERROR 8
@@ -42,17 +44,15 @@ int main(void)
 }
 void uprintf(char* fmt, ...)
 {
-    uprintfstrcol_scr(VGA_WHITE,fmt);
+	uprintfstrcol_scr(VGA_WHITE,fmt);
 }
 void uprintfstrcol_scr(unsigned char font, char* fmt)
 {
-    asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((unsigned long)fmt));
-    //asm volatile( "nop" :: "c" (sizeof("sghs")));
-    
-    asm volatile( "nop" :: "a" (SYS_WRITE));
-    
-    asm volatile ("int $0x30");
+	asm volatile( "nop" :: "d" (font));
+	asm volatile( "nop" :: "b" ((unsigned long)fmt));
+	//asm volatile( "nop" :: "c" (sizeof("sghs")));
+	
+	SYSCALL(SYS_WRITE);
 }
 char * itoa(unsigned int n, unsigned int base)
 {

@@ -17,12 +17,15 @@
  */
 #include <boot/multiboot.h>
 #include <dbg/console.h>
-#include <mm/gdt.h>
+#include <gdt.h>
 #include <boot/easy_map.h>
 #include <mt/elf.h>
 #include <string.h>
+#include <macros.h>
+
 extern const void kernel_stack;
 static void load_kernel(struct elf_header* header);
+
 void init_LM(struct multiboot_info * mb_info)
 {
 	struct multiboot_module* modules = (void*)mb_info->mbs_mods_addr;
@@ -35,9 +38,8 @@ void init_LM(struct multiboot_info * mb_info)
 	kprintf("[LM_loader] I: init_LM ...");
 	load_kernel((struct elf_header*)(modules[0].mod_start));
 	init_easymap();
-	uint32_t esp;
-	asm volatile("mov %esp , %eax;");
-	asm volatile("nop":"=a"(esp));
+	asm volatile("nop":: "a"(BSP_STACK+0xff0));
+	asm volatile("mov %eax , %esp;");
 	asm volatile
 	(
 		/*
@@ -59,9 +61,10 @@ void init_LM(struct multiboot_info * mb_info)
 		/* 
 		 * Load 64 bit segment registers
 		 */
-		"mov $0x10, %ax;"
+		"mov $0x18, %ax;"
 		"mov %ax, %ss;"
 		"mov %ax, %fs;"
+		"mov %ax, %ds;"
 		"mov %ax, %gs;"
 		/*
 		 * Let's set the PAE(Physical address extension) bit

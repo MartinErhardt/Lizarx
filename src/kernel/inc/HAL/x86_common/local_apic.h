@@ -19,6 +19,7 @@
 #define LOCAL_APIC_H
 
 #include<stdint.h>
+#include<libOS/lock.h>
 
 #define LOCAL_APIC_ID_REG	0x20  // rw
 #define LOCAL_APIC_VER_REG	0x30  // r
@@ -67,13 +68,15 @@ extern void gdtr(void);
 extern void pmode(void);
 
 #ifdef ARCH_X86_64
+
 extern void gdt64(void);
 extern void gdtr64(void);
 extern void lmode(void);
+
 #endif
 
-uint8_t all_APs_booted;
-uint8_t apic_ready;
+lock_t all_APs_booted;
+lock_t apic_ready;
 
 struct cpu_info * get_cur_cpu();
 
@@ -87,3 +90,4 @@ void local_apic_init_AP();
 void startup_APs();
 void local_apic_init_AP();
 #endif
+

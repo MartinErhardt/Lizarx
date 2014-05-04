@@ -77,13 +77,12 @@ int32_t init_elf(void* image)
 	struct elf_header* header = image;
 	struct elf_program_header* ph;
 	int i;
-	struct proc* new_proc=NULL; 
+	struct proc* new_proc = NULL; 
 	
-	vmm_context* curcontext=get_cur_context();
+	vmm_context* curcontext = get_cur_context_glob();
 	
-	uintptr_t curpd_phys= virt_to_phys(curcontext, (uintptr_t)curcontext->highest_paging);
+	uintptr_t curpd_phys = virt_to_phys(curcontext, (uintptr_t)curcontext->highest_paging);
 	/* Ist es ueberhaupt eine ELF-Datei? */
-	//kprintf("0x%x",(uintptr_t)image);
 	if (header->i_magic != ELF_MAGIC) 
 	{
 		kprintf("[ELF_LOADER] E: init_elf couldn't find valid ELF-Magic!\n");
@@ -117,13 +116,9 @@ int32_t init_elf(void* image)
 	    return -1;
 	}
 	new_proc = create_proc();
-	
 	/*
 	* Alle Program Header durchgehen und den Speicher an die passende Stelle
 	* kopieren.
-	*
-	* FIXME Wir erlauben der ELF-Datei hier, jeden beliebigen Speicher zu
-	* ueberschreiben, einschliesslich dem Kernel selbst.
 	*/
 	ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
 	for (i = 0; i < header->ph_entry_count; i++, ph++) 
@@ -146,10 +141,10 @@ int32_t init_elf(void* image)
 		SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->highest_paging));
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);
-		//
+		
 		SET_CONTEXT(curpd_phys);
 	}
-	create_thread((void*) header->entry,new_proc->p_id);
+	create_thread((void*) header->entry,new_proc);
 	//while(1);
 	//print_symbols(image,(struct elf_section_header*)((uintptr_t)(image)+header->sh_offset),header->sh_entry_count);
 	return 0;

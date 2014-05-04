@@ -17,7 +17,7 @@
  */
 #include"st_stdint.h"
 #include"video.h"
-
+#include"../../asm_inline.h"
 #define SYS_WRITE 0
 
 #define VGA_BLACK 0x0
@@ -45,5 +45,5 @@ void vprintfstrcol_scr(st_uint8_t font, char* fmt)
 {
     asm volatile( "nop" :: "d" (font));
     asm volatile( "nop" :: "b" ((st_uint32_t)fmt));    
-    asm volatile ("int $0x30" :: "a" (SYS_WRITE));
+    SYSCALL(SYS_WRITE)
 }

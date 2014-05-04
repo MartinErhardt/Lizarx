@@ -21,42 +21,42 @@
 #include<mt/user.h>
 #include<mt/threads.h>
 #include<dbg/console.h>
+#include<libOS/lock.h>
+#include<../x86_common/local_apic.h>
 
-static int32_t num_proc=0;
+uint_t num_proc = 0;
 
 struct proc* create_proc()
 {
-	vmm_context *new_con = kmalloc(sizeof(vmm_context));
-	struct proc* new_proc= kmalloc(sizeof(struct proc));
-	struct user* new_user= kmalloc(sizeof(struct user));
-	num_proc++;
-	*new_con =vmm_crcontext();
-	new_user->u_id=0;
-	
-	new_proc->context=new_con;
-	new_proc->user=new_user;
-	new_proc->p_id=num_proc;
-	new_proc->next=first_proc;
-	//new_proc->clock=0x0;
-	first_proc = new_proc;
-	
+	vmm_context *new_con	= kmalloc(sizeof(vmm_context));
+	struct proc* new_proc	= kmalloc(sizeof(struct proc));
+	struct user* new_user	= kmalloc(sizeof(struct user));
+	*new_con = vmm_crcontext();
+	spinlock_ackquire(&process_system_lock);
+	num_proc		++;
+	new_user->u_id		= 0;
+	new_proc->context	= new_con;
+	new_proc->user		= new_user;
+	new_proc->p_id		= num_proc;
+	new_proc->next		= first_proc;
+	first_proc		= new_proc;
+	spinlock_release(&process_system_lock);
 	return new_proc;
 }
-struct proc* get_proc(uint32_t p_id)
+struct proc * get_proc(uint_t p_id)
 {
-	struct proc* cur=first_proc;
+	struct proc* cur = first_proc;
 	
 	do
-	{
-		if(cur->p_id==p_id)
-		{
+		if(cur->p_id == p_id)
 			return cur;
-		}
 		else
-		{
 			cur = cur->next;
-		}
-	}
 	while(cur!=NULL);
+	
 	return NULL;
+}
+uint_t get_pid()
+{
+	return get_cur_cpu()->current_thread->proc->p_id;
 }

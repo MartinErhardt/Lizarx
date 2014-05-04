@@ -21,6 +21,8 @@
 #include<stdint.h>
 #include<dbg/console.h>
 
+#include<macros.h>
+
 #define REG_FUNCRET 	eax
 #define REG_IP 		eip
 #define REG_DATA0 	edx
@@ -40,8 +42,8 @@
 					STATE->intr=0x0; \
 					STATE->error=0x0; \
 					STATE->eip=0x0; \
-					STATE->cs=0x18 | 0x03; \
-					STATE->ss=0x23; \
+					STATE->cs= ( USER_CODE_SEG64_N<<3 ) | 0x3; \
+					STATE->ss=( USER_DATA_SEG_N<<3 ) | 0x3; \
 					STATE->esp=0x0; \
 					STATE->eflags=0x202; 
 
@@ -90,6 +92,7 @@ struct cpu_info
 	  struct thread * current_thread;
 	  uint32_t thread_count;
 	  uint8_t is_no_thread;
+	  uintptr_t stack;
 	  struct proc * cur_proc;
 	  struct cpu_info * next;
 };

@@ -21,6 +21,9 @@
 .extern handle_syscall
 .extern save_cpu
 .extern restore_cpu
+.extern syscall
+
+#include<macros.h>
 
 .macro SAVE_CPU
     // save CPU
@@ -41,14 +44,14 @@
     push %rbx
     push %rax
     
-    // Kernel-Datensegmente laden
-    mov $0x10, %ax
+    // load kernel data segment
+    mov $(KERNEL_DATA_SEG_N<<3), %ax
     mov %ax, %ds
     mov %ax, %es
 .endm
 .macro RESTORE_CPU
-    // User-Datensegmente laden
-    mov $0x23, %ax
+    // load user data segment
+    mov $((USER_DATA_SEG_N<<3)|3), %ax
     mov %ax, %ds
     mov %ax, %es
     
@@ -83,7 +86,7 @@ intr_stub_\nr:
     add $8, %esp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $0x10, %rsp
 
     iretq
@@ -102,7 +105,7 @@ intr_stub_\nr:
     add %rax, %rsp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $0x10, %rsp
 
     iretq
@@ -123,7 +126,7 @@ intr_stub_\nr:
 
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $0x10, %rsp
     iretq
 .endm
@@ -142,7 +145,7 @@ intr_stub_\nr:
     mov %rax, %rsp
     RESTORE_CPU
 
-    // Fehlercode und Interruptnummer vom Stack nehmen
+    // clean stack from error and intr number
     add $0x10, %rsp
 
     iretq
@@ -186,4 +189,55 @@ INTR_STUB_IRQ 33
 
 // Syscall
 INTR_STUB_SYSCALL 48
-
+.global syscall_stub
+syscall_stub:    
+	swapgs
+	
+	movl $((USER_DATA_SEG_N<<3)|3), %gs:-0x8 //ds
+	mov %rsp, 			%gs:-0x10 // rsp
+	movl $0x202, 			%gs:-0x18 //rflags
+	movl $((USER_CODE_SEG64_N<<3)|3), %gs:-0x20 //cs
+	movl $0,			%gs:-0x28 //rip
+	movl $0,			%gs:-0x30 // err
+	movl $0,			%gs:-0x38 // intr
+	mov %r15,			%gs:-0x40
+	mov %r14,			%gs:-0x48
+	mov %r13,			%gs:-0x50
+	mov %r12,			%gs:-0x58
+	mov %r11,			%gs:-0x60
+	mov %r10,			%gs:-0x68
+	mov %r9,			%gs:-0x70
+	mov %r8,			%gs:-0x78
+	mov %rbp,			%gs:-0x80
+	mov %rdi,			%gs:-0x88
+	mov %rsi,			%gs:-0x90
+	mov %rdx,			%gs:-0x98
+	mov %rcx,			%gs:-0xa0
+	mov %rbx,			%gs:-0xa8
+	mov %rax,			%gs:-0xb0
+	
+	swapgs
+	
+	mov $0xc0000102, %rcx
+	rdmsr
+	mov %rax, %rsp
+	
+	sub $0xb0, %rsp
+	
+	// load kernel data segment
+	mov $(KERNEL_DATA_SEG_N<<3), %ax
+	mov %ax, %ds
+	mov %ax, %es
+	
+	// call handler
+	mov %rsp, %rdi
+	call handle_syscall
+	mov %rax, %rsp
+	
+	RESTORE_CPU
+	
+	add $0x28, %esp
+	
+	pop %rsp
+	//sti
+	sysretq

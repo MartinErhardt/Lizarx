@@ -18,6 +18,8 @@
 #ifndef X86_MACROS_H
 #define X86_MACROS_H
 
+#define STDRD_STACKSIZ 0x2000
+
 /*Flags
 3	 0x8	 Granularity bit
 2	 0x4	 Size bit
@@ -26,6 +28,20 @@
 */
 #define GDT_FLAG_32_BIT  0x4
 
+#define KERNEL_CODE_SEG_N	1
+#define KERNEL_STACK_SEG_N	2
+#define KERNEL_DATA_SEG_N	3
+#define USER_CODE_SEG32_N	4
+#define USER_CODE_STACK_SEG_N	5
+#define USER_CODE_SEG64_N	6
+#define USER_DATA_SEG_N		7
+#define TSS_SEG_N		8
+
+#define BITMAP_SIZE 	32768
+#define PAGE_SIZE 	4096 // page size in bytes
+
+#define BSP_STACK 			0x104000
+#define TRAMPOLINE 			0x007000
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
 #define IDT_SIZE 256

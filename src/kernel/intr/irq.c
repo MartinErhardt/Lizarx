@@ -21,7 +21,6 @@
 #include <drv/timer/timer.h>
 #include <intr/irq.h>
 #include <mt/threads.h>
-#include <mm/gdt.h>
 #include <asm_inline.h>
 #include <local_apic.h>
 #include <libOS/lock.h>
@@ -32,9 +31,8 @@ struct cpu_state* handle_irq(struct cpu_state* cpu)
 	if (cpu->INFO_INTR == 28)
 	{
 		cpu = schedule(cpu);
-		
-		
 		local_apic_eoi();
+		//kprintf("rip at 0x%x",cpu->rip);
 	}
 #ifdef ARCH_X86
 	if (cpu->INFO_INTR >= 0x28) 
@@ -47,9 +45,9 @@ struct cpu_state* handle_irq(struct cpu_state* cpu)
 		kbc_handler(0x21);
 	}
 #endif
-
 		
 	// EOI an Master-PIC
 	OUTB(0x20, 0x20)
+
 	return cpu;
 }

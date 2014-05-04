@@ -1,5 +1,0 @@
-1. SMP
-2. VFS in C++
-3. tmpFS (should be a shared library of the VFS)
-4. unix like shell in C++ with OO semantics
-5. don't know yet :D

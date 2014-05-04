@@ -36,6 +36,7 @@
 #define WRITE_MSR(MSR, LO, HI)	asm volatile("wrmsr" :: "a"(LO), "d"(HI), "c" (MSR));
 
 #define LAST_ADDR 0xfffffffffffffff
+
 static inline uint64_t rdmsr(uint32_t msr)
 {
     uint32_t low, high;

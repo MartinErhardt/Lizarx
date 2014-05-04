@@ -29,12 +29,12 @@ trampoline_entry_func:
 	xor %ax, %ax
 	mov %ax, %ds
 	
-	lgdt 0x7020
+	lgdt 0x7120
 	mov %cr0, %eax
 	or $0x01, %eax
 	mov %eax, %cr0
 	
-	ljmp $0x08, $0x7048
+	ljmp $0x08, $0x71a0
 .code32
 .global pmode
 pmode:
@@ -78,4 +78,4 @@ gdt:
 .global gdtr
 gdtr:
 	.short	0x17
-	.int	0x7000
+	.int	0x7100

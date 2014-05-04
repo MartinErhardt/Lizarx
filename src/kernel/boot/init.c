@@ -17,7 +17,7 @@
  */
 #include <dbg/console.h>
 #include <idt.h>
-#include <mm/gdt.h>
+#include <gdt.h>
 #include <drv/keyboard/keyboard.h>
 #include <boot/multiboot.h>
 #include <string.h>
@@ -35,19 +35,31 @@
 #include <cpu.h>
 #include <libOS/lock.h>
 #include <intr/irq.h>
+#include <intr/syscall.h>
 #include <asm_inline.h>
 
-uint32_t cores_booted=1;
+uint32_t cores_booted			= 1; 
+
+/* / \
+    | the BSP is booted
+*/
 void init(struct multiboot_info * mb_info)
 {
 	// initialize global variables
 	uint32_t i;
-	startup_context.highest_paging=0x0;
-	startup_context.mm_tree=0x0;
-	apic_ready=0x0;
-	//struct tm* time_is=NULL;
+	startup_context.highest_paging	= 0;
+	startup_context.mm_tree		= 0;
+	apic_ready			= LOCK_FREE;
+	to_flush			= 0;
+	cores_from_tables		= 0;
+	process_system_lock		= LOCK_FREE;
+	multi_threading_lock		= LOCK_FREE;
+	heap_lock			= LOCK_FREE;
+	all_APs_booted			= LOCK_USED;
+	first_proc			= NULL;
+	//struct tm* time_isi		= NULL;
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
-	modules_glob=modules;
+	modules_glob			= modules;
 	
 	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
 #ifdef ARCH_X86
@@ -58,7 +70,7 @@ void init(struct multiboot_info * mb_info)
 	kprintf("... SUCCESS\n");
 #endif
 	kprintf("[INIT] I: init started\n");
-	to_flush=0x0;
+	
 	pmm_init(mb_info);
 	vmm_init();
 	
@@ -67,92 +79,78 @@ void init(struct multiboot_info * mb_info)
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	
-	uintptr_t smp_support_ = check_mp();
+	uintptr_t apic_support_ = check_mp();
 	
-	if(smp_support_)
+	if(apic_support_)
 	{
 		
-		local_apic_init(smp_support_);
+		local_apic_init(apic_support_);
+		
 		cores_booted=1;
 		cpu_caps();
-		
-		startup_APs();
+		if(cores_from_tables - 1)
+			startup_APs();
 	}
-	
 #endif
-	kprintf("[INIT] I: init loads Bootmods...");
 	
+	bsp_info.stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
+	
+	//uintptr_t more_than_4k		= (uintptr_t) kmalloc(0x200000);
+	//kprintf("[INIT] I: alloc more than 0x1000: 0x%x",more_than_4k);
+	//*((uint32_t*)more_than_4k)=0xDEADBEEF;
+	
+	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
-	{
 	    kprintf("FAILED No Programs found\n");
-	}
 	else
-	{
-	  
 		for(i=2;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
-		{
 			if(init_elf((void*) (uintptr_t)modules[i].mod_start))
-			{
 				kprintf("FAILED with mod: %d",i);
-			}
-		}
-		
-	}
 	kprintf(" SUCCESS\n");
 #ifdef ARCH_X86_64
-	
-	tss.rsp0=((uintptr_t)kvmm_malloc(0x1000))+0xff0;
+	init_SYSCALL();
+	tss.rsp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
 	
 	setup_tss();
+#else
+	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
 #endif
-	//kprintf("dispatch_thread at0x%x",&(dispatch_thread));
-	//kprintf("intr_stub_28 at0x%x",&(intr_stub_28));
-	//that's for testing purposes
-	//time_is = get_time();
 	enable_intr();
 	
 	while(1);
 }
 void AP_init()
 {
-	spinlock_ackquire(((uint8_t *)0x7208));
+	spinlock_ackquire(((lock_t *)0x7208));
 	//local_apic_init_AP();
-	uintptr_t stack= ((uintptr_t)kvmm_malloc(0x2000))+0x1ff0;
-	asm volatile("nop":: "a"(stack));
+	uintptr_t stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
+	
+	asm volatile("nop":: "a"(stack+ STDRD_STACKSIZ-0x10));
 #ifdef ARCH_X86
 	asm volatile ("mov %eax, %esp" );
 #endif
 #ifdef ARCH_X86_64
 	asm volatile ("mov %rax, %rsp" );
 #endif
+	local_apic_init_AP();
+	cpu_caps();
+	get_cur_cpu()->stack = stack;
+
 	init_gdt_AP();
 	init_idt_AP();
-	
-	local_apic_eoi();
-	local_apic_init_AP();
+#ifdef ARCH_X86_64
+	init_SYSCALL();
+#endif
 	cores_booted++;
-	cpu_caps();
+	local_apic_eoi();
 	
-	if(cores_booted==cores_from_tables)
-	{
-		//spinlock_lock(&testl);
-		
-		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 28, 0x0);
-		
-		//spinlock_ackquire(&testl);
-		
-		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 28, 0x0);
-		//local_apic_ipi(0,IPI_DELIVERY_MODE_FIXED, 29, 0x0);
-		//enable_intr();
+	if(cores_booted == cores_from_tables)
 		spinlock_release(&all_APs_booted);
-	}
 	else
-	{
-		//
-		spinlock_release(((uint8_t *)0x7208));
-	}
+		spinlock_release(((lock_t *)0x7208));
 	
 	ENABLE_INTR
 	
 	while(1);
 }
+

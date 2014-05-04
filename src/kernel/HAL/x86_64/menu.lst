@@ -1,6 +1,6 @@
 
 default 0
-#timeout 0
+timeout 0
  
 #title Boot from hard disk
 #chainloader (hd0)+1

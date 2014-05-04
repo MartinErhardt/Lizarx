@@ -24,6 +24,8 @@
 #include<string.h>
 #include<mt/threads.h>
 
+#include<macros.h>
+
 #define REG_FUNCRET 	rax
 #define REG_IP 		rip
 #define REG_DATA0 	rdx
@@ -32,29 +34,29 @@
 #define REG_STACKPTR 	rsp
 #define REG_FLAGS 	rflags
 #define INFO_INTR 	intr
-#define INIT_STATE(STATE)		STATE->rax=0x0; \
-					STATE->rbx=0x0; \
-					STATE->rcx=0x0; \
-					STATE->rdx=0x0; \
-					STATE->rsi=0x0; \
-					STATE->rdi=0x0; \
-					STATE->rbp=0x0; \
-					STATE->r8=0; \
-					STATE->r9=0; \
-					STATE->r10=0; \
-					STATE->r11=0; \
-					STATE->r12=0; \
-					STATE->r13=0; \
-					STATE->r14=0; \
-					STATE->r15=0; \
-					STATE->intr=0x0; \
-					STATE->error=0x0; \
-					STATE->rip=0x0; \
-					STATE->cs=0x18 | 0x03; \
-					STATE->ss=0x23; \
-					STATE->rsp=0x0; \
-					STATE->rflags=0x202; 
-#define SET_IRQ(FLAGS) FLAGS=0x200;
+#define INIT_STATE(STATE)		STATE->rax	= 0x0; \
+					STATE->rbx	= 0x0; \
+					STATE->rcx	= 0x0; \
+					STATE->rdx	= 0x0; \
+					STATE->rsi	= 0x0; \
+					STATE->rdi	= 0x0; \
+					STATE->rbp	= 0x0; \
+					STATE->r8	= 0; \
+					STATE->r9	= 0; \
+					STATE->r10	= 0; \
+					STATE->r11	= 0; \
+					STATE->r12	= 0; \
+					STATE->r13	= 0; \
+					STATE->r14	= 0; \
+					STATE->r15	= 0; \
+					STATE->intr	= 0x0; \
+					STATE->error	= 0x0; \
+					STATE->rip	= 0x0; \
+					STATE->cs	= ( USER_CODE_SEG32_N<<3 ) | 0x3; \
+					STATE->ss	= ( USER_DATA_SEG_N<<3 ) | 0x3; \
+					STATE->rsp	= 0x0; \
+					STATE->rflags	= 0x202; 
+#define SET_IRQ(FLAGS) FLAGS|0x200;
 
 struct cpu_info bsp_info;
 
@@ -106,6 +108,7 @@ struct cpu_info
 	  char cpu_name[48];
 	  struct thread * first_thread;
 	  struct thread * current_thread;
+	  uintptr_t stack;
 	  uint32_t thread_count;
 	  uint8_t is_no_thread;
 	  struct proc * cur_proc;

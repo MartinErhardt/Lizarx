@@ -2,6 +2,7 @@
 #include<stdint.h>
 #include<string.h>
 #include<stdlib.h>
+#include"../asm_inline.h"
 
 #define SYS_WRITE 0
 #define SYS_ERROR 8
@@ -50,9 +51,7 @@ void uprintfstrcol_scr(unsigned char font, char* fmt)
     asm volatile( "nop" :: "b" ((unsigned long)fmt));
     //asm volatile( "nop" :: "c" (sizeof("sghs")));
     
-    asm volatile( "nop" :: "a" (SYS_WRITE));
-    
-    asm volatile ("int $0x30");
+    SYSCALL(SYS_WRITE);
 }
 char * itoa(unsigned int n, unsigned int base)
 {

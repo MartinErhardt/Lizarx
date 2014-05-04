@@ -21,7 +21,7 @@ SRCS_OPTI = boot/init.c \
 	intr/syscall.c \
 	intr/err.c \
 	HAL/x86_common/idt.c \
-	mm/gdt.c \
+	HAL/x86_common/gdt.c \
 	dbg/stack_trace.c \
 	dbg/console.c \
 	drv/timer/timer.c \
@@ -34,10 +34,10 @@ SRCS_OPTI = boot/init.c \
 	mm/vmm.c \
 	lib/libOS/lock.c \
 	lib/libOS/mmio.c \
+	drv/vga-txt_graphics/vram.c \
 	lib/string.c 
 SRCS_UNOPTI = lib/stdlib.c \
 	mm/pmm.c \
-	drv/vga-txt_graphics/vram.c \
 	HAL/x86_common/smp_capabilities.c \
 	HAL/x86_64/asm/trampoline.S
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
@@ -50,14 +50,14 @@ kernel: $(OBJS_OPTI) $(OBJS_UNOPTI)
 %.o: %.c
 	$(CC_CROSS) $(C64FLAGS) $(CFLAGS) $(EXTRA_FLAGS) $(LOADER_FLAGS)  -o $@ -c $<
 %.o: %.S 
-	$(CC_CROSS) $(C64FLAGS) $(ASFLAGS) $(LOADER_FLAGS) -c -o $@ $^
+	$(CC_CROSS) $(C64FLAGS) $(ASFLAGS) $(LOADER_FLAGS) -DLOADER=LOADER -c -o $@ $^
 
 SRCS_LOADER = HAL/x86_64/asm/start_x86_64.S \
 	boot/boot_longmode.c \
 	boot/easy_map.c \
 	lib/stdlib.c \
 	lib/string.c \
-	mm/gdt.c \
+	HAL/x86_common/gdt.c \
 	drv/vga-txt_graphics/vram.c \
 	lib/libOS/lock.c \
 	dbg/console.c

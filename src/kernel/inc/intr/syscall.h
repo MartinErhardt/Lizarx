@@ -32,13 +32,13 @@ typedef enum {
     SYS_ERROR,
     SYS_GET_BOOTMOD,
     SYS_VMM_MALLOC,
-    SYS_VMM_FIND,
     SYS_VMM_REALLOC
 } syscalls;
 
 extern void intr_stub_48(void);
-
+extern void syscall_stub();
 struct cpu_state* handle_syscall(struct cpu_state* cpu);
+void init_SYSCALL();
 /*
 void do_err();
 void do_err2();

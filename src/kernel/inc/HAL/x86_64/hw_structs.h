@@ -106,7 +106,7 @@ struct vmm_paging_entry
 struct stack_frame
 {
 	struct stack_frame * base_ptr;
-	uint32_t return_addr;
+	uint64_t return_addr;
 }__attribute__((packed));
 struct gdt_tss_entry
 {

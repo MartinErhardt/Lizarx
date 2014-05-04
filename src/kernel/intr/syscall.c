@@ -27,6 +27,8 @@
 #include<mt/threads.h>
 #include<macros.h>
 #include<libOS/lock.h>
+#include<../x86_common/local_apic.h>
+#include<asm_inline.h>
 
 struct cpu_state* handle_syscall(struct cpu_state* cpu)
 {
@@ -40,9 +42,10 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			
 			copybuf_ptr =(void*)cpu->REG_DATA1;
 			font = (uint8_t)cpu->REG_DATA0;
-			spinlock_ackquire(&console_lock);
 			kprintfcol_scr((font>>4),font,copybuf_ptr);
-			spinlock_release(&console_lock);
+			
+		//	kprintf("virt_to_phys at 0x%x",virt_to_phys(get_cur_context(),cpu->rbp&0xfffff000));
+		//	kprintf("rbp at 0x%x",cpu->rbp);
 			break;
 		case(SYS_INFO): break;
 		case(SYS_GETTID):break;
@@ -54,27 +57,44 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 		case(SYS_ERROR):break;
 		case(SYS_GET_BOOTMOD):
 			bm_size= modules_glob[cpu->REG_DATA0].mod_end-modules_glob[cpu->REG_DATA0].mod_start;
-			cpu->REG_DATA0=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
-			cpu->REG_DATA2=bm_size;
+			
+			cpu->REG_FUNCRET=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
+			cpu->REG_DATA0=bm_size;
 			break;
 		case(SYS_VMM_MALLOC):
-			curcontext=get_cur_context();
+			curcontext=get_cur_context_glob();
 			cpu->REG_DATA0=(uintptr_t)uvmm_malloc(curcontext,cpu->REG_DATA0);
-			
-			break;
-		case(SYS_VMM_FIND):
-			curcontext=get_cur_context();
-			cpu->REG_DATA0=(uintptr_t)vmm_find_freemem(curcontext,cpu->REG_DATA0/PAGE_SIZE,KERNEL_SPACE,0xffffffff);
 			
 			break;
 		case(SYS_VMM_REALLOC):
 			
-			curcontext=get_cur_context();
+			curcontext=get_cur_context_glob();
 			
 			if((vmm_realloc(curcontext,((void*)cpu->REG_DATA0),cpu->REG_DATA1,FLGCOMBAT_USER))<0)
 				kprintf("error reallocating");
 			break;
 		default:break;
 	}
+	/*if(!cpu->REG_IP)
+	{
+		kprintf("[IRG] E: handle_irq notices !next_context bug\n");
+		while(1);
+	}*/
+	//kprintf("stack at %x",rdmsr(0xC0000102));
+	//kprintf("id: %d ",get_cur_cpu()->apic_id);
 	return cpu;
 }
+#ifdef ARCH_X86_64
+void init_SYSCALL()
+{
+	wrmsr(MSR_STAR,	( ( ((uint64_t) (USER_CODE_SEG32_N<<3) | 0x3)<<48) |	// Sysret cs
+			( ((uint64_t) (KERNEL_CODE_SEG_N<<3) ) <<32) )		// Syscall cs
+			&0xffffffff00000000LL					// first 32 bytes are reserved
+	);
+	
+	wrmsr(MSR_LSTAR,(uintptr_t) &syscall_stub);
+	wrmsr(MSR_EFER,rdmsr(MSR_EFER)|0x0000000000000001); // set EFER.SCE
+	wrmsr(0xC0000084, 0x0000000000000200LL);
+	wrmsr(0xC0000102, get_cur_cpu()->stack+STDRD_STACKSIZ-0x10);
+}
+#endif

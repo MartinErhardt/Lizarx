@@ -21,17 +21,18 @@
 #include <boot/multiboot.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <libOS/lock.h>
 
-#define BITMAP_SIZE 32768
-#define PAGE_SIZE 4096 // page size in bytes
+lock_t pmm_lock;
 
 void pmm_init(struct multiboot_info* mb_info);
 uint_t pmm_malloc_4k(void);
 uint_t pmm_malloc(uint_t pages);
 bool pmm_realloc(uint_t index, uint_t pages);
 
-void pmm_free(uint_t page);
-bool pmm_is_alloced(uint_t page);
-void pmm_mark_used(uint_t page);
+void pmm_free(uint_t page, uint_t n);
+void pmm_free_4k_glob(uint_t page);
+
+bool pmm_is_alloced_glob(uint_t page);
 
 #endif

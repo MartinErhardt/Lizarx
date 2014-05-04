@@ -4,6 +4,8 @@
 #include<stdlib.h>
 #include "main.h"
 #include "../ld.a/ld.h"
+#include"../asm_inline.h"
+
 #define SYS_WRITE 0
 #define SYS_GET_BOOTMOD 9
 #define SYS_VMM_MALLOC 10 
@@ -42,52 +44,52 @@ uintptr_t st_vmm_malloc(st_size_t alloc_size)
 {
 	st_uintptr_t free_space;
 	asm volatile( "nop" :: "d" (alloc_size));
-	asm volatile ("int $0x30"::"a" (SYS_VMM_MALLOC) );
+	SYSCALL(SYS_VMM_MALLOC)
 	asm volatile("nop" : "=d" (free_space) );
 	return free_space;
 }
 int main(void)
 {
-    
-     // outcomment to disable shared objects on x86
-    struct elf_lib main_;
-    struct elf_lib lib_;
-    bootmod_lib.start=NULL;
-    bootmod_lib.size=0;
-    bootmod_main.start=NULL;
-    bootmod_main.size=0;
-    uprintf("start");
-    while(1);
-    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
-    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
-    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
-    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
-    *((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
-    
-    
-    get_bootmod(2,&bootmod_main);
-    get_bootmod(1,&bootmod_lib);
-    
-    uintptr_t lib_load_addr=(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size);
-    
-    main_.header=(struct elf_header *)bootmod_main.start;
-    main_.runtime_addr=0;
-    
-    lib_.header=(struct elf_header *)bootmod_lib.start;
-    lib_.runtime_addr=lib_load_addr;
+	
+	// outcomment to disable shared objects on x86
+	struct elf_lib main_;
+	struct elf_lib lib_;
+	bootmod_lib.start	= NULL;
+	bootmod_lib.size	= 0;
+	bootmod_main.start	= NULL;
+	bootmod_main.size	= 0;
+	
 
-    link_lib_against(&main_,&lib_,NULL);
-    link_lib_against(&lib_,&main_,NULL);
-   
-    foo();
-    
-    unsigned long malloced=(unsigned long)malloc(10);
-    
-    *((unsigned int*)malloced)= 0xDEADBEEF;
-    uprintf(itoa(malloced,16));
-    uprintf("\n");
-    while(1);
-    return 0;
+	//*((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+	//*((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+	//*((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+	//*((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+	//*((uint64_t*)st_vmm_malloc(0x1000))=0x10101010;
+	
+	
+	get_bootmod(2,&bootmod_main);
+	get_bootmod(1,&bootmod_lib);
+	
+	uintptr_t lib_load_addr	=(uintptr_t)init_shared_lib(bootmod_lib.start,bootmod_lib.size);
+	
+	main_.header		= (struct elf_header *)bootmod_main.start;
+	main_.runtime_addr	= 0;
+	
+	lib_.header		= (struct elf_header *)bootmod_lib.start;
+	lib_.runtime_addr	= lib_load_addr;
+	
+	link_lib_against(&main_,&lib_,NULL);
+	link_lib_against(&lib_,&main_,NULL);
+	
+	foo();
+	
+	//unsigned long malloced=(unsigned long)malloc(10);
+	
+	//*((unsigned int*)malloced)= 0xDEADBEEF;
+	//uprintf(itoa(malloced,16));
+	//uprintf("\n");
+	while(1);
+	return 0;
 }
 
 void uprintf(char* fmt, ...)
@@ -95,25 +97,26 @@ void uprintf(char* fmt, ...)
     uprintfstrcol_scr(VGA_WHITE,fmt);
 }
 void uprintfstrcol_scr(unsigned char font, char* fmt){
-    asm volatile( "nop" :: "d" (font));
-    asm volatile( "nop" :: "b" ((unsigned long)fmt));
-    //asm volatile( "nop" :: "c" (sizeof("sghs")));
-    
-    asm volatile( "nop" :: "a" (SYS_WRITE));
-    asm volatile ("int $0x30");
+	asm volatile( "nop" :: "d" (font));
+	asm volatile( "nop" :: "b" ((unsigned long)fmt));
+	
+	SYSCALL(SYS_WRITE)
 }
 void get_bootmod(int num, struct bootmod* fill_it)
 {
-    uintptr_t mod_addr;
-    size_t mod_size;
-    asm volatile( "nop" :: "d" (num));
-    asm volatile ("int $0x30"::"a" (SYS_GET_BOOTMOD) );
-    asm volatile("nop" : "=d" (mod_addr) );
-    asm volatile("nop" : "=c" (mod_size) );
-    fill_it->size=mod_size;
-    fill_it->start=(void * )mod_addr;
+	uintptr_t mod_addr;
+	size_t mod_size;
+	asm volatile( "nop" :: "d" (num));
+	
+	SYSCALL(SYS_GET_BOOTMOD)
+	//while(1);
+	asm volatile("nop" : "=a" (mod_addr) );
+	asm volatile("nop" : "=d" (mod_size) );
+	
+	fill_it->size = mod_size;
+	fill_it->start = (void * )mod_addr;
 }
-char * itoa(unsigned int n, unsigned int base)
+char * itoa(unsigned long n, unsigned int base)
 {
 	static char new_str[16];
 	unsigned int i = 14;

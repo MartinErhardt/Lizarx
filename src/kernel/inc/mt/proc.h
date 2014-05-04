@@ -24,7 +24,7 @@
 #include"user.h"
 #include<time.h>
 struct proc {
-    uint32_t 	p_id;
+    uint_t 	p_id;
     struct user*user;
 //    char[10]	cmd;
 //    clock_t clock;
@@ -32,8 +32,9 @@ struct proc {
     struct proc*next;
 };
 struct proc* first_proc;
-
+uint8_t process_system_lock;
 struct proc* create_proc();
-struct proc* get_proc(uint32_t p_id);
+struct proc* get_proc(uint_t p_id);
+uint_t get_pid();
 
 #endif

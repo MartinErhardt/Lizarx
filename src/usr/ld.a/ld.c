@@ -22,11 +22,11 @@
 #include"lib_stat/st_string.h"
 #include"lib_stat/st_stdarg.h"
 #include"../archdef.h"
+#include"../asm_inline.h"
+
 #include"lib_stat/video.h"
 
 #define SYS_VMM_MALLOC 10 
-#define SYS_VMM_FIND 11
-#define SYS_VMM_REALLOC 12
 
 static st_uintptr_t st_vmm_malloc(st_size_t alloc_size);
 static st_uintptr_t st_vmm_find(st_size_t alloc_size);
@@ -159,24 +159,17 @@ static void resolve_references(struct dynamic * to_resolve,struct dynamic * all_
 		}
 	}
 }
-void link_lib_against(struct elf_lib* first_elf, ...)
+void link_lib_against(struct elf_lib* first_elf,struct elf_lib * second_elf)
 {
-	va_list elfs;
-	va_start(elfs,first_elf);
 	struct elf_lib * cur_elf_lib=first_elf;
-	int lib_num=0,i;
+	int i;
 	struct elf_section_header * cur_dynamic_sh=ST_NULL;
 	
-	while(cur_elf_lib!=ST_NULL)
-	{
-		lib_num++;
-		cur_elf_lib=va_arg(elfs,struct elf_lib*);
-	}
-	va_end(elfs);
-	struct dynamic dynamic_libs[lib_num];
-	va_start(elfs,first_elf);
+	struct dynamic dynamic_libs[2];
 	cur_elf_lib=first_elf;
-	for(i=0;i<lib_num;i++)
+	//vprintf("cur_elf_lib:");
+	//vprintf(st_itoa((unsigned  long)cur_elf_lib->header,0x10));
+	for(i=0;i<2;i++)
 	{
 		
 		cur_dynamic_sh=get_dynamic(cur_elf_lib->header);
@@ -188,17 +181,17 @@ void link_lib_against(struct elf_lib* first_elf, ...)
 				&dynamic_libs[i]
 				);
 		
-		cur_elf_lib=va_arg(elfs,struct elf_lib*);
+		cur_elf_lib=second_elf;
 	}
-	va_end(elfs);
-	resolve_references(&dynamic_libs[0],&dynamic_libs[0],lib_num);
+	
+	resolve_references(&dynamic_libs[0],&dynamic_libs[0],2);
 }
 static struct elf_section_header * get_dynamic(struct elf_header* elf)
 {
 	struct elf_section_header* section_header = (struct elf_section_header*)(((st_uintptr_t)elf)+(elf)->sh_offset);
-	
 	unsigned int i = 0;
 	unsigned int section_num = (elf)->sh_entry_count;
+	
 	// get 
 	for(i=0;i<section_num;i++)
 	{
@@ -278,7 +271,7 @@ void * init_shared_lib(void* image, st_size_t size)
 	struct elf_program_header* ph;
 	int i;
 	void * dest=ST_NULL;
-	st_uintptr_t file_dest=0x0;
+	st_uintptr_t file_dest = 0x0;
 	/* Ist es ueberhaupt eine ELF-Datei? */
 	
 	if (header->i_magic != ELF_MAGIC) 
@@ -328,12 +321,14 @@ void * init_shared_lib(void* image, st_size_t size)
 	*/
 	
 	ph = (struct elf_program_header*) (((st_uintptr_t) image) + header->ph_offset);
+	
 	for (i = 0; i < header->ph_entry_count; i++, ph++)
 	{
 		if(size<ph->virt_addr)
 			size = ph->virt_addr;
 	}
-	file_dest = st_vmm_find(size);
+	
+	file_dest = st_vmm_malloc(size);
 	ph = (struct elf_program_header*) (((st_uintptr_t) image) + header->ph_offset);
 	
 	for (i = 0; i < header->ph_entry_count; i++, ph++)
@@ -344,10 +339,11 @@ void * init_shared_lib(void* image, st_size_t size)
 			continue;
 		}
 		
-		st_vmm_realloc(file_dest+ph->virt_addr,ph->file_size);
+		//st_vmm_realloc(file_dest+ph->virt_addr,ph->file_size);
 		dest = (void*)(file_dest+ph->virt_addr);
 		
 		void* src = ((char*) image) + ph->offset;
+		
 		st_memset(dest, 0x00000000, ph->mem_size);
 		
 		st_memcpy(dest, src, ph->file_size);
@@ -359,27 +355,11 @@ st_uintptr_t st_vmm_malloc(st_size_t alloc_size)
 {
 	st_uintptr_t free_space;
 	asm volatile( "nop" :: "d" (alloc_size));
-	asm volatile ("int $0x30"::"a" (SYS_VMM_MALLOC) );
+	SYSCALL(SYS_VMM_MALLOC);
 	asm volatile("nop" : "=d" (free_space) );
 	return free_space;
 }
-st_uintptr_t st_vmm_find(st_size_t alloc_size)
-{
-	st_uintptr_t free_space;
-	asm volatile( "nop" :: "d" (alloc_size));
-	asm volatile ("int $0x30"::"a" (SYS_VMM_FIND) );
-	asm volatile("nop" : "=d" (free_space) );
-	return free_space;
-}
-st_uint_t st_vmm_realloc(st_uintptr_t ptr, st_size_t alloc_size)
-{
-	st_uint_t suc;
-	asm volatile( "nop" :: "d" (ptr));
-	asm volatile( "nop" :: "b" (alloc_size));
-	asm volatile ("int $0x30"::"a" (SYS_VMM_REALLOC) );
-	asm volatile("nop" : "=d" (suc) );
-	return suc;
-}
+
 /*
 static size_t elf_get_size(struct elf_header * elf)
 {

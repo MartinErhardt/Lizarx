@@ -62,10 +62,11 @@ typedef unsigned long long st_size_t;
 // Signed pointer-sized integer 
 typedef long long st_intptr_t;
 // Unsigned pointer-sized integer
-typedef unsigned long long st_uintptr_t;
+typedef unsigned long st_uintptr_t;
 
-typedef unsigned long long st_uint_t;
-typedef long long st_int_t;
+typedef unsigned long st_uint_t;
+typedef long st_int_t;
 
 #endif
+
 #endif

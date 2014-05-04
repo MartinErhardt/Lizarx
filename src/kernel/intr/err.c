@@ -25,8 +25,8 @@
 
 void handle_exception(struct cpu_state* cpu)
 {
-	kprintf("\nerr\n");
-	//redscreen(cpu);
+	//kprintf("\nerr\n");
+	redscreen(cpu);
 	while(1) 
 	{
 	   asm volatile("cli; hlt");

@@ -22,7 +22,7 @@
 #include <hw_structs.h>
 
 //--------------------------------------------------------------------------GDT--------------------------------------------------------------------
-#define GDT_SIZE 6
+#define GDT_SIZE 9
 
 /*Accessbyte
 7	 0x80	 Present bit
@@ -41,6 +41,16 @@
 #define GDT_ACCESS_RING0   0x00
 #define GDT_ACCESS_RING3   0x60
 #define GDT_ACCESS_PRESENT 0x80
+
+#define KERNEL_CODE_SEG_N	1
+#define KERNEL_STACK_SEG_N	2
+#define KERNEL_DATA_SEG_N	3
+#define USER_CODE_SEG32_N	4
+#define USER_CODE_STACK_SEG_N	5
+#define USER_CODE_SEG64_N	6
+#define USER_DATA_SEG_N		7
+#define TSS_SEG_N		8
+
 /*Flags
 3	 0x8	 Granularity bit
 2	 0x4	 Size bit
@@ -54,7 +64,7 @@ struct tss_t tss;
 void init_gdt_AP(void);
 #endif
 
-void gdt_set_entry(struct gdt_entry * gdttable_tofill,uint8_t i,uint16_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags);
+void gdt_set_entry(struct gdt_entry * gdttable_tofill,uint8_t i,uint32_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags);
 void init_gdt(void);
 #ifdef ARCH_X86_64
 void setup_tss();

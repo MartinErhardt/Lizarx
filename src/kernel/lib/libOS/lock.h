@@ -23,24 +23,27 @@
 #define LOCK_FREE 0
 #define LOCK_USED 1
 
-//void spinlock_ackquire(uint8_t * lock);
-void spinlock_release(uint8_t * lock);
-void spinlock_lock(uint8_t * lock);
+typedef uint8_t lock_t;
 
-static inline void spinlock_ackquire(uint8_t* lock)
+//void spinlock_ackquire(lock_t * lock);
+void spinlock_release(lock_t * lock);
+void spinlock_lock(lock_t * lock);
+
+static inline void spinlock_ackquire(lock_t* lock)
 {
-    asm volatile(
-        "spin_lock: cmpb $0,(%0);"
-	"je get_lock;"
-	"pause;"
-	"jmp spin_lock;"
-        "get_lock: movb $1, %%cl;"
+	    asm volatile(
+        	"spin_lock: cmpb $0,(%0);"
+		"je get_lock;"
+		"pause;"
+		"jmp spin_lock;"
+	        "get_lock: movb $1, %%cl;"
 		"lock cmpxchgb %%cl, (%0);"
 		"jne spin_lock;" : : "D" (lock) : "eax", "ecx");
-  /*  asm volatile("movb $1, %%cl;"
-        "lock_loop: xorb %%al, %%al;"
-        "lock cmpxchgb %%cl, (%0);"
-        "jnz lock_loop;" : : "D" (lock) : "eax", "ecx");*/
+		  /*  asm volatile("movb $1, %%cl;"
+	        "lock_loop: xorb %%al, %%al;"
+        	"lock cmpxchgb %%cl, (%0);"
+        	"jnz lock_loop;" : : "D" (lock) : "eax", "ecx");*/
 }
 
 #endif
+
