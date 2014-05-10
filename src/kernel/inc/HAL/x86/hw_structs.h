@@ -49,8 +49,9 @@ struct vmm_paging_entry
 	uint8_t reserved :4;
 	uintptr_t next_paging_layer :20;
 }__attribute__((packed));
+#define PAGING_TABLE_ENTRY_N 1024
 
-
+// The following two structs are DEPRECATED
 struct vmm_pagedir
 {
 	uint8_t rw_flags; 

@@ -36,8 +36,8 @@ struct heap_block
 void vheap_init()
 {
 	kprintf("[VHEAP] I: vheap_init ... ");
-	first		= (struct heap_block*)kvmm_malloc(PAGE_SIZE*2);
-	first->size	= PAGE_SIZE*2;
+	first		= (struct heap_block*)kvmm_malloc(PAGE_SIZE*4);
+	first->size	= PAGE_SIZE*4;
 	first->next	= NULL;
 	first->free	= TRUE;
 	kprintf("SUCCESS\n");

@@ -31,13 +31,13 @@ SRCS_OPTI = boot/init.c \
 	HAL/x86_common/local_apic.c \
 	HAL/x86_common/cpuid.c \
 	lib/libOS/find.c \
-	mm/vmm.c \
 	lib/libOS/lock.c \
 	lib/libOS/mmio.c \
 	drv/vga-txt_graphics/vram.c \
 	lib/string.c 
 SRCS_UNOPTI = lib/stdlib.c \
 	mm/pmm.c \
+	mm/vmm.c \
 	HAL/x86_common/smp_capabilities.c \
 	HAL/x86_64/asm/trampoline.S
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))

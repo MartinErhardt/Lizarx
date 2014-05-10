@@ -19,7 +19,7 @@
 #include<stdint.h>
 #include"lock.h"
 #include<smp_capabilities.h>
-void spinlock_release(uint8_t * lock)
+void spinlock_release(lock_t * lock)
 {
 	*lock = LOCK_FREE;
 }

@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "multiboot.h"
 
+uint_t all_cores_mask;
 void * kernel_elf;
 struct multiboot_module*modules_glob;
 void init(struct multiboot_info * mb_info);

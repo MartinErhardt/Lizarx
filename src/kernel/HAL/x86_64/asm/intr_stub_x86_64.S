@@ -43,7 +43,6 @@
     push %rcx
     push %rbx
     push %rax
-    
     // load kernel data segment
     mov $(KERNEL_DATA_SEG_N<<3), %ax
     mov %ax, %ds
@@ -51,6 +50,7 @@
 .endm
 .macro RESTORE_CPU
     // load user data segment
+    //test (%rsp) 
     mov $((USER_DATA_SEG_N<<3)|3), %ax
     mov %ax, %ds
     mov %ax, %es
@@ -189,6 +189,7 @@ INTR_STUB_IRQ 33
 
 // Syscall
 INTR_STUB_SYSCALL 48
+
 .global syscall_stub
 syscall_stub:    
 	swapgs
@@ -239,5 +240,9 @@ syscall_stub:
 	add $0x28, %esp
 	
 	pop %rsp
-	//sti
+	sti
 	sysretq
+.global idle_thread
+idle_thread:
+	hlt
+	jmp idle_thread

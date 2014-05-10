@@ -38,6 +38,15 @@
 #include <intr/syscall.h>
 #include <asm_inline.h>
 
+#define Bit0 1
+#define Bit1 2
+#define Bit2 3
+#define Bit3 4
+#define Bit4 5
+#define Bit5 6
+#define Bit6 7
+#define Bit7 8
+
 uint32_t cores_booted			= 1; 
 
 /* / \
@@ -52,12 +61,15 @@ void init(struct multiboot_info * mb_info)
 	apic_ready			= LOCK_FREE;
 	to_flush			= 0;
 	cores_from_tables		= 0;
+	all_cores_mask			= 0;
 	process_system_lock		= LOCK_FREE;
-	multi_threading_lock		= LOCK_FREE;
 	heap_lock			= LOCK_FREE;
+	invld_lock			= LOCK_FREE;
+	
 	all_APs_booted			= LOCK_USED;
 	first_proc			= NULL;
 	//struct tm* time_isi		= NULL;
+	to_invalidate_first		= NULL;
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob			= modules;
 	
@@ -73,9 +85,8 @@ void init(struct multiboot_info * mb_info)
 	
 	pmm_init(mb_info);
 	vmm_init();
-	
 	vheap_init();
-	
+	//init_idle_thread();
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	
@@ -94,10 +105,24 @@ void init(struct multiboot_info * mb_info)
 #endif
 	
 	bsp_info.stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
+	/*
+	 * malloc > PAGE_SIZE test case
+	uintptr_t more_than_4k		= (uintptr_t) kmalloc(0x200000);
+	kprintf("[INIT] I: alloc more than 0x1000: 0x%x",more_than_4k);
+	*((uint32_t*)more_than_4k)=0xDEADBEEF;
+	*/
+	/*
+	 * kvmm_free test case
+	uintptr_t will_be_del = (uintptr_t)kvmm_malloc(PAGE_SIZE*3);
+	kprintf("virt at 0x%x",will_be_del);
+	kprintf("phys_at 0x%x", virt_to_phys(get_cur_context_glob(), will_be_del));
+	kvmm_free((void*)(will_be_del), PAGE_SIZE*);
 	
-	//uintptr_t more_than_4k		= (uintptr_t) kmalloc(0x200000);
-	//kprintf("[INIT] I: alloc more than 0x1000: 0x%x",more_than_4k);
-	//*((uint32_t*)more_than_4k)=0xDEADBEEF;
+	will_be_del = (uintptr_t)kvmm_malloc(PAGE_SIZE);
+	kprintf("virt at 0x%x",will_be_del);
+	kprintf("phys_at 0x%x", virt_to_phys(get_cur_context_glob(), will_be_del));
+	kvmm_free((void *)will_be_del,PAGE_SIZE);
+	*/
 	
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
@@ -115,6 +140,8 @@ void init(struct multiboot_info * mb_info)
 #else
 	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
 #endif
+	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
+	//kprintf("cores_mask 0x%x",all_cores_mask);
 	enable_intr();
 	
 	while(1);
@@ -142,6 +169,8 @@ void AP_init()
 	init_SYSCALL();
 #endif
 	cores_booted++;
+	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
+	//
 	local_apic_eoi();
 	
 	if(cores_booted == cores_from_tables)

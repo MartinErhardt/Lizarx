@@ -276,14 +276,14 @@ void * init_shared_lib(void* image, st_size_t size)
 	
 	if (header->i_magic != ELF_MAGIC) 
 	{
-		vprintf("[ELF_LOADER] E: init_elf couldn't find valid ELF-Magic!\n");
+		vprintf("[LD.A] E: init_elf couldn't find valid ELF-Magic!\n");
 		vprintf(st_itoa(((st_uintptr_t)header),16));
 		return ST_NULL;
 	}
 #ifdef ARCH_X86
 	if (header->i_class != ELF_CLASS_32)
 	{
-		vprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
+		vprintf("[LD.A] E: init_elf found elf with class != 32!\n");
 		return ST_NULL;
 	}
 	if (header->machine != ELF_MACHINE_386)
@@ -294,22 +294,22 @@ void * init_shared_lib(void* image, st_size_t size)
 #ifdef ARCH_X86_64
 	if (header->i_class != ELF_CLASS_64)
 	{
-		vprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
+		vprintf("[LD.A] E: init_elf found elf with class != 32!\n");
 		return ST_NULL;
 	}
 #endif
 	if ((header->i_data != ELF_DATA_LITTLEENDIAN)||(header->version != ELF_DATA_LITTLEENDIAN))
 	{
-		vprintf("[ELF_LOADER] E: init_elf found elf with data != ELF_DATA_LITTLEENDIAN!\n");
+		vprintf("[LD.A] E: init_elf found elf with data != ELF_DATA_LITTLEENDIAN!\n");
 		return ST_NULL;
 	}
 	if (header->type != ELF_TYPE_DYN)
 	{
-		vprintf("[ELF_LOADER] E: init_elf found elf with type != ELF_TYPE_EXEC\n");
+		vprintf("[LD.A] E: init_elf found elf with type != ELF_TYPE_EXEC\n");
 	}
 	if (header->i_version != ELF_VERSION_CURRENT)
 	{
-	    vprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
+	    vprintf("[LD.A] E: init_elf found version != ELF_VERSION_CURRENT!\n");
 	    return ST_NULL;
 	}
 	/*

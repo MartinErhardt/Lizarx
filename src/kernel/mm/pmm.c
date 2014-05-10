@@ -284,7 +284,6 @@ bool pmm_is_alloced_glob(uint_t page)
 	}
 	spinlock_release(&pmm_lock);
 	return TRUE;
-	
 }
 
 static void pmm_mark_used(uint_t page)
@@ -317,7 +316,7 @@ static void pmm_push_stack(uint_t to_push)
 	{
 		pmm_stack_ptr--;
 		*pmm_stack_ptr = to_push;
-	} else kprintf("[PMM] E: pmm_push_stack can't push\n");
+	}// else kprintf("[PMM] E: pmm_push_stack can't push\n");
 }
 static uint_t pmm_pop_stack() 
 {

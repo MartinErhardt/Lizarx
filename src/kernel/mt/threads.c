@@ -28,6 +28,9 @@
 #include<cpu.h>
 #include<local_apic.h>
 
+struct cpu_state idle_state;
+static lock_t multi_threading_lock;
+static bool are_there_still_threads(struct cpu_info * this_cpu);
 int32_t create_thread(void* entry, struct proc * in_proc)
 {
 	struct thread* new_t	= (struct thread*)kmalloc(sizeof(struct thread));
@@ -54,12 +57,29 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 	new_t->user_stack	= user_stack;
 	new_t->proc		= in_proc;
 	new_t->next		= cpu->first_thread;
+	new_t->next_in_proc	= in_proc->first_thread;
 	cpu->first_thread	= new_t;
 	cpu->thread_count	++;
-	cpu->is_no_thread	= 0;
+        cpu->is_no_thread	= 0;
+	in_proc->first_thread	= new_t;
 	spinlock_release(&multi_threading_lock);
 	return 0;
 }
+/*void init_idle_thread()
+{
+	multi_threading_lock		= LOCK_FREE;
+	memset(&idle_state,0x0, sizeof(struct cpu_state));
+	//memcpy()
+	void * stack = kvmm_malloc(PAGE_SIZE);
+	memset(stack,0x0, PAGE_SIZE);
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
+	idle_state.cs = (KERNEL_CODE_SEG_N<<3);
+	idle_state.ss = (KERNEL_DATA_SEG_N<<3);
+#endif
+	idle_state.rsp =(uintptr_t)stack+PAGE_SIZE-0x10;
+	idle_state.rflags = 0x202;
+	idle_state.REG_IP = (uintptr_t)&idle_thread;
+}*/
 struct cpu_info * get_best_cpu()
 {
 	float average_thread_count=total_thread_count/cores_from_tables;// 1: 2 2: 5
@@ -88,7 +108,7 @@ struct cpu_info * get_best_cpu()
 struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move)
 {
 	this_cpu->thread_count--;
-	float average_thread_count=total_thread_count/cores_from_tables;
+	float average_thread_count = total_thread_count/cores_from_tables;
 	struct cpu_info * best_fit = this_cpu; 
 	struct cpu_info * cur_cpu = &bsp_info;
 	float best_fit_diff = ((&bsp_info)->thread_count+1)-average_thread_count;// 1: 12 2: 15
@@ -111,26 +131,65 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 	if(best_fit!=this_cpu)
 	{
 		kprintf("[THREADS] I: move_if_it_makes_sense moves\n");
-		if(last_thread!=to_move)
+		if(last_thread!=to_move)// if the thread which will be moved is the first we don't have to search for the one behind
 		{
-			while( (last_thread->next != to_move)&&(last_thread->next != NULL) )
+			while( (last_thread->next != to_move)&&(last_thread->next != NULL) ) // here we try to get the thread behind to_move the second case should never ocurr
 				last_thread = last_thread->next;
-			
-			last_thread->next = to_move->next;
+			// set the next thread of this, which will be moved as next for the one behind the moved
+			last_thread->next = to_move->next; 
 		}
-		else
+		else 
 		{
-			//kprintf("hi");
-			this_cpu->is_no_thread=1;
-			this_cpu->first_thread=NULL;
+			this_cpu->first_thread = to_move->next;
+			if(!are_there_still_threads(this_cpu))
+				this_cpu->is_no_thread=1;
 		}
 		
 		to_move->next = best_fit->first_thread;
 		best_fit->first_thread = to_move;
-		//cur_cpu->first_thread=
 	}
 	else this_cpu->thread_count++;
 	return best_fit;
+}
+void kill_thread(struct thread * to_kill, struct proc * in_proc)
+{
+	struct cpu_info * this_cpu = get_cur_cpu();
+	spinlock_ackquire(&multi_threading_lock);
+	struct thread * last_thread = this_cpu->first_thread;
+	if(last_thread!=to_kill)// if the thread which will be moved is the first we don't have to search for the one behind
+	{
+		while( (last_thread->next != to_kill)&&(last_thread->next != NULL) ) // here we try to get the thread behind to_kill the second case should never ocurr
+			last_thread = last_thread->next;
+		// set the next thread of this, which will be moved as next for the one behind the moved
+		last_thread->next = to_kill->next; 
+		SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(startup_context.highest_paging)))
+		this_cpu->current_thread = NULL;
+	//	SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(to_kill->next->proc->context->highest_paging)))
+	//	this_cpu->current_thread = to_kill->next; 
+	}
+	else 
+	{
+		this_cpu->first_thread = to_kill->next;
+		SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(startup_context.highest_paging)))
+		this_cpu->current_thread = NULL;
+		if(!are_there_still_threads(this_cpu))
+			this_cpu->is_no_thread=1;
+	}
+	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
+	kfree(to_kill->state);
+	kfree(to_kill);
+	spinlock_release(&multi_threading_lock);
+}
+static bool are_there_still_threads(struct cpu_info * this_cpu)
+{
+	struct thread * cur_thread	= this_cpu->first_thread;
+	bool are_there			= FALSE;
+	while(cur_thread)
+	{
+		are_there	= TRUE;
+		cur_thread	= cur_thread->next;
+	}
+	return are_there;
 }
 struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 {
@@ -148,22 +207,28 @@ struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 	spinlock_ackquire(&this_cpu->is_no_thread);
 	spinlock_release(&this_cpu->is_no_thread);
 	
-	//if(this_cpu->apic_id!=0)
-	//	while(1);
 	spinlock_ackquire(&multi_threading_lock);
-	
+	/*if(!are_there_still_threads(this_cpu))
+	{
+		//kprintf("rflags 0x%x", idle_state.rflags);
+		spinlock_release(&multi_threading_lock);
+		
+		//kprintf("rflags 0x%x", idle_state.rflags);
+		return &idle_state;
+	}*/
 	spinlock_ackquire(&this_cpu->is_no_thread);
 	spinlock_release(&this_cpu->is_no_thread);
-	
 	do if (this_cpu->current_thread == NULL)
 		{
+			
 			curcontext= &startup_context;
 			next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->first_thread->proc->context->highest_paging);
-			//kprintf("next con: 0x%x apic_id 0x%x\n",next_context,this_cpu->apic_id);
+			
 			this_cpu->current_thread = this_cpu->first_thread;
 		}
 		else 
 		{
+			
 			curcontext= this_cpu->current_thread->proc->context;
 			
 			*this_cpu->current_thread->state = *cpu;
@@ -183,7 +248,8 @@ struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 	
 	/* Prozessorzustand des neuen Tasks aktivieren */
 	cpu = this_cpu->current_thread->state;
-	this_cpu->cur_proc=this_cpu->current_thread->proc;
+	this_cpu->cur_proc = this_cpu->current_thread->proc;
+	
 	if(this_cpu->current_thread->proc->context!=curcontext)
 		SET_CONTEXT(next_context)
 	spinlock_release(&multi_threading_lock);

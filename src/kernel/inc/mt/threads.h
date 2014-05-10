@@ -22,8 +22,6 @@
 #include<cpu.h>
 #include<stdint.h>
 #include"proc.h"
-
-uint8_t multi_threading_lock;
 uint32_t total_thread_count;
 
 struct thread
@@ -33,12 +31,15 @@ struct thread
 	uint8_t*	user_stack;
 	struct proc *	proc;
 	struct thread *	next;
+	struct thread *	next_in_proc;
 };
+//extern void idle_thread();
 
+//void init_idle_thread();
 int32_t create_thread(void* entry, struct proc * in_proc);
 struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move);
 struct cpu_info * get_best_cpu();
-
+void kill_thread(struct thread * to_kill, struct proc * in_proc);
 struct cpu_state * dispatch_thread(struct cpu_state* cpu);
 int32_t switchto_thread(uint32_t t_id,struct cpu_state* cpu);
 struct thread* get_thread(uint32_t t_id);

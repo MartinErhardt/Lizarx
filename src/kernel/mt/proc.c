@@ -25,23 +25,58 @@
 #include<../x86_common/local_apic.h>
 
 uint_t num_proc = 0;
+uint_t pid_counter = 0;
 
 struct proc* create_proc()
 {
 	vmm_context *new_con	= kmalloc(sizeof(vmm_context));
 	struct proc* new_proc	= kmalloc(sizeof(struct proc));
 	struct user* new_user	= kmalloc(sizeof(struct user));
-	*new_con = vmm_crcontext();
+	*new_con		= vmm_crcontext();
 	spinlock_ackquire(&process_system_lock);
 	num_proc		++;
+	pid_counter		++;
 	new_user->u_id		= 0;
 	new_proc->context	= new_con;
 	new_proc->user		= new_user;
-	new_proc->p_id		= num_proc;
+	new_proc->p_id		= pid_counter;
+	new_proc->first_thread	= NULL;
 	new_proc->next		= first_proc;
 	first_proc		= new_proc;
 	spinlock_release(&process_system_lock);
 	return new_proc;
+}
+void exit(struct proc* to_exit)
+{
+	spinlock_ackquire(&process_system_lock);
+	struct thread * cur_thread = to_exit->first_thread;
+	struct proc * cur_proc = first_proc;
+	//kprintf("hi");
+	
+	num_proc--;
+	while(cur_thread)
+	{
+		kill_thread(cur_thread,to_exit);
+		
+		cur_thread = cur_thread->next_in_proc;
+	}
+	if(cur_proc == to_exit)
+		first_proc=first_proc->next;
+	else while(cur_proc)
+		{
+			if((uintptr_t)cur_proc->next==(uintptr_t)to_exit)
+			{
+				cur_proc->next = to_exit->next;
+				break;
+			}
+			cur_proc = cur_proc->next;
+		}
+	spinlock_release(&process_system_lock);
+	
+	vmm_delcontext(to_exit->context);
+	kfree(to_exit->context);
+	kfree(to_exit);
+	
 }
 struct proc * get_proc(uint_t p_id)
 {

@@ -19,8 +19,9 @@
 #define VHEAP_H
 
 #include<stdint.h>
+#include<libOS/lock.h>
 
-uint8_t heap_lock;
+lock_t heap_lock;
 
 void vheap_init();
 void* kmalloc(size_t size);

@@ -32,7 +32,7 @@
 
 #define TMP_PAGEBUF 0x1000
 
-#define KERNEL_SPACE 	0x4000000 //= 67 MB
+#define KERNEL_SPACE	0x4000000 //= 67 MB
 
 #define DIV_PAGE_SIZE(VAL) ((VAL)>>12)
 #define MUL_PAGE_SIZE(VAL) ((VAL)<<12)
@@ -47,12 +47,17 @@ typedef struct
 } vmm_context;
 
 vmm_context startup_context;
-    
+uint_t cores_invalidated;
+
+lock_t invld_lock;
+struct to_invalid * to_invalidate_first;
+
+void sync_addr_space();
 vmm_context vmm_init(void);
 vmm_context vmm_crcontext();
 
 vmm_context * get_cur_context_glob();
-
+void vmm_delcontext(vmm_context* to_del);
 void* kvmm_malloc(size_t size);
 void* uvmm_malloc(vmm_context* context,size_t size);
 int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs);

@@ -29,7 +29,7 @@
 #define DISABLE_INTR		asm volatile("cli");
 
 #define INVALIDATE_TLB(ADDR) 	asm volatile("invlpg %0" : : "m" (*(char*)ADDR));
-#define ENABLE_PAGING 		// nothing because Paging is allready engabled when switching to long mode
+#define ENABLE_PAGING 		// nothing because Paging is allready enabled when switching to long mode
 #define SET_CONTEXT(PAGEDIR)	asm volatile("mov %0, %%cr3" : : "r" (PAGEDIR));
 
 #define READ_MSR(MSR, LO, HI)	asm volatile("rdmsr": "=a"(LO), "=d"(HI) : "c"(MSR));

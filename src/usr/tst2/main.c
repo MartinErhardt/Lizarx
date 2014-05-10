@@ -9,6 +9,7 @@
 #define SYS_WRITE 0
 #define SYS_GET_BOOTMOD 9
 #define SYS_VMM_MALLOC 10 
+#define SYS_EXIT  12
 
 #define VGA_BLACK 0x0
 #define VGA_BLUE 0x1
@@ -88,6 +89,7 @@ int main(void)
 	//*((unsigned int*)malloced)= 0xDEADBEEF;
 	//uprintf(itoa(malloced,16));
 	//uprintf("\n");
+	SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
 }

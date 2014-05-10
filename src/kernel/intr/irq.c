@@ -30,7 +30,9 @@ struct cpu_state* handle_irq(struct cpu_state* cpu)
 {
 	if (cpu->INFO_INTR == 28)
 	{
+		sync_addr_space();
 		cpu = schedule(cpu);
+		
 		local_apic_eoi();
 		//kprintf("rip at 0x%x",cpu->rip);
 	}

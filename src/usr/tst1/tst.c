@@ -7,7 +7,7 @@
 
 #define SYS_WRITE 0
 #define SYS_ERROR 8
-
+#define SYS_EXIT  12
 void uprintf(char* fmt, ...);
 void uprintfstrcol_scr(unsigned char font, char* fmt);
 char * itoa(unsigned int n, unsigned int base);
@@ -39,6 +39,7 @@ int main(void)
 	uprintf(&hellolibc[0]);
 	uprintf(itoa(sqrt(4),10));
 	uprintf(&newline[0]);
+	SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
 }

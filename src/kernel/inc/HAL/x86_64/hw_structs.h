@@ -61,6 +61,16 @@ struct idt_entry
 }__attribute__((packed));
 
 //-----------------------------------------------------------------Paging-structures---------------------------------------------------------------
+struct vmm_paging_entry
+{
+	uint8_t rw_flags; 
+	uint8_t reserved :4;
+	uint64_t next_paging_layer :40;
+	uint16_t NXnfree :12;
+}__attribute__((packed));
+#define PAGING_TABLE_ENTRY_N 512
+
+// The following structs are DEPRECATED
 struct vmm_pagemap_level4
 {
 	uint8_t rw_flags; 
@@ -68,7 +78,6 @@ struct vmm_pagemap_level4
 	uint64_t pagedirptrtbl_ptr :40;
 	uint16_t NXnfree :12;
 }__attribute__((packed));
-
 struct vmm_pagedir_ptrtbl
 {
 	uint8_t rw_flags; 
@@ -90,16 +99,6 @@ struct vmm_pagetbl
 	uint8_t rw_flags; 
 	uint8_t reserved :4;
 	uint64_t page_ptr :40;	
-	uint16_t NXnfree :12;
-}__attribute__((packed));
-
-// new paging structure
-
-struct vmm_paging_entry
-{
-	uint8_t rw_flags; 
-	uint8_t reserved :4;
-	uint64_t next_paging_layer :40;
 	uint16_t NXnfree :12;
 }__attribute__((packed));
 
