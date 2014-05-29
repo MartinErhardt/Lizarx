@@ -38,7 +38,7 @@
 #define MUL_PAGE_SIZE(VAL) ((VAL)<<12)
 
 typedef struct vmm_paging_entry * highest_paging_struct;
-
+lock_t vmm_lock;
 typedef struct 
 {
 	highest_paging_struct highest_paging;

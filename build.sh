@@ -65,15 +65,6 @@ export CC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-li
 export CPPC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-g++
 export AR_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-ar
 
-if [ ! -f bin/boot/grub/stage2_eltorito ]
-then
-	echo "downloading stage2_eltorito"
-	cd bin/boot/grub/
-	wget https://docs.google.com/file/d/0B-x3QNiQfEeCallWMmxzVlZPRHM/edit
-	mv edit stage2_eltorito
-	cd ../../..
-fi
-
 cd src
 make
 cd ..

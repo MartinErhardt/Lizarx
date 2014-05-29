@@ -32,7 +32,7 @@ bool pmm_realloc(uint_t index, uint_t pages);
 
 void pmm_free(uint_t page, uint_t n);
 void pmm_free_4k_glob(uint_t page);
-
+void pmm_free_4k_unsafe(uint_t page);
 bool pmm_is_alloced_glob(uint_t page);
 
 #endif

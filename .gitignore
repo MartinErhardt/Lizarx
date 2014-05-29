@@ -16,7 +16,6 @@
 *.a # FIXME ld.a is also ignored :(
 bin/boot/LM_Loader
 bin/boot/kernel
-stage2_eltorito
 
 # that's temporary stuff
 src/kernel/Makefile

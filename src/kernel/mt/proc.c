@@ -49,7 +49,9 @@ struct proc* create_proc()
 void exit(struct proc* to_exit)
 {
 	spinlock_ackquire(&process_system_lock);
+	spinlock_ackquire(&multi_threading_lock);
 	struct thread * cur_thread = to_exit->first_thread;
+	
 	struct proc * cur_proc = first_proc;
 	//kprintf("hi");
 	
@@ -71,11 +73,13 @@ void exit(struct proc* to_exit)
 			}
 			cur_proc = cur_proc->next;
 		}
-	spinlock_release(&process_system_lock);
-	
+	spinlock_ackquire(&vmm_lock);
 	vmm_delcontext(to_exit->context);
 	kfree(to_exit->context);
 	kfree(to_exit);
+	spinlock_release(&multi_threading_lock);
+	spinlock_release(&process_system_lock);
+	spinlock_release(&vmm_lock);
 	
 }
 struct proc * get_proc(uint_t p_id)

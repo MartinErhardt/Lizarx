@@ -198,7 +198,7 @@ syscall_stub:
 	mov %rsp, 			%gs:-0x10 // rsp
 	movl $0x202, 			%gs:-0x18 //rflags
 	movl $((USER_CODE_SEG64_N<<3)|3), %gs:-0x20 //cs
-	movl $0,			%gs:-0x28 //rip
+	mov %rcx,			%gs:-0x28 //rip
 	movl $0,			%gs:-0x30 // err
 	movl $0,			%gs:-0x38 // intr
 	mov %r15,			%gs:-0x40
@@ -237,7 +237,9 @@ syscall_stub:
 	
 	RESTORE_CPU
 	
-	add $0x28, %esp
+	add $0x10, %rsp
+	mov (%rsp), %rcx
+	add $0x18, %rsp
 	
 	pop %rsp
 	sti

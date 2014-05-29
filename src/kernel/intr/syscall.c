@@ -77,10 +77,7 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			break;
 		case(SYS_EXIT):
 			exit(get_cur_cpu()->current_thread->proc);
-			//kprintf("ho \n\n\n");
-			//local_apic_ipi(get_cur_cpu()->apic_id, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode)get_cur_cpu()
-			asm volatile("int $28");
-			while(1);
+			
 			cpu = schedule(cpu);
 			
 			break;

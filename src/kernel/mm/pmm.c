@@ -48,7 +48,6 @@ static void pmm_init_stack();
 static uint_t pmm_pop_stack();
 static void pmm_push_stack(uint_t to_push);
 static uint_t pmm_malloc_4k_no_stack();
-static void pmm_free_4k(uint_t page);
 static bool pmm_is_alloced(uint_t page);
 static void pmm_mark_used(uint_t page);
 
@@ -102,7 +101,7 @@ void pmm_init(struct multiboot_info * mb_info)
 				*/
 				while ((addr/PAGE_SIZE < end_addr/PAGE_SIZE)&&(addr<0x100000000)) 
 				{
-					pmm_free(((uint32_t)addr)/PAGE_SIZE, 1);
+					pmm_free_4k_unsafe(((uint32_t)addr)/PAGE_SIZE);
 					addr += PAGE_SIZE;
 				}
 				goto cont;
@@ -110,7 +109,7 @@ void pmm_init(struct multiboot_info * mb_info)
 			
 			while ((addr/PAGE_SIZE < addr_mark_manual_until_that)&&(addr<0x100000000)) 
 			{
-				pmm_free(((uint32_t)addr)/PAGE_SIZE, 1);
+				pmm_free_4k_unsafe(((uint32_t)addr)/PAGE_SIZE);
 				addr += PAGE_SIZE;
 			}
 			
@@ -121,7 +120,7 @@ void pmm_init(struct multiboot_info * mb_info)
 			}
 			while ((addr/PAGE_SIZE <= end_addr/PAGE_SIZE)&&(addr<0x100000000)) 
 			{
-				pmm_free(((uint32_t)addr)/PAGE_SIZE, 1);
+				pmm_free_4k_unsafe(((uint32_t)addr)/PAGE_SIZE);
 				addr += PAGE_SIZE;
 			}
 		}
@@ -167,6 +166,9 @@ cont:
 	pmm_mark_used( DIV_PAGE_SIZE(TRAMPOLINE)			);// Trampoline space
 	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK)				);// That's our Stack which is still the MB Loader
 	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -1 			);// That's our Stack which is still the MB Loader
+	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -2 			);// That's our Stack which is still the MB Loader
+	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -3 			);// That's our Stack which is still the MB Loader
+	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -4 			);// That's our Stack which is still the MB Loader
 #ifdef ARCH_X86_64
 	
 	pmm_mark_used( DIV_PAGE_SIZE(INIT_PAGE_TBL_ADDR)		);
@@ -246,18 +248,7 @@ something_not_free:
 	return FALSE;
 }*/
 
-void pmm_free(uint_t page, uint_t n)
-{
-	uint_t cur_page;
-	spinlock_ackquire(&pmm_lock);
-	for(cur_page = page; cur_page<(page+n) ;cur_page++)
-	{
-		physbitmap[cur_page /32] |= (1 << (cur_page % 32));
-		//pmm_push_stack(cur_page);
-	}
-	spinlock_release(&pmm_lock);
-}
-static void pmm_free_4k(uint_t page)
+void pmm_free_4k_unsafe(uint_t page)
 {
 	physbitmap[page /32] |= ( 1 << (page % 32) );
 	pmm_push_stack(page);
@@ -265,7 +256,7 @@ static void pmm_free_4k(uint_t page)
 void pmm_free_4k_glob(uint_t page)
 {
 	spinlock_ackquire(&pmm_lock);
-	pmm_free_4k(page);
+	pmm_free_4k_unsafe(page);
 	spinlock_release(&pmm_lock);
 }
 static bool pmm_is_alloced(uint_t page)
@@ -341,5 +332,5 @@ static void pmm_init_stack()
 		pmm_stack[i] = pmm_malloc_4k_no_stack();
 	pmm_stack_ptr = &pmm_stack[PMM_STACK_SIZE];
 	for(i=PMM_STACK_SIZE-1; i!=0; i--) 
-		pmm_free_4k(pmm_stack[i]);
+		pmm_free_4k_unsafe(pmm_stack[i]);
 }

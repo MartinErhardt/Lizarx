@@ -29,7 +29,7 @@
 #include<local_apic.h>
 
 struct cpu_state idle_state;
-static lock_t multi_threading_lock;
+
 static bool are_there_still_threads(struct cpu_info * this_cpu);
 int32_t create_thread(void* entry, struct proc * in_proc)
 {
@@ -82,7 +82,7 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 }*/
 struct cpu_info * get_best_cpu()
 {
-	float average_thread_count=total_thread_count/cores_from_tables;// 1: 2 2: 5
+	float average_thread_count = total_thread_count/cores_from_tables;// 1: 2 2: 5
 	struct cpu_info * this_cpu = &bsp_info;
 	struct cpu_info * best_fit = &bsp_info;
 	float best_fit_diff = ((&bsp_info)->thread_count+1)-average_thread_count;// 1: 12 2: 15
@@ -154,7 +154,7 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 void kill_thread(struct thread * to_kill, struct proc * in_proc)
 {
 	struct cpu_info * this_cpu = get_cur_cpu();
-	spinlock_ackquire(&multi_threading_lock);
+	//spinlock_ackquire(&multi_threading_lock);
 	struct thread * last_thread = this_cpu->first_thread;
 	if(last_thread!=to_kill)// if the thread which will be moved is the first we don't have to search for the one behind
 	{
@@ -162,7 +162,7 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 			last_thread = last_thread->next;
 		// set the next thread of this, which will be moved as next for the one behind the moved
 		last_thread->next = to_kill->next; 
-		SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(startup_context.highest_paging)))
+		SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
 		this_cpu->current_thread = NULL;
 	//	SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(to_kill->next->proc->context->highest_paging)))
 	//	this_cpu->current_thread = to_kill->next; 
@@ -170,7 +170,7 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 	else 
 	{
 		this_cpu->first_thread = to_kill->next;
-		SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(startup_context.highest_paging)))
+		SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
 		this_cpu->current_thread = NULL;
 		if(!are_there_still_threads(this_cpu))
 			this_cpu->is_no_thread=1;
@@ -178,7 +178,7 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
 	kfree(to_kill->state);
 	kfree(to_kill);
-	spinlock_release(&multi_threading_lock);
+	//spinlock_release(&multi_threading_lock);
 }
 static bool are_there_still_threads(struct cpu_info * this_cpu)
 {

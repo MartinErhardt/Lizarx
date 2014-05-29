@@ -25,7 +25,7 @@
 */
 #define GDT_FLAG_32_BIT  0x2
 
-#define STDRD_STACKSIZ 0x2000
+#define STDRD_STACKSIZ 0x5000
 
 #define KERNEL_CODE_SEG_N	1
 #define KERNEL_STACK_SEG_N	2
