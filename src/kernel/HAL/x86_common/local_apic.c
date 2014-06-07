@@ -67,10 +67,7 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 }
 struct cpu_info * get_cur_cpu()
 {
-	if(local_apic_virt==0x0)
-	{
-		return &bsp_info;
-	}
+	if(local_apic_virt==0x0) return &bsp_info;
 	uint64_t apic_id = (mmio_read32(local_apic_virt,LOCAL_APIC_ID_REG)>>24);
 	struct cpu_info * cur_cpu = &bsp_info;
 	
@@ -79,6 +76,7 @@ struct cpu_info * get_cur_cpu()
 		if (cur_cpu->apic_id==apic_id) return cur_cpu;
 		cur_cpu=cur_cpu->next;
 	}while(cur_cpu!=NULL);
+	//kprintf("cpu: 0x%x", apic_id);
 	return NULL;
 }
 void startup_APs()

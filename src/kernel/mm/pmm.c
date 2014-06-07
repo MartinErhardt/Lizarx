@@ -166,9 +166,6 @@ cont:
 	pmm_mark_used( DIV_PAGE_SIZE(TRAMPOLINE)			);// Trampoline space
 	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK)				);// That's our Stack which is still the MB Loader
 	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -1 			);// That's our Stack which is still the MB Loader
-	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -2 			);// That's our Stack which is still the MB Loader
-	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -3 			);// That's our Stack which is still the MB Loader
-	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -4 			);// That's our Stack which is still the MB Loader
 #ifdef ARCH_X86_64
 	
 	pmm_mark_used( DIV_PAGE_SIZE(INIT_PAGE_TBL_ADDR)		);
@@ -193,6 +190,7 @@ uint_t pmm_malloc_4k()
 	pmm_mark_used(page_to_alloc);
 	
 	spinlock_release(&pmm_lock);
+	if(page_to_alloc == 0x12a) kprintf("AHA");
 	return page_to_alloc;
 }/*
 

@@ -114,8 +114,8 @@ struct cpu_info
 	  struct thread * first_thread;
 	  struct thread * current_thread;
 	  uintptr_t stack;
+	  struct cpu_state idle_state;
 	  uint32_t thread_count;
-	  uint8_t is_no_thread;
 	  struct proc * cur_proc;
 	  struct cpu_info * next;
 };

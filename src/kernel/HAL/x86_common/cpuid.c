@@ -22,24 +22,23 @@
 #include <libOS/mmio.h>
 #include <local_apic.h>
 #include <mm/vheap.h>
+#include <mm/vmm.h>
+
 uint8_t bsp_filled=0;
 // this function can only be used at the beginning
 void cpu_caps()
 {
 	uint8_t * cpuid_support =(uint8_t *) 0x7200;
 	struct cpu_info * this_cpu = &bsp_info;
-	while(this_cpu->next!=NULL) 
-	{
-		this_cpu = this_cpu->next;
-	};
+	while(this_cpu->next!=NULL)	this_cpu = this_cpu->next;
 	if(bsp_filled)
 	{
 		this_cpu->next=kmalloc(sizeof(struct cpu_info));
 		memset((void*)(this_cpu->next), 0x00, sizeof(struct cpu_info));
-		this_cpu=this_cpu->next;
+		this_cpu = this_cpu->next;
 	}
 	else
-	{ 
+	{
 		bsp_filled=1;
 		memset((void*)(this_cpu->next), 0x00, sizeof(struct cpu_info));
 	}
@@ -77,13 +76,9 @@ void cpu_caps()
 	    "out:");
 #endif
 	if(*cpuid_support)
-	{
 		this_cpu->cpu_info_support=1;
-	}
 	else
-	{
 		return;
-	}
 	
 	uint_t func =0x0; 
 	uint_t ebx =0x0; 
@@ -151,9 +146,24 @@ void cpu_caps()
 		kprintf(", sse_4.2");
 	}
 	this_cpu->apic_id=(mmio_read32(local_apic_virt,LOCAL_APIC_ID_REG)>>24);
-	this_cpu->is_no_thread=1;
-	/*this_cpu->current_thread=NULL;
+	//this_cpu->is_no_thread=1;
+	this_cpu->current_thread=NULL;
 	this_cpu->first_thread=NULL;
-	this_cpu->thread_count=0;*/
+	this_cpu->thread_count=0;
+#ifdef ARCH_X86_64
+	memset(&(this_cpu->idle_state),0x0, sizeof(struct cpu_state));
+	//memcpy()
+	
+	void * stack = kvmm_malloc(PAGE_SIZE);
+	
+	this_cpu->idle_state.cs = (KERNEL_CODE_SEG_N<<3);
+	this_cpu->idle_state.ss = (KERNEL_STACK_SEG_N<<3);
+	//kprintf("idle_thread 0x%p", &idle_thread);
+	this_cpu->idle_state.REG_STACKPTR =(uintptr_t)stack+PAGE_SIZE-0x10;
+	kprintf("at 0x%p",this_cpu->idle_state.REG_STACKPTR);
+	this_cpu->idle_state.REG_FLAGS = 0x200;
+	this_cpu->idle_state.REG_IP = (uintptr_t)&idle_thread;
+#endif
+	//while(1);
 	kprintf("\n");
 }

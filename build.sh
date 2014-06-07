@@ -18,14 +18,14 @@ fi
 if [ "$1" == "--arch-x86_64" ] || [ "$2" == "--arch-x86_64" ]
 then
 	R_ARCH="x86_64"
-	cp src/kernel/HAL/x86_64/Makefile 	src/kernel/Makefile
+	cp src/kernel/HAL/x86_64/makefile 	src/kernel/makefile
 	cp src/kernel/HAL/x86_64/kernel.ld 	src/kernel/kernel.ld
 	cp src/kernel/HAL/x86_64/loader.ld 	src/kernel/loader.ld
 	
 	cp src/usr/arch/x86_64/archdef.h 	src/usr
 	cp src/usr/arch/x86_64/asm_inline.h 	src/usr
 else
-	cp src/kernel/HAL/x86/Makefile 		src/kernel/Makefile
+	cp src/kernel/HAL/x86/makefile 		src/kernel/makefile
 	cp src/kernel/HAL/x86/kernel.ld 	src/kernel/kernel.ld
 	
 	cp src/usr/arch/x86/archdef.h 		src/usr

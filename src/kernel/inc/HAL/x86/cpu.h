@@ -42,7 +42,7 @@
 					STATE->intr=0x0; \
 					STATE->error=0x0; \
 					STATE->eip=0x0; \
-					STATE->cs= ( USER_CODE_SEG64_N<<3 ) | 0x3; \
+					STATE->cs= ( USER_CODE_SEG32_N<<3 ) | 0x3; \
 					STATE->ss=( USER_DATA_SEG_N<<3 ) | 0x3; \
 					STATE->esp=0x0; \
 					STATE->eflags=0x202; 
@@ -91,8 +91,8 @@ struct cpu_info
 	  struct thread * first_thread;
 	  struct thread * current_thread;
 	  uint32_t thread_count;
-	  uint8_t is_no_thread;
 	  uintptr_t stack;
+	  lock_t is_no_thread;
 	  struct proc * cur_proc;
 	  struct cpu_info * next;
 };

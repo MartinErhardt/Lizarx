@@ -33,9 +33,8 @@ struct thread
 	struct thread *	next;
 	struct thread *	next_in_proc;
 };
-//extern void idle_thread();
 lock_t multi_threading_lock;
-//void init_idle_thread();
+extern void return_idle_thread();
 int32_t create_thread(void* entry, struct proc * in_proc);
 struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move);
 struct cpu_info * get_best_cpu();

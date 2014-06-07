@@ -28,8 +28,6 @@
 #include<cpu.h>
 #include<local_apic.h>
 
-struct cpu_state idle_state;
-
 static bool are_there_still_threads(struct cpu_info * this_cpu);
 int32_t create_thread(void* entry, struct proc * in_proc)
 {
@@ -60,26 +58,13 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 	new_t->next_in_proc	= in_proc->first_thread;
 	cpu->first_thread	= new_t;
 	cpu->thread_count	++;
-        cpu->is_no_thread	= 0;
+#ifdef ARCH_X86
+	cpu->is_no_thread	= 0;
+#endif
 	in_proc->first_thread	= new_t;
 	spinlock_release(&multi_threading_lock);
 	return 0;
 }
-/*void init_idle_thread()
-{
-	multi_threading_lock		= LOCK_FREE;
-	memset(&idle_state,0x0, sizeof(struct cpu_state));
-	//memcpy()
-	void * stack = kvmm_malloc(PAGE_SIZE);
-	memset(stack,0x0, PAGE_SIZE);
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
-	idle_state.cs = (KERNEL_CODE_SEG_N<<3);
-	idle_state.ss = (KERNEL_DATA_SEG_N<<3);
-#endif
-	idle_state.rsp =(uintptr_t)stack+PAGE_SIZE-0x10;
-	idle_state.rflags = 0x202;
-	idle_state.REG_IP = (uintptr_t)&idle_thread;
-}*/
 struct cpu_info * get_best_cpu()
 {
 	float average_thread_count = total_thread_count/cores_from_tables;// 1: 2 2: 5
@@ -141,8 +126,10 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 		else 
 		{
 			this_cpu->first_thread = to_move->next;
+#ifdef ARCH_X86
 			if(!are_there_still_threads(this_cpu))
 				this_cpu->is_no_thread=1;
+#endif
 		}
 		
 		to_move->next = best_fit->first_thread;
@@ -172,8 +159,10 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 		this_cpu->first_thread = to_kill->next;
 		SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
 		this_cpu->current_thread = NULL;
+#ifdef ARCH_X86
 		if(!are_there_still_threads(this_cpu))
 			this_cpu->is_no_thread=1;
+#endif
 	}
 	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
 	kfree(to_kill->state);
@@ -204,23 +193,30 @@ struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 	/*
 	* Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
 	*/
-	spinlock_ackquire(&this_cpu->is_no_thread);
-	spinlock_release(&this_cpu->is_no_thread);
-	
-	spinlock_ackquire(&multi_threading_lock);
-	/*if(!are_there_still_threads(this_cpu))
+retry:
+#ifdef ARCH_X86_64
+	if(!are_there_still_threads(this_cpu))
 	{
-		//kprintf("rflags 0x%x", idle_state.rflags);
-		spinlock_release(&multi_threading_lock);
 		
-		//kprintf("rflags 0x%x", idle_state.rflags);
-		return &idle_state;
-	}*/
+		return &(this_cpu->idle_state);
+	}
+#endif
+#ifdef ARCH_X86
 	spinlock_ackquire(&this_cpu->is_no_thread);
 	spinlock_release(&this_cpu->is_no_thread);
+#endif
+	spinlock_ackquire(&multi_threading_lock);
+#ifdef ARCH_X86
+	spinlock_ackquire(&this_cpu->is_no_thread);
+	spinlock_release(&this_cpu->is_no_thread);
+#endif
 	do if (this_cpu->current_thread == NULL)
 		{
-			
+			if(!are_there_still_threads(this_cpu))
+			{
+				spinlock_release(&multi_threading_lock);
+				goto retry;
+			}
 			curcontext= &startup_context;
 			next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->first_thread->proc->context->highest_paging);
 			

@@ -80,6 +80,8 @@ lock_t apic_ready;
 
 struct cpu_info * get_cur_cpu();
 
+extern void idle_thread();
+
 void local_apic_ipi(uint8_t destinationId, uint8_t deliveryMode, uint8_t vector, uint8_t trigger_mode);
 void local_apic_ipi_all_excluding_self(uint8_t deliveryMode,uint8_t vector, uint8_t trigger_mode);
 void local_apic_eoi();
@@ -90,4 +92,3 @@ void local_apic_init_AP();
 void startup_APs();
 void local_apic_init_AP();
 #endif
-

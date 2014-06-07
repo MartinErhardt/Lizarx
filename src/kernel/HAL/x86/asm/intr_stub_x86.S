@@ -127,6 +127,31 @@ intr_stub_\nr:
     iret
 .endm
 
+.global idle_thread
+idle_thread:
+	hlt
+	jmp idle_thread
+.global return_idle_thread
+return_idle_thread:
+	mov %eax, %esp
+	// load Kernel data segment
+	mov $(KERNEL_DATA_SEG_N<<3), %ax
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
+	// restore CPU
+	pop %eax
+	pop %ebx
+	pop %ecx
+	pop %edx
+	pop %esi
+	pop %edi
+	pop %ebp
+	// clean stack from error and intr number
+	add $8, %esp
+
+	iret
 // Exceptions
 INTR_STUB_EXCEPTION 0
 INTR_STUB_EXCEPTION 1

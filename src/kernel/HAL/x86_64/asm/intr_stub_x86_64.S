@@ -153,6 +153,11 @@ intr_stub_\nr:
 
 // Exceptions
 
+.global idle_thread
+idle_thread:
+	hlt
+	jmp idle_thread
+
 INTR_STUB_EXCEPTION 0
 INTR_STUB_EXCEPTION 1
 INTR_STUB_EXCEPTION 2
@@ -244,7 +249,3 @@ syscall_stub:
 	pop %rsp
 	sti
 	sysretq
-.global idle_thread
-idle_thread:
-	hlt
-	jmp idle_thread

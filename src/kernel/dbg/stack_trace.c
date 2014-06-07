@@ -28,7 +28,7 @@ int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_p
 	uintptr_t* last_func;
 	kprintf("kernel stack_trace(last recent call first):\n");
 #ifndef F_DBG
-	kprintf("disable -Os in EXTRA_FLAGS in src/kernel/Makefile to achieve better results\n");
+	kprintf("disable -Os in EXTRA_FLAGS in src/kernel/makefile to achieve better results\n");
 #endif
 	vmm_context* curcontext=get_cur_context_glob();
 	

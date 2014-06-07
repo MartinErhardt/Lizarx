@@ -33,6 +33,8 @@ struct cpu_state* handle_irq(struct cpu_state* cpu)
 		sync_addr_space();
 		cpu = schedule(cpu);
 		
+		//kprintf("when starting 0x%x",bsp_info.idle_state.REG_STACKPTR);
+		
 		local_apic_eoi();
 		//kprintf("rip at 0x%x",cpu->rip);
 	}

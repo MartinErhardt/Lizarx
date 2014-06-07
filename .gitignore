@@ -4,6 +4,7 @@
 *.swo
 *.swp
 *.swm
+*.kate-swp
 
 *.directory
 *~

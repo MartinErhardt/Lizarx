@@ -77,7 +77,7 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			break;
 		case(SYS_EXIT):
 			exit(get_cur_cpu()->current_thread->proc);
-			
+			asm volatile("int $28");
 			cpu = schedule(cpu);
 			
 			break;

@@ -180,9 +180,9 @@ vmm_context * get_cur_context_glob()
 }
 static vmm_context * get_cur_context()
 {
-	if((startup_context.highest_paging != NULL)&&(get_cur_cpu()->current_thread==NULL))
+	if(startup_context.highest_paging != NULL && (!get_cur_cpu() || get_cur_cpu()->current_thread==NULL))
 		return &startup_context;
-	else if(get_cur_cpu()->current_thread!=NULL)
+	else if(get_cur_cpu() && get_cur_cpu()->current_thread!=NULL)
 		return get_cur_cpu()->current_thread->proc->context;
 	return NULL;
 }

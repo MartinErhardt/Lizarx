@@ -86,7 +86,6 @@ void init(struct multiboot_info * mb_info)
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
-	//init_idle_thread();
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	
@@ -124,6 +123,7 @@ void init(struct multiboot_info * mb_info)
 	kvmm_free((void *)will_be_del,PAGE_SIZE);
 	*/
 	
+	//while(1);
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
 	    kprintf("FAILED No Programs found\n");
@@ -141,6 +141,7 @@ void init(struct multiboot_info * mb_info)
 	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
 #endif
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
+	
 	//kprintf("cores_mask 0x%x",all_cores_mask);
 	enable_intr();
 	
