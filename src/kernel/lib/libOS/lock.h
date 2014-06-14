@@ -25,7 +25,6 @@
 
 typedef uint8_t lock_t;
 
-//void spinlock_ackquire(lock_t * lock);
 void spinlock_release(lock_t * lock);
 void spinlock_lock(lock_t * lock);
 

@@ -25,18 +25,17 @@
 #include <local_apic.h>
 #include <libOS/lock.h>
 #include<mt/sched.h>
+#include <intr/err.h>
 
 struct cpu_state* handle_irq(struct cpu_state* cpu)
 {
+	if (err_ocurred)
+		cpu_halt();
 	if (cpu->INFO_INTR == 28)
 	{
 		sync_addr_space();
 		cpu = schedule(cpu);
-		
-		//kprintf("when starting 0x%x",bsp_info.idle_state.REG_STACKPTR);
-		
 		local_apic_eoi();
-		//kprintf("rip at 0x%x",cpu->rip);
 	}
 #ifdef ARCH_X86
 	if (cpu->INFO_INTR >= 0x28) 

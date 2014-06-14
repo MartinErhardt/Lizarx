@@ -40,9 +40,8 @@ struct proc* create_proc()
 	new_proc->context	= new_con;
 	new_proc->user		= new_user;
 	new_proc->p_id		= pid_counter;
-	new_proc->first_thread	= NULL;
-	new_proc->next		= first_proc;
-	first_proc		= new_proc;
+	new_proc->first_thread = NULL;
+	alist_add(&proc_list, (void*)new_proc);
 	spinlock_release(&process_system_lock);
 	return new_proc;
 }
@@ -51,28 +50,16 @@ void exit(struct proc* to_exit)
 	spinlock_ackquire(&process_system_lock);
 	spinlock_ackquire(&multi_threading_lock);
 	struct thread * cur_thread = to_exit->first_thread;
-	
-	struct proc * cur_proc = first_proc;
 	//kprintf("hi");
 	
 	num_proc--;
 	while(cur_thread)
 	{
 		kill_thread(cur_thread,to_exit);
-		
+
 		cur_thread = cur_thread->next_in_proc;
 	}
-	if(cur_proc == to_exit)
-		first_proc=first_proc->next;
-	else while(cur_proc)
-		{
-			if((uintptr_t)cur_proc->next==(uintptr_t)to_exit)
-			{
-				cur_proc->next = to_exit->next;
-				break;
-			}
-			cur_proc = cur_proc->next;
-		}
+	alist_remove(&proc_list, to_exit);
 	spinlock_ackquire(&vmm_lock);
 	vmm_delcontext(to_exit->context);
 	kfree(to_exit->context);
@@ -80,20 +67,11 @@ void exit(struct proc* to_exit)
 	spinlock_release(&multi_threading_lock);
 	spinlock_release(&process_system_lock);
 	spinlock_release(&vmm_lock);
-	
+
 }
 struct proc * get_proc(uint_t p_id)
 {
-	struct proc* cur = first_proc;
-	
-	do
-		if(cur->p_id == p_id)
-			return cur;
-		else
-			cur = cur->next;
-	while(cur!=NULL);
-	
-	return NULL;
+	return alist_get_by_entry(&proc_list, 0,p_id);
 }
 uint_t get_pid()
 {

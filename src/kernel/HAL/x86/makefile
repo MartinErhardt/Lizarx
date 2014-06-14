@@ -25,6 +25,7 @@ SRCS_OPTI = mm/vmm.c \
 	HAL/x86_common/cpuid.c \
 	lib/libOS/find.c \
 	lib/libOS/lock.c \
+	lib/libOS/list.c \
 	lib/libOS/mmio.c
 SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c mm/pmm.c
 

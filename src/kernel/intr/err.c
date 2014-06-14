@@ -26,8 +26,14 @@
 
 void handle_exception(struct cpu_state* cpu)
 {
+	err_ocurred = 1;
 	kprintf("\nError on core: 0x%x\n", get_cur_cpu()->apic_id );
 	redscreen(cpu);
+	
+	cpu_halt();
+}
+void cpu_halt()
+{
 	while(1) asm volatile("cli; hlt");
 }
 void redscreen(struct cpu_state* cpu)

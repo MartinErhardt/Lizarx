@@ -96,11 +96,11 @@ vmm_context vmm_init(void)
 	kprintf("[VMM] I: vmm_init ...");
 	/* Speicherkontext anlegen */
 	startup_context = vmm_crcontext();
-	
+
 	SET_CONTEXT((uintptr_t)startup_context.highest_paging)
-	
+
 	ENABLE_PAGING
-	
+
 	paging_activated=TRUE;
 	kprintf("SUCCESS\n");
 	return startup_context;
@@ -129,10 +129,10 @@ vmm_context vmm_crcontext()
 	}
 	uint_t i;
 	struct vmm_paging_entry * cur_struct_to_set = (struct vmm_paging_entry *) new_context.highest_paging;
-	
+
 	memset((void*)new_context.mm_tree,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
 	memset((void*)new_context.highest_paging,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
-	
+
 	/*
 	 * I loop through the paging hierarchy. This is possible, because in X86_64 a page map level 4 entry is similar to a pagedirectorypointertable entry, a pagedirectorytable entry and a pagletable entry.
 	 * In X86 a paging directory table entry is similar to a pagetable entry.
@@ -232,9 +232,9 @@ void * vmm_malloc(vmm_context * context, size_t size, uintptr_t from, uintptr_t 
 {
 	spinlock_ackquire(&vmm_lock);
 	int i;
-	
+
 	size = from_bytes_to_pages(size);
-	
+
 	uintptr_t phys;
 	uintptr_t virt;
 	if(!context)
@@ -257,7 +257,7 @@ void * vmm_malloc(vmm_context * context, size_t size, uintptr_t from, uintptr_t 
 		}
 	else
 	    	kprintf("[VMM] E: vmm_malloc gets invalid return value from vmm_find_freemem\n");
-	
+
 	spinlock_release(&vmm_lock);
 	return (void *)virt;
 }
@@ -267,9 +267,9 @@ int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 	int j;
 	uintptr_t page = DIV_PAGE_SIZE((uintptr_t)ptr);
 	spinlock_ackquire(&vmm_lock);
-	
+
 	size = from_bytes_to_pages(size);
-	
+
 	uintptr_t phys = 0x0;
 	for(j=0;j<size;j++) 
 		if (vmm_is_alloced(context,page+j)==TRUE) 
@@ -290,9 +290,9 @@ int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs)
 void vmm_free(vmm_context* context,void* to_free,size_t size)//FIXME No Overflow check
 {
 	uint_t i;
-	
+
 	size = from_bytes_to_pages(size);
-	
+
 	spinlock_ackquire(&vmm_lock);
 	for(i=0;i<size;i++)
 	{
@@ -311,16 +311,14 @@ void kvmm_free(void* to_free,size_t size)//FIXME No Overflow check
 static void kvmm_free_unsafe(void* to_free,size_t size)//FIXME No Overflow check
 {
 	uint_t i;
-	
 	size = from_bytes_to_pages(size);
-	
 	for(i=0;i<size;i++)
 	{
 		pmm_free_4k_glob(DIV_PAGE_SIZE( virt_to_phys_unsafe(get_cur_context(), MUL_PAGE_SIZE(  DIV_PAGE_SIZE((uintptr_t)to_free)  + i) ) ));
 		vmm_remind_to_mark_free(DIV_PAGE_SIZE( (uintptr_t)to_free ) + i );
 		vmm_map_inallcon(0x0,MUL_PAGE_SIZE(DIV_PAGE_SIZE((uintptr_t)to_free)+i),0x0);
 	}
-	
+
 }
 
 /*
@@ -454,7 +452,6 @@ static void vmm_mark_used(vmm_context* context,uint_t page)
 	}*/
 	if(!nodes)
 	{
-		
 		uintptr_t node_phys = pmm_malloc_4k()*PAGE_SIZE;
 		vmm_map(get_cur_context(),node_phys,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
 		memset((void*)TMP_PAGEBUF,0x00000000,PAGE_SIZE);
@@ -473,13 +470,14 @@ static void vmm_mark_used(vmm_context* context,uint_t page)
 }
 static void vmm_mark_used_inallcon(uint_t page)
 {
-	struct proc* cur = first_proc;
-	if(cur)
-		while(cur)
-		{
-			vmm_mark_used(cur->context,page);
-			cur = cur->next;
-		}
+	struct proc* cur =alist_get_by_index(&proc_list,0);
+	int i=0;
+	while(cur)
+	{
+		vmm_mark_used(cur->context,page);
+		cur =alist_get_by_index(&proc_list,i);
+		i++;
+	}
 	if(startup_context.highest_paging)
 		vmm_mark_used(&startup_context,page);
 }
@@ -509,17 +507,18 @@ static void vmm_remind_to_mark_free(uint_t page)
 			invalid_stackptr->cores_invalidated	= (1<<(get_cur_cpu()->apic_id) );
 	}
 	spinlock_release(&invld_lock);
-	
+
 }
 static void vmm_mark_free_inallcon(uint_t page)
 {
-	struct proc* cur = first_proc;
-	if(cur)
-		while(cur)
-		{
-			vmm_mark_free(cur->context,page);
-			cur=cur->next;
-		}
+	struct proc* cur =alist_get_by_index(&proc_list,0);
+	int i=0;
+	while(cur)
+	{
+		vmm_mark_free(cur->context,page);
+		cur =alist_get_by_index(&proc_list,i);
+		i++;
+	}
 	if(startup_context.highest_paging)
 		vmm_mark_free(&startup_context,page);
 }
@@ -547,7 +546,7 @@ static uintptr_t virt_to_phys_unsafe(vmm_context* context,uintptr_t virt)
 	struct vmm_paging_entry * next_paging_struct 	= NULL;
 	uint_t i 					= 1;
 	vmm_context* curcontext 			= get_cur_context();
-	
+
 	/*
 	 * I loop through the paging hierarchy. This is possible, because in X86_64 a page map level 4 entry is similar to a pagedirectorypointertable entry, a pagedirectorytable entry and a pagletable entry.
 	 * In X86 a paging directory table entry is similar to a pagetable entry.
@@ -572,7 +571,7 @@ static void vmm_map_kernel(vmm_context* context)
 	if(paging_activated)
 	{
 		spinlock_ackquire(&vmm_lock);
-		
+
 		for(i=0;i<32;i++)
 		{
 			context->mm_tree->nodepkg[i].nodepkg_ptr	= 0;
@@ -606,14 +605,14 @@ static void vmm_map_kernel(vmm_context* context)
 }
 static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t flgs)
 {
-	
+
 	// We need 4k alignment 
 	if (((virt % PAGE_SIZE)!=0) || ((phys % PAGE_SIZE)!= 0)) 
 	{
 		kprintf("[VMM] E: vmm_map has no 4k alignment\n",virt,phys);
 		return;
 	}
-	
+
 	uint_t page = DIV_PAGE_SIZE(virt);
 	vmm_context* curcontext=get_cur_context();
 #ifdef ARCH_X86
@@ -629,10 +628,10 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 	 * I loop through the paging hierarchy. This is possible, because in X86_64 a page map level 4 entry is similar to a pagedirectorypointertable entry, a pagedirectorytable entry and a pagletable entry.
 	 * In X86 a paging directory table entry is similar to a pagetable entry.
 	 */
-	
+
 	for(i=0; i< ( PAGING_HIER_SIZE - 1 ); i++)
 	{
-		
+
 		/*
 		 * NOTE: the first table of every sort is allocated in a row of physical and virtual PAGEs - to avoid endless recursion
 		 */
@@ -640,7 +639,7 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 		* -----------------------------------------------------find-or-create-pagedirectorytable---------------------------------------------------------------
 		* (in the first case the pagedirectorytable is allready existing)
 		*/
-		
+
 		if (current_paging_entry[paging_indexes[i]].rw_flags& FLG_IN_MEM) 
 		{
 			/*
@@ -648,7 +647,7 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 			* If pd_index == 0 we know it's the page following to the PD. 
 			* We mustn't map it to TMP_PAGEBUF to prevent endless recursion when mapping to TMP_PAGEBUF, which is > 0x400000
 			*/
-			
+
 			next_paging_struct = (void*)((uintptr_t)(current_paging_entry[paging_indexes[i]].next_paging_layer)*PAGE_SIZE);
 			if((virt==TMP_PAGEBUF)&&(paging_activated))
 				next_paging_struct = context->other_first_tables[i];
@@ -657,7 +656,7 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 				vmm_map(curcontext,(uintptr_t)next_paging_struct,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
 				next_paging_struct =(struct vmm_paging_entry *)TMP_PAGEBUF;
 			}
-			
+
 		}
 		else 
 		{
@@ -665,14 +664,14 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 			* setup new pagedirectorytable 
 			* if that's the first next_paging_struct it's the next page from PD
 			*/
-			
+
 			next_paging_struct = (struct vmm_paging_entry*)(pmm_malloc_4k()*PAGE_SIZE);// alloc physical memory
-			
+
 			current_paging_entry[paging_indexes[i]].rw_flags = FLGCOMBAT_USER;
 			current_paging_entry[paging_indexes[i]].next_paging_layer = DIV_PAGE_SIZE((uintptr_t)next_paging_struct);
 			if(paging_activated)
 			{// if paging is activated TMP_PAGEBUF will be allways mapped
-				
+
 				vmm_map(curcontext,(uintptr_t)next_paging_struct,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
 				next_paging_struct = (struct vmm_paging_entry*)TMP_PAGEBUF;
 			}
@@ -685,9 +684,9 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 		to_flush=virt;
 		local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_FIXED, 28, 0x0);
 	}*/	
-	
+
 	INVALIDATE_TLB(virt)
-	
+
 	uint_t index					= paging_indexes[PAGING_HIER_SIZE - 1];
 	current_paging_entry[index].rw_flags 		= flgs;
 	current_paging_entry[index].next_paging_layer	= DIV_PAGE_SIZE(phys);
@@ -713,13 +712,14 @@ void sync_addr_space()
 }
 static void vmm_map_inallcon(uintptr_t phys, uintptr_t virt, uint8_t flgs)
 {
-	struct proc* cur =first_proc;
-	if(cur)
-		while(cur)
-		{
-			vmm_map(cur->context, phys,virt,flgs);
-			cur =cur->next;
-		}
+	struct proc* cur =alist_get_by_index(&proc_list,0);
+	int i=0;
+	while(cur)
+	{
+		vmm_map(cur->context, phys,virt,flgs);
+		cur =alist_get_by_index(&proc_list,i);
+		i++;
+	}
 	if(startup_context.highest_paging)
 		vmm_map(&startup_context,phys,virt,flgs);
 }

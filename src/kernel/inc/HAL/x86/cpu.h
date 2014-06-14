@@ -20,7 +20,7 @@
 
 #include<stdint.h>
 #include<dbg/console.h>
-
+#include<libOS/list.h>
 #include<macros.h>
 
 #define REG_FUNCRET 	eax
@@ -50,7 +50,7 @@
 #define SET_IRQ(FLAGS) FLAGS=0x202;
 
 struct cpu_info bsp_info;
-
+alist_t cpu_list;
 struct cpu_state{
     // manually secured registers
     uint32_t   eax;
@@ -76,7 +76,7 @@ struct cpu_info
 {
 	  uint8_t cpu_info_support;
 	  uint32_t cpu_n;
-	  uint32_t apic_id;
+	  uint8_t apic_id;
 	  uint8_t sse_support;
 	  uint8_t sse_2_support;
 	  uint8_t sse_3_support;
@@ -88,13 +88,13 @@ struct cpu_info
 	  uint8_t hyperthreading;
 	  char vendor_id[12];
 	  char cpu_name[48];
-	  struct thread * first_thread;
+	  alist_t thread_list;
 	  struct thread * current_thread;
+	  uint_t current_thread_index;
 	  uint32_t thread_count;
 	  uintptr_t stack;
 	  lock_t is_no_thread;
 	  struct proc * cur_proc;
-	  struct cpu_info * next;
 };
 
 void cpu_caps();

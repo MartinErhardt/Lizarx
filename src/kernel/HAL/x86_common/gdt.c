@@ -191,6 +191,7 @@ void setup_tss()
 	tss_desc->reserved	= 0;
 	tss_desc->zero		= 0;
 	tss_desc->reserved2	= 0;
+	
 	asm volatile("ltr %%ax" : : "a" ( (TSS_SEG_N<<3)|0x3 ));
 }
 #endif

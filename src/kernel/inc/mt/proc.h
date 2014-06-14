@@ -23,15 +23,17 @@
 #include<stdint.h>
 #include"user.h"
 #include<time.h>
+#include<libOS/list.h>
+
 struct proc {
-    uint_t 	p_id;
-    struct user*user;
-//    char[10]	cmd;
-//    clock_t clock;
-    struct thread * first_thread;
-    vmm_context*	context;
-    struct proc*next;
+	uint_t 	p_id;
+	struct user*user;
+//	char[10]	cmd;
+//	clock_t clock;
+	struct thread * first_thread;
+	vmm_context*	context; 
 };
+alist_t proc_list;
 struct proc* first_proc;
 uint8_t process_system_lock;
 struct proc* create_proc();

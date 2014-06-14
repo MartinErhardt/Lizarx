@@ -31,6 +31,7 @@
 #include<asm_inline.h>
 #include<mt/proc.h>
 #include<mt/sched.h>
+#include <intr/err.h>
 
 struct cpu_state* handle_syscall(struct cpu_state* cpu)
 {
@@ -38,6 +39,8 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 	uint8_t font;
 	size_t bm_size;
 	vmm_context* curcontext;
+	if (err_ocurred)
+		cpu_halt();
 	switch(cpu->REG_FUNCRET)
 	{
 		case(SYS_DRAW):

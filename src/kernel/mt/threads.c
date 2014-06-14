@@ -27,6 +27,7 @@
 #include<smp_capabilities.h>
 #include<cpu.h>
 #include<local_apic.h>
+#include<libOS/list.h>
 
 static bool are_there_still_threads(struct cpu_info * this_cpu);
 int32_t create_thread(void* entry, struct proc * in_proc)
@@ -34,6 +35,7 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 	struct thread* new_t	= (struct thread*)kmalloc(sizeof(struct thread));
 	struct cpu_state * new_state	= (struct cpu_state*)kmalloc(sizeof(struct cpu_state));
 	uint8_t* user_stack	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
+	
 	if(in_proc==NULL)
 	{
 		kprintf("couldn't get pid");
@@ -54,14 +56,14 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 	new_t->state		= new_state;
 	new_t->user_stack	= user_stack;
 	new_t->proc		= in_proc;
-	new_t->next		= cpu->first_thread;
 	new_t->next_in_proc	= in_proc->first_thread;
-	cpu->first_thread	= new_t;
-	cpu->thread_count	++;
+	
+	//alist_add(&in_proc->threads_in_proc, new_t);
+	alist_add(&cpu->thread_list, new_t);
+	cpu->thread_count	++;in_proc->first_thread	= new_t;
 #ifdef ARCH_X86
 	cpu->is_no_thread	= 0;
 #endif
-	in_proc->first_thread	= new_t;
 	spinlock_release(&multi_threading_lock);
 	return 0;
 }
@@ -72,6 +74,7 @@ struct cpu_info * get_best_cpu()
 	struct cpu_info * best_fit = &bsp_info;
 	float best_fit_diff = ((&bsp_info)->thread_count+1)-average_thread_count;// 1: 12 2: 15
 	float diff_with_process;
+	int i = 0;
 	if(best_fit_diff<0)
 			best_fit_diff = best_fit_diff*(-1);
 	while(this_cpu!=NULL) 
@@ -85,23 +88,24 @@ struct cpu_info * get_best_cpu()
 			best_fit = this_cpu;
 			best_fit_diff = diff_with_process;
 		}
-		this_cpu=this_cpu->next;
+		i++;
+		this_cpu = (struct cpu_info *)alist_get_by_index(&cpu_list,i);
 	}
-	//kprintf("apic_id: 0x%x\n",best_fit->apic_id);
+	
 	return best_fit;
 }
 struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread * to_move)
 {
 	this_cpu->thread_count--;
+	int i = 0;
 	float average_thread_count = total_thread_count/cores_from_tables;
 	struct cpu_info * best_fit = this_cpu; 
 	struct cpu_info * cur_cpu = &bsp_info;
 	float best_fit_diff = ((&bsp_info)->thread_count+1)-average_thread_count;// 1: 12 2: 15
 	float diff_with_thread;
-	struct thread * last_thread = this_cpu->first_thread;
 	if(best_fit_diff<0)
 			best_fit_diff = best_fit_diff*(-1);
-	while(cur_cpu->next!=NULL)
+	while(cur_cpu)
 	{
 		diff_with_thread = (cur_cpu->thread_count+1)-average_thread_count;
 		if(diff_with_thread<0)
@@ -111,29 +115,20 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 			best_fit_diff = diff_with_thread;
 			best_fit = cur_cpu;
 		}
-		cur_cpu=cur_cpu->next;
+		i++;
+		cur_cpu = (struct cpu_info *)alist_get_by_index(&cpu_list,i);
 	}
 	if(best_fit!=this_cpu)
 	{
 		kprintf("[THREADS] I: move_if_it_makes_sense moves\n");
-		if(last_thread!=to_move)// if the thread which will be moved is the first we don't have to search for the one behind
-		{
-			while( (last_thread->next != to_move)&&(last_thread->next != NULL) ) // here we try to get the thread behind to_move the second case should never ocurr
-				last_thread = last_thread->next;
-			// set the next thread of this, which will be moved as next for the one behind the moved
-			last_thread->next = to_move->next; 
-		}
-		else 
-		{
-			this_cpu->first_thread = to_move->next;
+		alist_remove(&this_cpu->thread_list, to_move);
+		alist_add(&best_fit->thread_list, to_move);
+		this_cpu->current_thread = NULL;
+		this_cpu->current_thread_index = 0;
 #ifdef ARCH_X86
-			if(!are_there_still_threads(this_cpu))
-				this_cpu->is_no_thread=1;
+		if(!are_there_still_threads(this_cpu))
+			this_cpu->is_no_thread = LOCK_USED;
 #endif
-		}
-		
-		to_move->next = best_fit->first_thread;
-		best_fit->first_thread = to_move;
 	}
 	else this_cpu->thread_count++;
 	return best_fit;
@@ -142,28 +137,14 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 {
 	struct cpu_info * this_cpu = get_cur_cpu();
 	//spinlock_ackquire(&multi_threading_lock);
-	struct thread * last_thread = this_cpu->first_thread;
-	if(last_thread!=to_kill)// if the thread which will be moved is the first we don't have to search for the one behind
-	{
-		while( (last_thread->next != to_kill)&&(last_thread->next != NULL) ) // here we try to get the thread behind to_kill the second case should never ocurr
-			last_thread = last_thread->next;
-		// set the next thread of this, which will be moved as next for the one behind the moved
-		last_thread->next = to_kill->next; 
-		SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
-		this_cpu->current_thread = NULL;
-	//	SET_CONTEXT(virt_to_phys(get_cur_context_glob(),(uintptr_t)(to_kill->next->proc->context->highest_paging)))
-	//	this_cpu->current_thread = to_kill->next; 
-	}
-	else 
-	{
-		this_cpu->first_thread = to_kill->next;
-		SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
-		this_cpu->current_thread = NULL;
+	alist_remove(&this_cpu->thread_list, to_kill);
+	SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
+	this_cpu->current_thread = NULL;
+	this_cpu->current_thread_index = 0;
 #ifdef ARCH_X86
-		if(!are_there_still_threads(this_cpu))
-			this_cpu->is_no_thread=1;
+	if(!are_there_still_threads(this_cpu))
+		this_cpu->is_no_thread=1;
 #endif
-	}
 	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
 	kfree(to_kill->state);
 	kfree(to_kill);
@@ -171,20 +152,16 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 }
 static bool are_there_still_threads(struct cpu_info * this_cpu)
 {
-	struct thread * cur_thread	= this_cpu->first_thread;
-	bool are_there			= FALSE;
-	while(cur_thread)
-	{
-		are_there	= TRUE;
-		cur_thread	= cur_thread->next;
-	}
-	return are_there;
+	if(alist_get_entry_n(&(this_cpu->thread_list))>0)
+		return TRUE;
+	return FALSE;
 }
 struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 {
-	vmm_context* curcontext=NULL;
-	uintptr_t next_context= 0x0;
+	vmm_context* curcontext = NULL;
+	uintptr_t next_context = 0x0;
 	struct cpu_info * this_cpu = get_cur_cpu();
+	
 	/*
 	* Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
 	* gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
@@ -196,10 +173,7 @@ struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 retry:
 #ifdef ARCH_X86_64
 	if(!are_there_still_threads(this_cpu))
-	{
-		
 		return &(this_cpu->idle_state);
-	}
 #endif
 #ifdef ARCH_X86
 	spinlock_ackquire(&this_cpu->is_no_thread);
@@ -210,6 +184,7 @@ retry:
 	spinlock_ackquire(&this_cpu->is_no_thread);
 	spinlock_release(&this_cpu->is_no_thread);
 #endif
+	struct thread * first_thread = (struct thread *)alist_get_by_index(&this_cpu->thread_list, 0);
 	do if (this_cpu->current_thread == NULL)
 		{
 			if(!are_there_still_threads(this_cpu))
@@ -218,9 +193,9 @@ retry:
 				goto retry;
 			}
 			curcontext= &startup_context;
-			next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->first_thread->proc->context->highest_paging);
+			next_context = virt_to_phys(curcontext,(uintptr_t)(first_thread->proc->context->highest_paging));
 			
-			this_cpu->current_thread = this_cpu->first_thread;
+			this_cpu->current_thread = first_thread;
 		}
 		else 
 		{
@@ -229,16 +204,17 @@ retry:
 			
 			*this_cpu->current_thread->state = *cpu;
 			
-			if(this_cpu->current_thread->next != NULL)
+			if(this_cpu->current_thread_index +1 < alist_get_entry_n(&this_cpu->thread_list))
 			{
-				next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->current_thread->next->proc->context->highest_paging);
-				this_cpu->current_thread = this_cpu->current_thread->next;
+				next_context = virt_to_phys(curcontext,(uintptr_t)(uintptr_t)((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index+1))->proc->context->highest_paging);
+				this_cpu->current_thread_index ++;
 			}
-			else 
+			else
 			{
-				next_context = virt_to_phys(curcontext,(uintptr_t)this_cpu->first_thread->proc->context->highest_paging);
-				this_cpu->current_thread = this_cpu->first_thread;
+				next_context = virt_to_phys(curcontext,(uintptr_t)(first_thread->proc->context->highest_paging));
+				this_cpu->current_thread_index = 0;
 			}
+			this_cpu->current_thread = alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index);
 		}
 	while(move_if_it_make_sense(this_cpu,this_cpu->current_thread)!=this_cpu);
 	
@@ -251,7 +227,7 @@ retry:
 	spinlock_release(&multi_threading_lock);
 	return cpu;
 }
-int32_t switchto_thread(uint32_t t_id,struct cpu_state* cpu)
+int32_t switchto_thread(uint_t t_id,struct cpu_state* cpu)
 {
 /*
 	struct thread*prev=current_thread;
@@ -285,21 +261,9 @@ int32_t switchto_thread(uint32_t t_id,struct cpu_state* cpu)
 	}*/
 	return 0;
 }
-/*
-struct thread* get_thread(uint32_t t_id)
+
+struct thread* get_thread(uint_t t_id)
 {
-	struct thread* cur=first_thread;
-	while(cur->next!=NULL)
-	{
-		if(cur->t_id==t_id)
-		{
-			return cur;
-		}
-		else
-		{
-			cur = cur->next;
-		}
-	}
-	return NULL;
+	return alist_get_by_entry(&get_cur_cpu()->thread_list, 0, t_id);
 }
-*/
+

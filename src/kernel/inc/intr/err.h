@@ -44,5 +44,8 @@ extern void * kernel_elf;
 
 void handle_exception(struct cpu_state* cpu);
 void redscreen(struct cpu_state* cpu);
+void cpu_halt();
+
+int err_ocurred;
 
 #endif

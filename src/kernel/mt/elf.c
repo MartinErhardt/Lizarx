@@ -121,6 +121,7 @@ int32_t init_elf(void* image)
 	* kopieren.
 	*/
 	ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
+	
 	for (i = 0; i < header->ph_entry_count; i++, ph++) 
 	{
 		void* dest = (void*) ph->virt_addr;
@@ -144,6 +145,7 @@ int32_t init_elf(void* image)
 		
 		SET_CONTEXT(curpd_phys);
 	}
+	
 	create_thread((void*) header->entry,new_proc);
 	//while(1);
 	//print_symbols(image,(struct elf_section_header*)((uintptr_t)(image)+header->sh_offset),header->sh_entry_count);
