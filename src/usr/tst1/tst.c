@@ -8,9 +8,11 @@
 #define SYS_WRITE 0
 #define SYS_ERROR 8
 #define SYS_EXIT  12
+
 void uprintf(char* fmt, ...);
 void uprintfstrcol_scr(unsigned char font, char* fmt);
 char * itoa(unsigned int n, unsigned int base);
+unsigned long shmat(unsigned long id);
 
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1
@@ -29,16 +31,24 @@ char * itoa(unsigned int n, unsigned int base);
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
 //extern "C" void _start();
+
 int main(void)
 {
-	
+	int i=0;
 	char hellocpp[]="hello C++ \n";
 	char hellolibc[]="hello libC; sqrt of 4 =";
+	char at_addr_c[] = "at addr: ";
 	char newline[]="\n";
 	uprintf(&hellocpp[0]);
 	uprintf(&hellolibc[0]);
 	uprintf(itoa(sqrt(4),10));
 	uprintf(&newline[0]);
+	for(i=0;i<0xffffff;i++);
+	unsigned long addr = shmat(1);
+	uprintf(&at_addr_c[0]);
+	uprintf(itoa(*((unsigned long *)addr),16));
+	uprintf(&newline[0]);
+	
 	SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
@@ -75,4 +85,12 @@ char * itoa(unsigned int n, unsigned int base)
 	while((n /= base) > 0);
 	new_str[15] = '\0';
 	return (char*)(new_str+(i+1));
+}
+unsigned long shmat(unsigned long id)
+{
+	unsigned long addr;
+	asm volatile( "nop" :: "d" (id));
+	SYSCALL(14);
+	asm volatile( "nop" : "=d" (addr));
+	return addr;
 }

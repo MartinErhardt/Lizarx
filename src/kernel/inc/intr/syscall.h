@@ -33,7 +33,9 @@ typedef enum {
     SYS_GET_BOOTMOD,
     SYS_VMM_MALLOC,
     SYS_VMM_REALLOC,
-    SYS_EXIT
+    SYS_EXIT,
+    SYS_SHMGET,
+    SYS_SHMAT
 } syscalls;
 
 extern void intr_stub_48(void);

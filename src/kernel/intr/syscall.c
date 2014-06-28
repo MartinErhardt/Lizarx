@@ -32,6 +32,7 @@
 #include<mt/proc.h>
 #include<mt/sched.h>
 #include <intr/err.h>
+#include <mm/shm.h>
 
 struct cpu_state* handle_syscall(struct cpu_state* cpu)
 {
@@ -83,6 +84,12 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			asm volatile("int $28");
 			cpu = schedule(cpu);
 			
+			break;
+		case(SYS_SHMGET):
+			cpu->REG_DATA0 = shmget(0, cpu->REG_DATA0, 0);
+			break;
+		case(SYS_SHMAT):
+			cpu->REG_DATA0 = (uintptr_t)shmat(cpu->REG_DATA0, 0, 0);
 			break;
 		default:break;
 	}

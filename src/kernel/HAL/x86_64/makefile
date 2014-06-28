@@ -35,7 +35,8 @@ SRCS_OPTI = boot/init.c \
 	lib/libOS/mmio.c \
 	drv/vga-txt_graphics/vram.c \
 	lib/libOS/list.c \
-	lib/string.c 
+	lib/string.c \
+	mm/shm.c
 SRCS_UNOPTI = lib/stdlib.c \
 	mm/pmm.c \
 	mm/vmm.c \

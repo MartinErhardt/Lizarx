@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/mt/inc/proc.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/mm/inc/shm.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,32 +16,33 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef PROC_H
-#define PROC_H
+#ifndef SHM_H
+#define SHM_H
 
-#include<mm/vmm.h>
 #include<stdint.h>
-#include"user.h"
-#include<time.h>
-#include<libOS/list.h>
+#include<mt/proc.h>
 
-typedef uint_t pid_t;
-struct proc {
-	pid_t		p_id;
-	struct user*	user;
-//	char[10]	cmd;
-//	clock_t		clock;
-	struct thread * first_thread;
-	alist_t		shm_segs;
-	vmm_context*	context; 
+struct shmid_ds
+{
+	uint_t id;
+	pid_t shm_cpid;
+	uintptr_t virt_in_orig_proc;
+	size_t size;
 };
+struct shm_seg
+{
+	uint_t id;
+	uintptr_t addr;
+	size_t size;
+};
+typedef uint_t key_t;
 
-alist_t proc_list;
-struct proc* first_proc;
-uint8_t process_system_lock;
-struct proc* create_proc();
-struct proc* get_proc(uint_t p_id);
-uint_t get_pid();
-void exit(struct proc* to_exit);
+lock_t shm_lock;
+alist_t shmid_list;
+
+int shmget(key_t key, size_t size, int shmflg);
+void *shmat(uint_t shmid, const void *shmaddr, int shmflg);
+int shmctl(int shmid, int cmd, struct shmid_ds *buf);
+int shmdt(const void *shmaddr);
 
 #endif

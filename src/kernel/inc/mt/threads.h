@@ -23,15 +23,16 @@
 #include<stdint.h>
 #include"proc.h"
 uint32_t total_thread_count;
-
+typedef uint_t tid_t;
 struct thread
 {
-	uint_t	t_id;
+	tid_t	t_id;
 	struct cpu_state * state;
 	uint8_t*	user_stack;
 	struct proc *	proc;
 	struct thread *	next_in_proc;
 };
+
 lock_t multi_threading_lock;
 extern void return_idle_thread();
 int32_t create_thread(void* entry, struct proc * in_proc);

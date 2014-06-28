@@ -66,15 +66,11 @@ retry:
 				first      = free;
 				
 				cur->size -= (size+sizeof(struct heap_block));
-				if( (((uintptr_t)free)+sizeof(struct heap_block)) == 0x29620) kprintf("hey2");
-				if( (((uintptr_t)free)+sizeof(struct heap_block)) == 0x29578) kprintf("hey2");
 				spinlock_release(&heap_lock);
 				return (void*)(((uintptr_t)free)+sizeof(struct heap_block));
 			} 
 			else
 			{
-				if( (((uintptr_t)cur) + sizeof(struct heap_block)) == 0x29620) kprintf("hey3");
-				if( (((uintptr_t)cur) + sizeof(struct heap_block)) == 0x29578) kprintf("hey4");
 				cur->free = 0;
 				spinlock_release(&heap_lock);
 				return (void*)(((uintptr_t)cur) + sizeof(struct heap_block));
@@ -97,7 +93,6 @@ void* kcalloc(size_t size)
 }
 void kfree(void* ptr)
 {
-  
 	spinlock_ackquire(&heap_lock);
 	struct heap_block* cur =first;
 	while(cur!=NULL)

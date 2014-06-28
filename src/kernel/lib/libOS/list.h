@@ -32,6 +32,7 @@ struct alist_st
 typedef struct alist_st alist_t;
 
 void * alist_get_by_index(alist_t * list, uint_t index);
+int_t alist_get_index(alist_t * list, void * entry);
 void * alist_get_by_entry8(alist_t * list, uint_t off, uint8_t val);
 void * alist_get_by_entry(alist_t * list, uint_t off, uint_t val);
 void alist_add(alist_t * list, void * entry);

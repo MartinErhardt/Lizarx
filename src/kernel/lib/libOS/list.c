@@ -36,6 +36,19 @@ void * alist_get_by_index(alist_t * list, uint_t index)
 	} while(list);
 	return NULL;
 }
+int_t alist_get_index(alist_t * list, void * entry)
+{
+	int i;
+	int_t j = 1;
+	do{
+		for(i=0;i<ENTRYS_PER_ARRAY;i++)
+			if(list->pointer[i] == entry)
+				return j;
+			else if(list->pointer[i]) j++;
+		list = list->next;
+	} while(list);
+	return -1;
+}
 void * alist_get_by_entry8(alist_t * list, uint_t off, uint8_t val)
 {
 	int i;
