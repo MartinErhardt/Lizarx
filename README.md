@@ -30,6 +30,7 @@ The OS will also use dynamic linked shared objects to minimize Overhead between 
 - [x] full X86_64 port
 - [x] basic SMP support(including SMP scheduling)
 - [x] SYSCALL/SYSRET syscall(x86_64 only)
+- [X] some very basic IPC(message queues, shared memory)
 - [ ] VFS in C++
 - [ ] tmpFS (should be a shared library of the VFS)
 - [ ] unix like shell in C++ with OO semantics

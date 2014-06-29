@@ -348,13 +348,11 @@ uintptr_t vmm_share_mem(void * aim_proc,void * origin_proc, uintptr_t segment_ad
 	spinlock_ackquire(&vmm_lock);
 	size_t size = from_bytes_to_pages(segment_size);
 	uintptr_t virt = vmm_find_freemem(((struct proc *)aim_proc)->context,size,KERNEL_SPACE,0xffffffff);
-	kprintf("virt: 0x%x", virt);
 	uintptr_t phys = 0;
 	uintptr_t i;
 	for(i=0;i<MUL_PAGE_SIZE(size);i+=PAGE_SIZE)
 	{
 		phys = virt_to_phys_unsafe( ((struct proc *)origin_proc)->context, segment_addr_in_origin + i);
-		kprintf("phys: 0x%p", origin_proc);
 		vmm_map(((struct proc *)aim_proc)->context,phys,virt+i,FLGCOMBAT_USER);
 		vmm_mark_used( ((struct proc *)aim_proc)->context, (DIV_PAGE_SIZE(virt+i)) );
 	}

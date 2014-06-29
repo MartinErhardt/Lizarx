@@ -21,6 +21,7 @@
 #include<mm/vmm.h>
 #include<../x86_common/local_apic.h>
 #include<cpu.h>
+#include<mt/threads.h>
 
 /*struct shmid_ds
 {
@@ -39,8 +40,7 @@ int shmget(key_t key, size_t size, int shmflg)
 	buf->virt_in_orig_proc 	= 0;
 	buf->size 		= size;
 	spinlock_release(&shm_lock);
-	//kprintf("p_id 0x%x",buf->shm_cpid);
-	//kprintf("p_id 0x%p",get_proc(buf->shm_cpid));
+	
 	return buf->id;
 }
 void *shmat(uint_t shmid, const void *shmaddr, int shmflg)
@@ -58,7 +58,7 @@ void *shmat(uint_t shmid, const void *shmaddr, int shmflg)
 	else
 	{
 		spinlock_release(&shm_lock);
-		//kprintf("p_id 0x%p",get_proc(id->shm_cpid));
+		
 		return (void*) vmm_share_mem(
 						get_cur_cpu()->current_thread->proc,
 						(void*) get_proc(id->shm_cpid),

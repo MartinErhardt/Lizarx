@@ -13,7 +13,7 @@ void uprintf(char* fmt, ...);
 void uprintfstrcol_scr(unsigned char font, char* fmt);
 char * itoa(unsigned int n, unsigned int base);
 unsigned long shmat(unsigned long id);
-
+unsigned long msgrcv(unsigned long id, void *ptr, unsigned long size);
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1
 #define VGA_GREEN 0x2
@@ -31,25 +31,35 @@ unsigned long shmat(unsigned long id);
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
 //extern "C" void _start();
-
+unsigned long receive = 0;
 int main(void)
 {
 	int i=0;
 	char hellocpp[]="hello C++ \n";
 	char hellolibc[]="hello libC; sqrt of 4 =";
-	char at_addr_c[] = "at addr: ";
+	char shared_memory[] = "shared memory: ";
+	char message_queue_1[] = "message queue #1: ";
+	char message_queue_2[] = "message queue #2: ";
 	char newline[]="\n";
 	uprintf(&hellocpp[0]);
 	uprintf(&hellolibc[0]);
 	uprintf(itoa(sqrt(4),10));
 	uprintf(&newline[0]);
 	for(i=0;i<0xffffff;i++);
-	unsigned long addr = shmat(1);
-	uprintf(&at_addr_c[0]);
+	unsigned long addr = shmat(0);
+	uprintf(&shared_memory[0]);
 	uprintf(itoa(*((unsigned long *)addr),16));
 	uprintf(&newline[0]);
+	msgrcv(0,&receive, sizeof(unsigned long));
+	uprintf(&message_queue_1[0]);
+	uprintf(itoa(receive,16));
+	uprintf(&newline[0]);
 	
-	SYSCALL(SYS_EXIT);
+	msgrcv(0,&receive, sizeof(unsigned long));
+	uprintf(&message_queue_2[0]);
+	uprintf(itoa(receive,16));
+	uprintf(&newline[0]);
+	//SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
 }
@@ -93,4 +103,15 @@ unsigned long shmat(unsigned long id)
 	SYSCALL(14);
 	asm volatile( "nop" : "=d" (addr));
 	return addr;
+}
+unsigned long msgrcv(unsigned long id, void *ptr, unsigned long size)
+{
+	unsigned long suc;
+	
+	asm volatile( "nop" :: "d" ((uintptr_t)ptr));
+	asm volatile( "nop" :: "b" (((uintptr_t)size)|(id<<16)));
+	//asm volatile( "nop" :: "a" (id));
+	SYSCALL(17);
+	asm volatile( "nop" : "=d" (suc));
+	return suc;
 }

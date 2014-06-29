@@ -35,7 +35,10 @@ typedef enum {
     SYS_VMM_REALLOC,
     SYS_EXIT,
     SYS_SHMGET,
-    SYS_SHMAT
+    SYS_SHMAT,
+    SYS_MSGGET,
+    SYS_MSGSND,
+    SYS_MSGRCV
 } syscalls;
 
 extern void intr_stub_48(void);

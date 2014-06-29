@@ -14,6 +14,8 @@ void uprintfstrcol_scr(unsigned char font, char* fmt);
 char * itoa(unsigned int n, unsigned int base);
 unsigned long shmget();
 unsigned long shmat(unsigned long id);
+unsigned long msgget();
+unsigned long msgsnd(unsigned long id, void *ptr, unsigned long size);
 
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1
@@ -32,24 +34,23 @@ unsigned long shmat(unsigned long id);
 #define VGA_YELLOW 0xd
 #define VGA_WHITE 0xf
 //extern "C" void _start();
-
+unsigned long send = 0xCAFEBABE;
 int main(void)
 {
 	
 	char hellocpp[]="hello C++ \n";
 	char hellolibc[]="hello libC; sqrt of 4 =";
-	char addr_c[] = "addr: ";
 	char newline[]="\n";
 	uprintf(&hellocpp[0]);
 	uprintf(&hellolibc[0]);
 	uprintf(itoa(sqrt(4),10));
 	uprintf(&newline[0]);
 	unsigned long addr = shmat(shmget());
-	uprintf(&addr_c[0]);
-	uprintf(itoa(addr,16));
 	*((unsigned long *)addr) = 0xDEADBEEF;
-	uprintf(&newline[0]);
-	
+	unsigned long id = msgget();
+	msgsnd(id,&send, sizeof(unsigned long));
+	send= 0xDEADBEEF;
+	msgsnd(id,&send, sizeof(unsigned long));
 	//SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
@@ -102,4 +103,22 @@ unsigned long shmat(unsigned long id)
 	SYSCALL(14);
 	asm volatile( "nop" : "=d" (addr));
 	return addr;
+}
+unsigned long msgget()
+{
+	unsigned long id;
+	SYSCALL(15);
+	asm volatile( "nop" : "=d" (id));
+	return id;
+}
+unsigned long msgsnd(unsigned long id, void *ptr, unsigned long size)
+{
+	unsigned long suc;
+	//asm volatile( "nop" :: "a" (id));
+	asm volatile( "nop" :: "d" ((uintptr_t)ptr));
+	asm volatile( "nop" :: "b" (((uintptr_t)size)|(id<<16)) );
+	
+	SYSCALL(16);
+	asm volatile( "nop" : "=d" (suc));
+	return suc;
 }

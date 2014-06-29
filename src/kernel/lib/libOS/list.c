@@ -39,7 +39,7 @@ void * alist_get_by_index(alist_t * list, uint_t index)
 int_t alist_get_index(alist_t * list, void * entry)
 {
 	int i;
-	int_t j = 1;
+	int_t j = 0;
 	do{
 		for(i=0;i<ENTRYS_PER_ARRAY;i++)
 			if(list->pointer[i] == entry)

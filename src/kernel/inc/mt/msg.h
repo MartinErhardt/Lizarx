@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/mm/inc/shm.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/mt/inc/msg.h is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -16,32 +16,27 @@
  *   with this program; if not, write to the Free Software Foundation, Inc.,
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef SHM_H
-#define SHM_H
+#ifndef MSG_H
+#define MSG_H
 
-#include<stdint.h>
 #include<mt/proc.h>
+#include<stdint.h>
+#include<libOS/list.h>
 
-struct shmid_ds
+struct msqid_ds
 {
 	uint_t id;
-	pid_t shm_cpid;
-	uintptr_t virt_in_orig_proc;
-	size_t size;
+	//uint_t msg_qnum;
+	//pid_t msg_lrpid;
+	//pid_t msg_lspid;
+	uint_t * first_message;
 };
-struct shm_seg
-{
-	uint_t id;
-	uintptr_t addr;
-	size_t size;
-};
+lock_t msq_lock;
+alist_t msqid_list;
 
-lock_t shm_lock;
-alist_t shmid_list;
-
-int shmget(key_t key, size_t size, int shmflg);
-void *shmat(uint_t shmid, const void *shmaddr, int shmflg);
-int shmctl(int shmid, int cmd, struct shmid_ds *buf);
-int shmdt(const void *shmaddr);
+int       msgctl(int msqid, int cmd, struct msqid_ds * buf);
+uint_t       msgget(key_t key, int flag);
+ssize_t   msgrcv(uint_t id, void * ptr, size_t size, long type, int flag);
+int       msgsnd(uint_t id, const void * ptr, size_t size, int flag);
 
 #endif

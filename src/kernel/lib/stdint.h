@@ -40,5 +40,7 @@ typedef UPTR_T uintptr_t;
 
 typedef INT_T int_t;
 typedef UINT_T uint_t;
+typedef uint_t key_t;
+typedef uint_t ssize_t;
 
 #endif
