@@ -24,9 +24,15 @@
 #include"proc.h"
 uint32_t total_thread_count;
 typedef uint_t tid_t;
+typedef enum
+{
+	THREAD_ACTIVE,
+	THREAD_BLCKD
+} thread_state;
 struct thread
 {
 	tid_t	t_id;
+	uint8_t exc_state;
 	struct cpu_state * state;
 	uint8_t*	user_stack;
 	struct proc *	proc;
@@ -42,5 +48,8 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc);
 struct cpu_state * dispatch_thread(struct cpu_state* cpu);
 int32_t switchto_thread(uint_t t_id,struct cpu_state* cpu);
 struct thread* get_thread(uint_t t_id);
+
+uint_t sleep(uint_t time);
+void wakeup(uint_t t_id);
 
 #endif

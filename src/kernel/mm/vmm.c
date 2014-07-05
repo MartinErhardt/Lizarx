@@ -318,7 +318,6 @@ static void kvmm_free_unsafe(void* to_free,size_t size)//FIXME No Overflow check
 		vmm_remind_to_mark_free(DIV_PAGE_SIZE( (uintptr_t)to_free ) + i );
 		vmm_map_inallcon(0x0,MUL_PAGE_SIZE(DIV_PAGE_SIZE((uintptr_t)to_free)+i),0x0);
 	}
-
 }
 
 /*

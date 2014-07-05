@@ -51,7 +51,7 @@ int main(void)
 	msgsnd(id,&send, sizeof(unsigned long));
 	send= 0xDEADBEEF;
 	msgsnd(id,&send, sizeof(unsigned long));
-	//SYSCALL(SYS_EXIT);
+	SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
 }

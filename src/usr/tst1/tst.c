@@ -59,7 +59,9 @@ int main(void)
 	uprintf(&message_queue_2[0]);
 	uprintf(itoa(receive,16));
 	uprintf(&newline[0]);
-	//SYSCALL(SYS_EXIT);
+	asm volatile( "nop" :: "d" (4));
+	SYSCALL(19);
+	SYSCALL(SYS_EXIT);
 	while(1);
 	return 0;
 }

@@ -38,7 +38,9 @@ typedef enum {
     SYS_SHMAT,
     SYS_MSGGET,
     SYS_MSGSND,
-    SYS_MSGRCV
+    SYS_MSGRCV,
+    SYS_SLEEP,
+    SYS_WAKEUP
 } syscalls;
 
 extern void intr_stub_48(void);

@@ -39,7 +39,8 @@ int main(void)
 	uprintf(&hellolibc[0]);
 	uprintf(itoa(sqrt(4),10));
 	uprintf(&newline[0]);
-	SYSCALL(SYS_EXIT);
+	SYSCALL(18);
+	uprintf(&hellocpp[0]);
 	while(1);
 	return 0;
 }

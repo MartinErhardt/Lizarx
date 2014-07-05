@@ -29,7 +29,7 @@ uint8_t bsp_filled=0;
 // this function can only be used at the beginning
 void cpu_caps()
 {
-	uint8_t * cpuid_support =(uint8_t *) 0x7200;
+	uint8_t * cpuid_support = (uint8_t *) 0x7200;
 	struct cpu_info * this_cpu = &bsp_info;
 	if(bsp_filled)
 		this_cpu = kmalloc(sizeof(struct cpu_info));
