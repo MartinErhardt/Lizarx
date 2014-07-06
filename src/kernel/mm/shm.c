@@ -37,7 +37,7 @@ int shmget(key_t key, size_t size, int shmflg)
 	alist_add(&shmid_list, buf);
 	buf->id 		= alist_get_index(&shmid_list, buf);
 	buf->shm_cpid 		= get_pid();
-	buf->virt_in_orig_proc 	= 0;
+	buf->virt_in_kernel 	= 0;
 	buf->size 		= size;
 	spinlock_release(&shm_lock);
 	
@@ -47,25 +47,13 @@ void *shmat(uint_t shmid, const void *shmaddr, int shmflg)
 {
 	spinlock_release(&shm_lock);
 	struct shmid_ds * id = alist_get_by_entry(&shmid_list, 0,shmid);
-	if(!id->virt_in_orig_proc )
-	{
-		if(id->shm_cpid != get_pid())
-			id->shm_cpid = get_pid();
-		id->virt_in_orig_proc =(uintptr_t) uvmm_malloc(get_cur_context_glob(),id->size);
-		spinlock_release(&shm_lock);
-		return (void*)id->virt_in_orig_proc;
-	}
-	else
-	{
-		spinlock_release(&shm_lock);
-		
-		return (void*) vmm_share_mem(
-						get_cur_cpu()->current_thread->proc,
-						(void*) get_proc(id->shm_cpid),
-						id->virt_in_orig_proc,
-						id->size);
-	}
-	return NULL;
+	if(!id)
+		return NULL;
+	if(!id->virt_in_kernel)
+		id->virt_in_kernel = (uintptr_t) kvmm_malloc(id->size);
+	uintptr_t virt_in_proc =vmm_share_to_user(id->virt_in_kernel, id->size);
+	spinlock_release(&shm_lock);
+	return (void*) virt_in_proc;
 }
 int shmctl(int shmid, int cmd, struct shmid_ds *buf)
 {

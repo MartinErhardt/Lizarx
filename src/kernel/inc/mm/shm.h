@@ -26,7 +26,7 @@ struct shmid_ds
 {
 	uint_t id;
 	pid_t shm_cpid;
-	uintptr_t virt_in_orig_proc;
+	uintptr_t virt_in_kernel;
 	size_t size;
 };
 struct shm_seg

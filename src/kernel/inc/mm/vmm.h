@@ -68,7 +68,7 @@ void * vmm_malloc(vmm_context * context, size_t size, uintptr_t from, uintptr_t 
 
 void* cpyin(void* src,size_t siz);
 void* cpyout(void* src,size_t siz);
-uintptr_t vmm_share_mem(void* aim_proc, void * origin_proc, uintptr_t segment_addr_in_origin, size_t segment_size);
+uintptr_t vmm_share_to_user(uintptr_t in_kernel,size_t length);
 
 uintptr_t virt_to_phys(vmm_context* context,uintptr_t virt);
 

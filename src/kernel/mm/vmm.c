@@ -342,18 +342,19 @@ void* cpyin(void* src,size_t siz)
 	memcpy(dst,src,siz);
 	return dst;
 }
-uintptr_t vmm_share_mem(void * aim_proc,void * origin_proc, uintptr_t segment_addr_in_origin, size_t segment_size)
+uintptr_t vmm_share_to_user(uintptr_t in_kernel,size_t length)
 {
 	spinlock_ackquire(&vmm_lock);
-	size_t size = from_bytes_to_pages(segment_size);
-	uintptr_t virt = vmm_find_freemem(((struct proc *)aim_proc)->context,size,KERNEL_SPACE,0xffffffff);
+	vmm_context * cur_context = get_cur_context();
+	size_t size = from_bytes_to_pages(length);
+	uintptr_t virt = vmm_find_freemem(cur_context,size,KERNEL_SPACE,0xffffffff);
 	uintptr_t phys = 0;
 	uintptr_t i;
 	for(i=0;i<MUL_PAGE_SIZE(size);i+=PAGE_SIZE)
 	{
-		phys = virt_to_phys_unsafe( ((struct proc *)origin_proc)->context, segment_addr_in_origin + i);
-		vmm_map(((struct proc *)aim_proc)->context,phys,virt+i,FLGCOMBAT_USER);
-		vmm_mark_used( ((struct proc *)aim_proc)->context, (DIV_PAGE_SIZE(virt+i)) );
+		phys = virt_to_phys_unsafe( cur_context, in_kernel + i);
+		vmm_map(cur_context,phys,virt+i,FLGCOMBAT_USER);
+		vmm_mark_used( cur_context, (DIV_PAGE_SIZE(virt+i)) );
 	}
 	spinlock_release(&vmm_lock);
 	return virt;
