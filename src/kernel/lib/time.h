@@ -24,15 +24,15 @@
 
 struct tm
 {
-	int tm_sec;
-	int tm_min;
-	int tm_hour;
-	int tm_mday;
-	int tm_mon;
-	int tm_year;
-	int tm_wday;
-	int tm_yday;
-	int tm_isdst;
+	unsigned int tm_sec;
+	unsigned int tm_min;
+	unsigned int tm_hour;
+	unsigned int tm_mday;
+	unsigned int tm_mon;
+	unsigned int tm_year;
+	unsigned int tm_wday;
+	unsigned int tm_yday;
+	unsigned int tm_isdst;
 };
 
 typedef unsigned int clock_t;
@@ -46,6 +46,9 @@ time_t mktime (struct tm * timeptr);
 char* ctime (const time_t * timer);
 char* asctime (const struct tm * timeptr);
 struct tm * gmtime (const time_t * timer);
+struct tm *gmtime_r(const time_t *timer, struct tm *tmbuf);
 struct tm * localtime (const time_t * timer);
 size_t strftime (char* ptr, size_t maxsize, const char* format,const struct tm* timeptr );
+void print_time(struct tm * time);
+
 #endif

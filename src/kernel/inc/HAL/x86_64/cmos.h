@@ -32,7 +32,7 @@ static inline uint8_t cmos_read(uint8_t off)
 	uint8_t tmp =0;
 	uint8_t data =0;
 	INB((uint16_t)CMOS_PORT_ADDRESS,tmp)
-	OUTB((uint16_t)CMOS_PORT_ADDRESS,(tmp & 0x80) | (off & 0x7F))
+	OUTB((uint16_t)CMOS_PORT_ADDRESS,((tmp & 0x80) | (off & 0x7F)))
 	INB(CMOS_PORT_DATA,data)
 	return data;
 }

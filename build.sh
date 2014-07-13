@@ -42,15 +42,18 @@ then
 	fi
 	export TARGET=i386-pc-lizarx
 	cd buildtools
-	#./build.sh
 	if [ "$R_ARCH" == "x86_64" ]
 	then
 		export ARCH=$R_ARCH
 		export TARGET=x86_64-pc-lizarx
 		./build.sh
+	else
+		./build.sh
 	fi
+	cp $(pwd)/$TOOLCHAIN_DIR/buildtools/build/newlib-obj/$ARCH-pc-lizarx/newlib/crt0.o $(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/crt0.o
 	cd ../..
 fi
+cp $(pwd)/$TOOLCHAIN_DIR/buildtools/build/newlib-obj/$ARCH-pc-lizarx/newlib/crt0.o $(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/crt0.o
 if [ "$R_ARCH" == "x86_64" ]
 then
 	export ARCH=$R_ARCH
@@ -59,12 +62,12 @@ then
 fi
 export COMPILER_PATH=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-gcc
 export PATH=$PATH:$COMPILER_PATH
-export LD_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/$ARCH-pc-lizarx/bin/ld
-export LD32_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/i386-pc-lizarx/i386-pc-lizarx/bin/ld
+export LD_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-ld
+export LD32_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/i386-pc-lizarx/bin/i386-pc-lizarx-ld
 export CC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-gcc
 export CPPC_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-g++
 export AR_CROSS=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/$ARCH-pc-lizarx-ar
-
+export LD_CRT0_FLG=$(pwd)/$TOOLCHAIN_DIR/buildtools/$ARCH-pc-lizarx/bin/crt0.o
 cd src
 make
 cd ..

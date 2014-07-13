@@ -31,7 +31,6 @@
 
 static bool are_there_still_threads(struct cpu_info * this_cpu);
 struct cpu_info* get_cpu(uint_t t_id);
-int wakeup_=0;
 int32_t create_thread(void* entry, struct proc * in_proc)
 {
 	struct thread* new_t	= (struct thread*)kmalloc(sizeof(struct thread));
@@ -163,14 +162,14 @@ uint_t sleep(uint_t time)
 	spinlock_ackquire(&multi_threading_lock);
 	struct cpu_info * cur_cpu = get_cur_cpu();
 	cur_cpu->current_thread->exc_state = THREAD_BLCKD;
+#ifdef ARCH_X86
 	if(!are_there_still_threads(cur_cpu))
 	{
-#ifdef ARCH_X86
 		cur_cpu->is_no_thread = 1;
-#endif
-		SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
-		cur_cpu->current_thread=NULL;
 	}
+#endif
+	SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
+	cur_cpu->current_thread=NULL;
 	spinlock_release(&multi_threading_lock);
 	return 0;
 }
@@ -185,7 +184,6 @@ void wakeup(uint_t t_id)
 	struct cpu_info * cur_cpu = get_cpu( t_id);
 	cur_cpu->is_no_thread = 0;
 #endif
-	wakeup_ =1;
 	spinlock_release(&multi_threading_lock);
 }
 struct cpu_state* dispatch_thread(struct cpu_state* cpu)
@@ -233,16 +231,17 @@ retry:
 			
 			*this_cpu->current_thread->state = *cpu;
 			
-			if(this_cpu->current_thread_index +1 < alist_get_entry_n(&this_cpu->thread_list))
-			{
-				next_context = virt_to_phys(curcontext,(uintptr_t)(uintptr_t)((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index+1))->proc->context->highest_paging);
-				this_cpu->current_thread_index ++;
-			}
-			else
-			{
-				next_context = virt_to_phys(curcontext,(uintptr_t)(first_thread->proc->context->highest_paging));
-				this_cpu->current_thread_index = 0;
-			}
+			do if(this_cpu->current_thread_index +1 < alist_get_entry_n(&this_cpu->thread_list))
+				{
+					next_context = virt_to_phys(curcontext,(uintptr_t)(uintptr_t)((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index+1))->proc->context->highest_paging);
+					this_cpu->current_thread_index ++;
+				}
+				else
+				{
+					next_context = virt_to_phys(curcontext,(uintptr_t)(first_thread->proc->context->highest_paging));
+					this_cpu->current_thread_index = 0;
+				}
+			while(((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index))->exc_state ==THREAD_BLCKD);
 			this_cpu->current_thread = alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index);
 		}
 	while(move_if_it_make_sense(this_cpu,this_cpu->current_thread)!=this_cpu);

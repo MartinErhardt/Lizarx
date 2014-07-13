@@ -41,7 +41,6 @@ int main(void)
 	uprintf(&newline[0]);
 	SYSCALL(18);
 	uprintf(&hellocpp[0]);
-	while(1);
 	return 0;
 }
 void uprintf(char* fmt, ...)

@@ -5,6 +5,6 @@ then
 fi
 if [ -f lizarx-x86_64.iso ]
 then
-	/usr/bin/qemu-system-x86_64 -cdrom lizarx-x86_64.iso -smp 4  -cpu core2duo  -d int
+	/usr/bin/qemu-system-x86_64 -cdrom lizarx-x86_64.iso -smp 2 -cpu core2duo  -d int
 fi
 

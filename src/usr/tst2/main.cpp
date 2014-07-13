@@ -49,6 +49,7 @@ uintptr_t st_vmm_malloc(st_size_t alloc_size)
 	asm volatile("nop" : "=d" (free_space) );
 	return free_space;
 }
+
 int main(void)
 {
 	
@@ -89,8 +90,6 @@ int main(void)
 	//*((unsigned int*)malloced)= 0xDEADBEEF;
 	//uprintf(itoa(malloced,16));
 	//uprintf("\n");
-	SYSCALL(SYS_EXIT);
-	while(1);
 	return 0;
 }
 

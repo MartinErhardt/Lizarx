@@ -102,12 +102,13 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			cpu->REG_DATA0 = msgrcv(cpu->REG_DATA1>>16, (void*)cpu->REG_DATA0, cpu->REG_DATA1, 0, 0);
 			break;
 		case(SYS_SLEEP):
-			cpu = schedule(cpu);
+			kprintf("sleep");
+			*(get_cur_cpu()->current_thread->state) = *cpu;
 			sleep(0);
 			asm volatile("int $28");
 			break;
 		case(SYS_WAKEUP):
-		  kprintf("wakeup");
+			kprintf("wakeup");
 			wakeup(cpu->REG_DATA0);
 			break;
 		default:break;

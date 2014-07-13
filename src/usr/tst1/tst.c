@@ -61,8 +61,6 @@ int main(void)
 	uprintf(&newline[0]);
 	asm volatile( "nop" :: "d" (4));
 	SYSCALL(19);
-	SYSCALL(SYS_EXIT);
-	while(1);
 	return 0;
 }
 void uprintf(char* fmt, ...)

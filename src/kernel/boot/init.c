@@ -39,6 +39,7 @@
 #include <asm_inline.h>
 #include <libOS/list.h>
 #include <intr/err.h>
+#include <drv/hwtime/hwtime.h>
 
 uint32_t cores_booted			= 1; 
 
@@ -60,8 +61,8 @@ void init(struct multiboot_info * mb_info)
 	invld_lock			= LOCK_FREE;
 	err_ocurred 			= 0;
 	all_APs_booted			= LOCK_USED;
-	//struct tm* time_isi		= NULL;
 	to_invalidate_first		= NULL;
+	struct tm* time_is		= NULL;
 	//memset(&proc_list, 0, sizeof(struct alist_st));
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob			= modules;
@@ -115,7 +116,12 @@ void init(struct multiboot_info * mb_info)
 	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
 #endif
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
-	
+	//that's for testing purposes
+	time_is = get_time();
+	time_t timer = mktime(time_is);
+	kprintf("UNIX time is  %d \n",timer);
+	gmtime_r(&timer, time_is); 
+	print_time(time_is);
 	//kprintf("cores_mask 0x%x",all_cores_mask);
 	enable_intr();
 	
