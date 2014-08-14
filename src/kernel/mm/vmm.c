@@ -257,7 +257,7 @@ void * vmm_malloc(vmm_context * context, size_t size, uintptr_t from, uintptr_t 
 		}
 	else
 	    	kprintf("[VMM] E: vmm_malloc gets invalid return value from vmm_find_freemem\n");
-
+	
 	spinlock_release(&vmm_lock);
 	return (void *)virt;
 }
@@ -456,6 +456,7 @@ static bool vmm_is_alloced(vmm_context* context,uint_t page)//FIXME No Overflow 
 
 static void vmm_mark_used(vmm_context* context,uint_t page)
 {
+	
 	uint_t master_ind		= page>>10;		// = /1024
 	uint_t node_ind			= page&0x3ff;		// = %1024
 	uint_t inner_nodepkgoff		= (master_ind&0x1f)<<10;// = (master_ind%32)*1024;
@@ -483,6 +484,7 @@ static void vmm_mark_used(vmm_context* context,uint_t page)
 		return;
 	}
 	nodes->nodepkgentr[(node_ind+inner_nodepkgoff)/32]|=(1<<((node_ind+inner_nodepkgoff)%32));
+	//kprintf("hi2");
 }
 static void vmm_mark_used_inallcon(uint_t page)
 {
@@ -518,9 +520,9 @@ static void vmm_remind_to_mark_free(uint_t page)
 	spinlock_ackquire(&invld_lock);
 	if(invalid_stackptr<&invalid_stack[MAX_STACK_INVLD_SIZ])
 	{
-			invalid_stackptr			++;
-			invalid_stackptr->virt			= MUL_PAGE_SIZE(page);
-			invalid_stackptr->cores_invalidated	= (1<<(get_cur_cpu()->apic_id) );
+		invalid_stackptr			++;
+		invalid_stackptr->virt			= MUL_PAGE_SIZE(page);
+		invalid_stackptr->cores_invalidated	= (1<<(get_cur_cpu()->apic_id) );
 	}
 	spinlock_release(&invld_lock);
 
@@ -663,7 +665,6 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 			* If pd_index == 0 we know it's the page following to the PD. 
 			* We mustn't map it to TMP_PAGEBUF to prevent endless recursion when mapping to TMP_PAGEBUF, which is > 0x400000
 			*/
-
 			next_paging_struct = (void*)((uintptr_t)(current_paging_entry[paging_indexes[i]].next_paging_layer)*PAGE_SIZE);
 			if((virt==TMP_PAGEBUF)&&(paging_activated))
 				next_paging_struct = context->other_first_tables[i];
@@ -672,7 +673,6 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 				vmm_map(curcontext,(uintptr_t)next_paging_struct,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
 				next_paging_struct =(struct vmm_paging_entry *)TMP_PAGEBUF;
 			}
-
 		}
 		else 
 		{
@@ -680,14 +680,13 @@ static void vmm_map(vmm_context* context, uintptr_t phys, uintptr_t virt,uint8_t
 			* setup new pagedirectorytable 
 			* if that's the first next_paging_struct it's the next page from PD
 			*/
-
+			
 			next_paging_struct = (struct vmm_paging_entry*)(pmm_malloc_4k()*PAGE_SIZE);// alloc physical memory
-
+			
 			current_paging_entry[paging_indexes[i]].rw_flags = FLGCOMBAT_USER;
 			current_paging_entry[paging_indexes[i]].next_paging_layer = DIV_PAGE_SIZE((uintptr_t)next_paging_struct);
 			if(paging_activated)
 			{// if paging is activated TMP_PAGEBUF will be allways mapped
-
 				vmm_map(curcontext,(uintptr_t)next_paging_struct,TMP_PAGEBUF,FLGCOMBAT_KERNEL);
 				next_paging_struct = (struct vmm_paging_entry*)TMP_PAGEBUF;
 			}
@@ -718,6 +717,7 @@ void sync_addr_space()
 		to_invalid_cur->cores_invalidated |= (1<<apic_id);
 		if(to_invalid_cur->cores_invalidated == all_cores_mask && to_invalid_cur == invalid_stackptr)
 		{
+		//	kprintf("free: 0x%x", to_invalid_cur->virt);
 			vmm_mark_free_inallcon(DIV_PAGE_SIZE(to_invalid_cur->virt) );
 			invalid_stackptr--;
 		}

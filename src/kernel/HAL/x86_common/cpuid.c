@@ -27,9 +27,9 @@
 
 uint8_t bsp_filled=0;
 // this function can only be used at the beginning
-void cpu_caps()
+void cpu_caps(uintptr_t stack)
 {
-	uint8_t * cpuid_support = (uint8_t *) 0x7200;
+	//uint8_t * cpuid_support = (uint8_t *) 0x7200;
 	struct cpu_info * this_cpu = &bsp_info;
 	if(bsp_filled)
 		this_cpu = kmalloc(sizeof(struct cpu_info));
@@ -54,7 +54,7 @@ void cpu_caps()
 	    "cpu_supported: mov $1, %eax; mov %eax, 0x7200; jmp out;"
 	    "out:");
 #else
-	asm volatile(
+	/*asm volatile(
 	    "pushf;"
 	    "pop %ecx;"
 	    "mov %ecx, %eax;"
@@ -68,12 +68,12 @@ void cpu_caps()
 	    "jmp cpu_supported;"
 	    "cpuid_unsupported: xor %eax, %eax; mov %eax, 0x7200;jmp out;" // FIXME
 	    "cpu_supported: mov $1, %eax; mov %eax, 0x7200; jmp out;"
-	    "out:");
+	    "out:");*/
 #endif
-	if(*cpuid_support)
+//	if(*cpuid_support)
 		this_cpu->cpu_info_support=1;
-	else
-		return;
+//	else
+//		return;
 	
 	uint_t func =0x0; 
 	uint_t ebx =0x0; 
@@ -141,20 +141,19 @@ void cpu_caps()
 		kprintf(", sse_4.2");
 	}
 	this_cpu->apic_id=(mmio_read32(local_apic_virt,LOCAL_APIC_ID_REG)>>24);
-	
-#ifdef ARCH_X86_64
 	memset(&(this_cpu->idle_state),0x0, sizeof(struct cpu_state));
-	
-	void * stack = kvmm_malloc(PAGE_SIZE);
+	this_cpu->stack=stack;
+	uintptr_t stack_idle =(uintptr_t) kvmm_malloc(PAGE_SIZE);
 	
 	this_cpu->idle_state.cs = (KERNEL_CODE_SEG_N<<3);
 	this_cpu->idle_state.ss = (KERNEL_STACK_SEG_N<<3);
 	
-	this_cpu->idle_state.REG_STACKPTR =(uintptr_t)stack+PAGE_SIZE-0x10;
-	kprintf("at 0x%p",this_cpu->idle_state.REG_STACKPTR);
-	this_cpu->idle_state.REG_FLAGS = 0x200;
+	this_cpu->idle_state.REG_STACKPTR = stack_idle+PAGE_SIZE-0x8;
+
+	this_cpu->idle_state.REG_FLAGS = 0x202;
 	this_cpu->idle_state.REG_IP = (uintptr_t)&idle_thread;
+#ifdef ARCH_X86
+	this_cpu->idle_state.kernel_mode=1;
 #endif
-	
 	kprintf("\n");
 }

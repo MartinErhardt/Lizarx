@@ -47,16 +47,15 @@ struct proc* create_proc()
 }
 void exit(struct proc* to_exit)
 {
+	kprintf("exit!");
 	spinlock_ackquire(&process_system_lock);
 	spinlock_ackquire(&multi_threading_lock);
 	struct thread * cur_thread = to_exit->first_thread;
-	//kprintf("hi");
 	
 	num_proc--;
 	while(cur_thread)
 	{
 		kill_thread(cur_thread,to_exit);
-
 		cur_thread = cur_thread->next_in_proc;
 	}
 	alist_remove(&proc_list, to_exit);

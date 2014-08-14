@@ -100,8 +100,6 @@ void init_gdt(void)
 	asm volatile("ltr %%ax" : : "a" ((TSS_SEG_N << 3)|0x3));
 #endif
 	kprintf("SUCCESS\n");
-	//while(1);
-	// Taskregister neu laden
 }
 #ifndef LOADER
 void init_gdt_AP(void)
@@ -142,10 +140,11 @@ void init_gdt_AP(void)
 	struct tss_t * tss_ap =(struct tss_t *) kmalloc(sizeof(struct tss_t));
 	memset(tss_ap,0x00000000, sizeof(struct tss_t));
 	
+
 	gdt_set_entry(gdtable_ap,TSS_SEG_N,sizeof(struct tss_t),(uintptr_t) tss_ap,  GDT_ACCESS_TSS | GDT_ACCESS_PRESENT | GDT_ACCESS_RING3,0);
 	
 #ifdef ARCH_X86
-	tss_ap->esp0 = get_cur_cpu()->stack+STDRD_STACKSIZ-0x10;
+	tss_ap->esp0 = get_cur_cpu()->stack+STDRD_STACKSIZ-sizeof(struct cpu_state) -0x10;
 	tss_ap->ss0 = KERNEL_DATA_SEG_N<<3;
 	asm volatile("lgdt %0" : : "m" (gdtp));
 	// reload the gdt segmentregisters, so that they are really used
@@ -162,7 +161,7 @@ void init_gdt_AP(void)
 #endif
 	
 #ifdef ARCH_X86_64
-	tss_ap->rsp0 = get_cur_cpu()->stack + STDRD_STACKSIZ-8;
+	tss_ap->rsp0 = get_cur_cpu()->stack + STDRD_STACKSIZ-sizeof(struct cpu_state) -0x10;
 	struct gdt_tss_entry * tss_desc = (struct gdt_tss_entry *)&(gdtable_ap[TSS_SEG_N]);
 	tss_desc->limit		= sizeof(struct gdt_tss_entry) & 0xffffLL;
 	tss_desc->base		= ((uintptr_t) tss_ap) & 0xffffffLL;

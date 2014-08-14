@@ -23,7 +23,6 @@
 .extern restore_cpu
 
 #include<macros.h>
-
 .macro SAVE_CPU
     // save CPU
     push %ebp
@@ -33,18 +32,13 @@
     push %ecx
     push %ebx
     push %eax
-    
+    pushl $0
     // load Kernel data segment
     mov $(KERNEL_DATA_SEG_N<<3), %ax
     mov %ax, %ds
     mov %ax, %es
 .endm
 .macro RESTORE_CPU
-    // load User data segment
-    mov $((USER_DATA_SEG_N<<3)|3), %ax
-    mov %ax, %ds
-    mov %ax, %es
-    
     // restore CPU
     pop %eax
     pop %ebx
@@ -100,6 +94,13 @@ intr_stub_\nr:
     push %esp
     call handle_irq
     mov %eax, %esp
+    pop %eax
+    cmp $1, %eax
+je kernel_mode\nr
+    mov $((USER_DATA_SEG_N<<3)|3), %ax
+    mov %ax, %ds
+    mov %ax, %es
+kernel_mode\nr:
     RESTORE_CPU
 
     // clean stack from error and intr number
@@ -119,6 +120,13 @@ intr_stub_\nr:
     push %esp
     call handle_syscall
     mov %eax, %esp
+    pop %eax
+    cmp $1, %eax
+je kernel_mode\nr
+    mov $((USER_DATA_SEG_N<<3)|3), %ax
+    mov %ax, %ds
+    mov %ax, %es
+kernel_mode\nr:
     RESTORE_CPU
 
     // clean stack from error and intr number
@@ -131,27 +139,6 @@ intr_stub_\nr:
 idle_thread:
 	hlt
 	jmp idle_thread
-.global return_idle_thread
-return_idle_thread:
-	mov %eax, %esp
-	// load Kernel data segment
-	mov $(KERNEL_DATA_SEG_N<<3), %ax
-	mov %ax, %ds
-	mov %ax, %es
-	mov %ax, %fs
-	mov %ax, %gs
-	// restore CPU
-	pop %eax
-	pop %ebx
-	pop %ecx
-	pop %edx
-	pop %esi
-	pop %edi
-	pop %ebp
-	// clean stack from error and intr number
-	add $8, %esp
-
-	iret
 // Exceptions
 INTR_STUB_EXCEPTION 0
 INTR_STUB_EXCEPTION 1
@@ -178,20 +165,11 @@ INTR_STUB_EXCEPTION 18
 INTR_STUB_IRQ 28
 
 // APIC Timer
-.global intr_stub_29
-intr_stub_29:
-	iret
-
+INTR_STUB_IRQ 29
 // APIC Error Interrupt
-.global intr_stub_30
-intr_stub_30:
-	iret
-
+INTR_STUB_IRQ 30
 // APIC Spurious Interrupt
-.global intr_stub_31
-intr_stub_31:
-	iret
-
+INTR_STUB_IRQ 31
 // IRQs
 INTR_STUB_IRQ 32
 INTR_STUB_IRQ 33

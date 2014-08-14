@@ -60,6 +60,24 @@
 #define APIC_DISABLE	0x10000
 #define APIC_NMI	(4<<8)
 
+
+#define TRAMPOLINE_ENTRY_FUNC_SIZE 	0x300
+#define TRAMPOLINE_GDT_SIZE		0x20
+#define TRAMPOLINE_GDTR_SIZE		0x8
+#define TRAMPOLINE_GDT64_SIZE		0x20
+#define TRAMPOLINE_GDTR64_SIZE		0x8
+#define TRAMPOLINE_PMODE_SIZE		0x100
+#define TRAMPOLINE_LMODE_SIZE		0x50
+
+#define TRAMPOLINE_GDT			TRAMPOLINE+TRAMPOLINE_ENTRY_FUNC_SIZE
+#define TRAMPOLINE_GDTR			TRAMPOLINE_GDT+TRAMPOLINE_GDT_SIZE
+#define TRAMPOLINE_GDT64		TRAMPOLINE_GDTR+TRAMPOLINE_GDTR_SIZE
+#define TRAMPOLINE_GDTR64		TRAMPOLINE_GDT64+TRAMPOLINE_GDT64_SIZE
+#define TRAMPOLINE_LMODE		TRAMPOLINE_GDTR64+TRAMPOLINE_GDTR64_SIZE
+#define TRAMPOLINE_PMODE		TRAMPOLINE_LMODE+TRAMPOLINE_LMODE_SIZE
+#define TRAMPOLINE_LOCK			TRAMPOLINE_PMODE+TRAMPOLINE_PMODE_SIZE
+#define TRAMPOLINE_VBEINFO		TRAMPOLINE_LOCK+0x8
+
 uintptr_t local_apic_virt;
 
 extern void trampoline_entry_func(void);
@@ -67,17 +85,19 @@ extern void gdt(void);
 extern void gdtr(void);
 extern void pmode(void);
 
+extern void vesa_setup(void);
+
 #ifdef ARCH_X86_64
 
 extern void gdt64(void);
 extern void gdtr64(void);
 extern void lmode(void);
-
+extern void VbeInfoBlock(void);
 #endif
 
 lock_t all_APs_booted;
 lock_t apic_ready;
-
+uint8_t get_real_apic_id();
 struct cpu_info * get_cur_cpu();
 
 extern void idle_thread();

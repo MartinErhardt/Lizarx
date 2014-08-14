@@ -61,6 +61,7 @@ void kputs(const char* s,atrbyt font)
 
 void kput(uint8_t chr, atrbyt font)
 {
+	//OUTB(0x3f8, chr);
 	figure fig={chr, font};
 	uint16_t* adr=0;
 	if((curx>=VIDEO_X)&&(cury<(VIDEO_Y-1)))// Test
@@ -178,7 +179,7 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 	//OUTB(0x3f8, a );
 	while (*fmt) {
 		// serial console(only QEMU)
-	//	OUTB(0x3f8, *fmt);
+		
 		
 		if (*fmt == '%') 
 		{

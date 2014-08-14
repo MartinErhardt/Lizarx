@@ -47,7 +47,7 @@
 #define INIT_PAGEDIR_TBL_ADDR		0x112000
 #define INIT_PAGEDIRPTR_TBL_ADDR	0x111000
 #define INIT_PAGEMAPLEVEL4_TBL_ADDR	0x110000
-#define BSP_STACK 			0x104000
+#define BSP_STACK 			0x105000-STDRD_STACKSIZ
 #define TRAMPOLINE 			0x007000
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
@@ -57,6 +57,11 @@
 #define IDT_FLAG_PRESENT	0x80
 #define IDT_FLAG_RING0		0x00
 #define IDT_FLAG_RING3		0x60
+
+#define INTR_TIMER		28
+#define INTR_KEYBOARD		0x21
+#define INTR_SOFT_INTR		0x48
+#define INTR
 //-------------------------------------------------------------------------Paging------------------------------------------------------------------
 
 /*

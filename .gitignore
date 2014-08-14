@@ -14,7 +14,7 @@
 *.bin
 *.mod
 *.so
-*.a # FIXME ld.a is also ignored :(
+*.a
 bin/boot/LM_Loader
 bin/boot/kernel
 

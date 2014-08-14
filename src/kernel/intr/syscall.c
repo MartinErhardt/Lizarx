@@ -27,13 +27,13 @@
 #include<mt/threads.h>
 #include<macros.h>
 #include<libOS/lock.h>
-#include<../x86_common/local_apic.h>
 #include<asm_inline.h>
 #include<mt/proc.h>
 #include<mt/sched.h>
 #include <intr/err.h>
 #include <mm/shm.h>
 #include <mt/msg.h>
+#include<local_apic.h>
 
 struct cpu_state* handle_syscall(struct cpu_state* cpu)
 {
@@ -58,7 +58,9 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 		case(SYS_GETTID):break;
 		case(SYS_KILLTID):break;
 		case(SYS_FORKTID):break;
-		case(SYS_GETPID):break;
+		case(SYS_GETPID):
+			cpu->REG_DATA0=get_cur_cpu()->current_thread->proc->p_id;
+			break;
 		case(SYS_KILLPID):break;
 		case(SYS_FORKPID):break;
 		case(SYS_ERROR):break;
@@ -82,7 +84,9 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			break;
 		case(SYS_EXIT):
 			exit(get_cur_cpu()->current_thread->proc);
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
 			asm volatile("int $28"); //FIXME
+#endif
 			cpu = schedule(cpu);
 			
 			break;
@@ -100,26 +104,24 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			break;
 		case(SYS_MSGRCV):
 			cpu->REG_DATA0 = msgrcv(cpu->REG_DATA1>>16, (void*)cpu->REG_DATA0, cpu->REG_DATA1, 0, 0);
+			//if(cpu->REG_DATA0)
+			//      kprintf("hi");
 			break;
 		case(SYS_SLEEP):
-			kprintf("sleep");
+			//kprintf("sleep");
 			*(get_cur_cpu()->current_thread->state) = *cpu;
 			sleep(0);
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
 			asm volatile("int $28");
+#endif
 			break;
 		case(SYS_WAKEUP):
-			kprintf("wakeup");
+			//kprintf("wakeup");
 			wakeup(cpu->REG_DATA0);
 			break;
 		default:break;
 	}
-	/*if(!cpu->REG_IP)
-	{
-		kprintf("[IRG] E: handle_irq notices !next_context bug\n");
-		while(1);
-	}*/
-	//kprintf("stack at %x",rdmsr(0xC0000102));
-	//kprintf("id: %d ",get_cur_cpu()->apic_id);
+	
 	return cpu;
 }
 #ifdef ARCH_X86_64

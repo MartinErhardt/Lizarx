@@ -62,12 +62,13 @@ void init(struct multiboot_info * mb_info)
 	err_ocurred 			= 0;
 	all_APs_booted			= LOCK_USED;
 	to_invalidate_first		= NULL;
-	struct tm* time_is		= NULL;
-	//memset(&proc_list, 0, sizeof(struct alist_st));
+	//struct tm* time_is		= NULL;
+	memset(&proc_list, 0, sizeof(struct alist_st));
+	memset(&cpu_list, 0, sizeof(struct alist_st));
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob			= modules;
 	
-	kernel_elf=(void * )(uintptr_t)modules[0].mod_start;
+	kernel_elf = (void * )(uintptr_t)modules[0].mod_start;
 #ifdef ARCH_X86
 	clrscr(VGA_BLACK,VGA_WHITE);
 	init_gdt();
@@ -91,37 +92,36 @@ void init(struct multiboot_info * mb_info)
 		local_apic_init(apic_support_);
 		
 		cores_booted=1;
-		cpu_caps();
+		cpu_caps((uintptr_t)bsp_info.stack);
 		if(cores_from_tables - 1)
 			startup_APs();
 	}
 #endif
-	
 	bsp_info.stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
 	
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
-	    kprintf("FAILED No Programs found\n");
+		kprintf("FAILED No Programs found\n");
 	else
-		for(i=2;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
+		for(i=1;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
 			if(init_elf((void*) (uintptr_t)modules[i].mod_start))
 				kprintf("FAILED with mod: %d",i);
 	kprintf(" SUCCESS\n");
 #ifdef ARCH_X86_64
 	init_SYSCALL();
-	tss.rsp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
+	tss.rsp0 = bsp_info.stack+STDRD_STACKSIZ-sizeof(struct cpu_state)-0x10;
 	
 	setup_tss();
 #else
-	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-0x10;
+	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-sizeof(struct cpu_state)-0x10;
 #endif
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
 	//that's for testing purposes
-	time_is = get_time();
+	/*time_is = get_time();
 	time_t timer = mktime(time_is);
 	kprintf("UNIX time is  %d \n",timer);
 	gmtime_r(&timer, time_is); 
-	print_time(time_is);
+	print_time(time_is);*/
 	//kprintf("cores_mask 0x%x",all_cores_mask);
 	enable_intr();
 	
@@ -129,25 +129,25 @@ void init(struct multiboot_info * mb_info)
 }
 void AP_init()
 {
-	spinlock_ackquire(((lock_t *)0x7208));
+	spinlock_ackquire(((lock_t *)TRAMPOLINE_LOCK));
 	//local_apic_init_AP();
 	uintptr_t stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
-	
-	asm volatile("nop":: "a"(stack+ STDRD_STACKSIZ-0x10));
+#if defined(ARCH_X86) || defined(ARCH_X86_64)
+	asm volatile("nop":: "a"(stack+ STDRD_STACKSIZ-sizeof(struct cpu_state)-0x10));
 #ifdef ARCH_X86
 	asm volatile ("mov %eax, %esp" );
 #endif
 #ifdef ARCH_X86_64
 	asm volatile ("mov %rax, %rsp" );
 #endif
+	//memset((void*)stack, 0, STDRD_STACKSIZ);
 	local_apic_init_AP();
-	cpu_caps();
-	get_cur_cpu()->stack = stack;
-
+	cpu_caps(stack);
 	init_gdt_AP();
 	init_idt_AP();
 #ifdef ARCH_X86_64
 	init_SYSCALL();
+#endif
 #endif
 	cores_booted++;
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
@@ -157,7 +157,7 @@ void AP_init()
 	if(cores_booted == cores_from_tables)
 		spinlock_release(&all_APs_booted);
 	else
-		spinlock_release(((lock_t *)0x7208));
+		spinlock_release(((lock_t *)TRAMPOLINE_LOCK));
 	
 	ENABLE_INTR
 	

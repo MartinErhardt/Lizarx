@@ -144,7 +144,7 @@ intr_stub_\nr:
     call handle_syscall
     mov %rax, %rsp
     RESTORE_CPU
-
+    
     // clean stack from error and intr number
     add $0x10, %rsp
 

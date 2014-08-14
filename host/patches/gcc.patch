@@ -1,0 +1,75 @@
+--- ./libgcc/config.orig.host	2014-07-24 17:03:10.995622048 +0200
++++ ./libgcc/config.host	2014-07-25 16:32:10.787213984 +0200
+@@ -1207,6 +1207,12 @@ vax-*-netbsdelf*)
+ 	;;
+ vax-*-openbsd*)
+ 	;;
++i[3-7]86-*-lizarx*)
++	extra_parts="crtbegin.o crtend.o"
++	tmake_file="$tmake_file i386/t-crtstuff"
++	;;
++x86_64-*-lizarx*)
++	;;
+ xstormy16-*-elf)
+ 	tmake_file="stormy16/t-stormy16 t-fdpbit"
+ 	;;
+--- ./gcc/config.orig.gcc	2014-07-24 17:03:10.998955375 +0200
++++ ./gcc/config.gcc	2014-07-25 17:21:10.923963188 +0200
+@@ -742,6 +742,12 @@ case ${target} in
+   tmake_file="${tmake_file} t-glibc"
+   target_has_targetcm=yes
+   ;;
++*-*-lizarx*)
++  extra_parts="crtbegin.o crtend.o"
++  gas=yes
++  gnu_ld=yes
++  default_use_cxa_atexit=yes
++  ;;
+ *-*-netbsd*)
+   tmake_file="t-slibgcc"
+   gas=yes
+@@ -1328,6 +1334,16 @@ hppa[12]*-*-hpux11*)
+ 		dwarf2=no
+ 	fi
+ 	;;
++i[3-7]86-*-lizarx*)
++	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h i386/i386elf.h lizarx_32.h"
++	tmake_file="i386/t-i386elf t-svr4"
++	use_fixproto=yes
++	;;
++x86_64-*-lizarx*)
++	tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h i386/i386elf.h i386/x86-64.h  lizarx_64.h"
++	tmake_file="${tmake_file} t-lizarx64 t-svr4 i386/t-crtstuff i386/t-crtpc i386/t-crtfm t-dfprules"
++	use_fixproto=yes
++	;;
+ i[34567]86-*-darwin*)
+ 	need_64bit_isa=yes
+ 	# Baseline choice for a machine that allows m64 support.
+--- ./libstdc++-v3/crossconfig.orig.m4	2014-07-24 17:03:10.995622048 +0200
++++ ./libstdc++-v3/crossconfig.m4	2014-07-25 16:35:01.310660539 +0200
+@@ -45,7 +45,13 @@ case "${host}" in
+     #GCC_CHECK_TLS
+     AM_ICONV
+     ;;
+-
++  *-lizarx*)
++    AC_CHECK_HEADERS([sys/types.h locale.h float.h])
++    GLIBCXX_CHECK_BUILTIN_MATH_SUPPORT
++    GLIBCXX_CHECK_COMPLEX_MATH_SUPPORT
++    GLIBCXX_CHECK_STDLIB_SUPPORT
++    GLIBCXX_CHECK_LINKER_FEATURES
++    ;;
+   *-darwin*)
+     # Darwin versions vary, but the linker should work in a cross environment,
+     # so we just check for all the features here.
+--- ./config.orig.sub	2014-07-24 17:03:10.998955375 +0200
++++ ./config.sub	2014-07-25 16:09:40.454719146 +0200
+@@ -1356,7 +1356,7 @@ case $os in
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+-	      | -aos* | -aros* \
++	      | -aos* | -aros* | -lizarx* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \

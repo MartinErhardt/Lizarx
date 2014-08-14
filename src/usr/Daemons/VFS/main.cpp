@@ -15,10 +15,17 @@
  *  You should have received a copy of the GNU LESSER General Public License
  *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include"main.h"
-#include"ipc_manager.h"
+#include"vfs.h"
+#include<stdlib.h>
+#include<dbg.h>
+#include<asm_inline.h>
 
+extern "C" void uprintf(const char* fmt, ...);
 int main()
 {
+	//uprintf("hello \n");
+	
+	VFS * myVFS = new VFS();
+	myVFS->loop();
 	return 0;
 }

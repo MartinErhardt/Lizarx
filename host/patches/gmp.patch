@@ -1,0 +1,11 @@
+diff -rupN gmp-6.0.0.orig/configfsf.sub gmp-6.0.0/configfsf.sub
+--- gmp-6.0.0.orig/configfsf.sub	2011-09-20 02:48:37.224034311 -0400
++++ gmp-6.0.0/configfsf.sub	2011-09-20 02:53:08.140695606 -0400
+@@ -1327,6 +1327,7 @@ case $os in
+ 	      | -sym* | -kopensolaris* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+ 	      | -aos* | -aros* \
++	      | -lizarx* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \

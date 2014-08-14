@@ -27,9 +27,9 @@
 void handle_exception(struct cpu_state* cpu)
 {
 	err_ocurred = 1;
-	kprintf("\nError on core: 0x%x\n", get_cur_cpu()->apic_id );
+	//kprintf("\nError on core: 0x%x\n", get_cur_cpu()->apic_id );
 	redscreen(cpu);
-	
+	while(1);
 	cpu_halt();
 }
 void cpu_halt()

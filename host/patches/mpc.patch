@@ -1,0 +1,11 @@
+diff -rupN ../../mpc-1.0.2/config.sub ./config.sub
+--- ../../mpc-1.0.2/config.sub	2011-09-20 03:10:22.527341760 -0400
++++ ./config.sub	2011-09-20 03:18:05.710665907 -0400
+@@ -1291,6 +1291,7 @@ case $os in
+ 	      | -sym* | -kopensolaris* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+ 	      | -aos* | -aros* \
++	      | -lizarx* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \

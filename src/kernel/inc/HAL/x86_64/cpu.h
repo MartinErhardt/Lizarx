@@ -98,29 +98,29 @@ struct cpu_state{
 
 struct cpu_info
 {
-	  uint8_t cpu_info_support;
-	  uint32_t cpu_n;
-	  uint8_t apic_id;
-	  uint8_t sse_support;
-	  uint8_t sse_2_support;
-	  uint8_t sse_3_support;
-	  uint8_t ssse_3_support;
-	  uint8_t sse_4_1_support;
-	  uint8_t sse_4_2_support;
-	  uint8_t sysenter_exit_support;
-	  uint8_t apic_support;
-	  uint8_t hyperthreading;
-	  char vendor_id[12];
-	  char cpu_name[48];
-	  alist_t thread_list;
-	  struct thread * current_thread;
-	  uint_t current_thread_index;
-	  uintptr_t stack;
-	  struct cpu_state idle_state;
-	  uint32_t thread_count;
-	  struct proc * cur_proc;
+	uint8_t cpu_info_support;
+	uint32_t cpu_n;
+	uint8_t apic_id;
+	uint8_t sse_support;
+	uint8_t sse_2_support;
+	uint8_t sse_3_support;
+	uint8_t ssse_3_support;
+	uint8_t sse_4_1_support;
+	uint8_t sse_4_2_support;
+	uint8_t sysenter_exit_support;
+	uint8_t apic_support;
+	uint8_t hyperthreading;
+	char vendor_id[12];
+	char cpu_name[48];
+	alist_t thread_list;
+	struct thread * current_thread;
+	uint_t current_thread_index;
+	uintptr_t stack;
+	struct cpu_state idle_state;
+	uint32_t thread_count;
+	struct proc * cur_proc;
 };
-void cpu_caps();
+void cpu_caps(uintptr_t stack);
          /* Ring-0-Segmentregister nicht mehr benutzt*/
         //.cs  = 0x08,
 	/* Ring-3-Segmentregister */   

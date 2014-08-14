@@ -42,18 +42,14 @@ uintptr_t * get_last_function(void* elf_header, uintptr_t addr)
 			sym_num=section_header->size/sizeof(struct elf_symbol);
 		}
 		if(section_header->type==ELF_SECTION_TYPE_STRTAB)
-		{
 			str_section=(uintptr_t)(elf_header)+(section_header->off);
-		}
 		section_header=(struct elf_section_header*)((uintptr_t)(section_header)+sizeof(struct elf_section_header));
 	}
 	for(i=0;i<sym_num;i++)
 	{
 		cur_sym=(struct elf_symbol*)((uintptr_t)(cur_sym)+sizeof(struct elf_symbol));
 		if(cur_sym==NULL) 
-		{
 			continue;
-		}
 		if((cur_sym->value)
 		  &&(ELF_SYM_TYPE(cur_sym->info)==ELF_SYM_TYPE_FUNC))
 		{
@@ -84,38 +80,23 @@ int32_t init_elf(void* image)
 	uintptr_t curpd_phys = virt_to_phys(curcontext, (uintptr_t)curcontext->highest_paging);
 	/* Ist es ueberhaupt eine ELF-Datei? */
 	if (header->i_magic != ELF_MAGIC) 
-	{
 		kprintf("[ELF_LOADER] E: init_elf couldn't find valid ELF-Magic!\n");
-		return -1;
-	}
 #ifdef ARCH_X86
 	if (header->i_class != ELF_CLASS_32)
-	{
 		kprintf("[ELF_LOADER] E: init_elf found elf with class != 32!\n");
-		return -1;
-	}
 	if ((header->i_data != ELF_DATA_LITTLEENDIAN)||(header->version != ELF_DATA_LITTLEENDIAN))
-	{
 		kprintf("[ELF_LOADER] E: init_elf found elf with data != ELF_DATA_LITTLEENDIAN!\n");
-		return -1;
-	}
 	if (header->type != ELF_TYPE_EXEC)
-	{
 		kprintf("[ELF_LOADER] E: init_elf found elf with type != ELF_TYPE_EXEC\n");
-	}
 	if (header->machine != ELF_MACHINE_386)
-	{
 		kprintf("[ELF_LOADER] E: init_elf found elf with invalid target!\n");
-	}
 /*#else
     #error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
 #endif
 	if (header->i_version != ELF_VERSION_CURRENT)
-	{
-	    kprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
-	    return -1;
-	}
+		kprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
 	new_proc = create_proc();
+	
 	/*
 	* Alle Program Header durchgehen und den Speicher an die passende Stelle
 	* kopieren.
@@ -128,26 +109,24 @@ int32_t init_elf(void* image)
 		void* src = ((char*) image) + ph->offset;
 		/* Nur Program Header vom Typ LOAD laden */
 		if (ph->type != ELF_PROGRAM_TYPE_LOAD)
-		{
 			continue;
-		}
 		if(ph->virt_addr<KERNEL_SPACE)
-		{
-		    kprintf("[ELF_LOADER] E: init_elf an elf want to be loaded at %x ; That's in Kernelspace!\n",ph->virt_addr);
-		}
+			kprintf("[ELF_LOADER] E: init_elf an elf want to be loaded at %x ; That's in Kernelspace!\n",ph->virt_addr);
 		if(vmm_realloc(new_proc->context,(void*)ph->virt_addr,ph->mem_size,FLGCOMBAT_USER)<0)
-		{
 			kprintf("[ELF_LOADER] W: init_elf couldn't realloc for PH!\n");//it is only a warning yet ,coz the header could be in the same Page and that's not tested yet
-		}
+		
 		SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->highest_paging));
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);
 		
 		SET_CONTEXT(curpd_phys);
+		
 	}
 	
 	create_thread((void*) header->entry,new_proc);
+	
 	//while(1);
 	//print_symbols(image,(struct elf_section_header*)((uintptr_t)(image)+header->sh_offset),header->sh_entry_count);
+	
 	return 0;
 }

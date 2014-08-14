@@ -33,6 +33,7 @@ static bool are_there_still_threads(struct cpu_info * this_cpu);
 struct cpu_info* get_cpu(uint_t t_id);
 int32_t create_thread(void* entry, struct proc * in_proc)
 {
+	
 	struct thread* new_t	= (struct thread*)kmalloc(sizeof(struct thread));
 	struct cpu_state * new_state	= (struct cpu_state*)kmalloc(sizeof(struct cpu_state));
 	uint8_t* user_stack	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
@@ -62,14 +63,12 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 	//alist_add(&in_proc->threads_in_proc, new_t);
 	alist_add(&cpu->thread_list, new_t);
 	cpu->thread_count	++;in_proc->first_thread	= new_t;
-#ifdef ARCH_X86
-	cpu->is_no_thread	= 0;
-#endif
 	spinlock_release(&multi_threading_lock);
 	return 0;
 }
 struct cpu_info * get_best_cpu()
 {
+	
 	float average_thread_count = total_thread_count/cores_from_tables;// 1: 2 2: 5
 	struct cpu_info * this_cpu = &bsp_info;
 	struct cpu_info * best_fit = &bsp_info;
@@ -105,7 +104,7 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 	float best_fit_diff = ((&bsp_info)->thread_count+1)-average_thread_count;// 1: 12 2: 15
 	float diff_with_thread;
 	if(best_fit_diff<0)
-			best_fit_diff = best_fit_diff*(-1);
+		best_fit_diff = best_fit_diff*(-1);
 	while(cur_cpu)
 	{
 		diff_with_thread = (cur_cpu->thread_count+1)-average_thread_count;
@@ -126,10 +125,6 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 		alist_add(&best_fit->thread_list, to_move);
 		this_cpu->current_thread = NULL;
 		this_cpu->current_thread_index = 0;
-#ifdef ARCH_X86
-		if(!are_there_still_threads(this_cpu))
-			this_cpu->is_no_thread = LOCK_USED;
-#endif
 	}
 	else this_cpu->thread_count++;
 	return best_fit;
@@ -142,14 +137,11 @@ void kill_thread(struct thread * to_kill, struct proc * in_proc)
 	SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
 	this_cpu->current_thread = NULL;
 	this_cpu->current_thread_index = 0;
-#ifdef ARCH_X86
-	if(!are_there_still_threads(this_cpu))
-		this_cpu->is_no_thread=1;
-#endif
 	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
 	kfree(to_kill->state);
 	kfree(to_kill);
 	//spinlock_release(&multi_threading_lock);
+	
 }
 static bool are_there_still_threads(struct cpu_info * this_cpu)
 {
@@ -162,14 +154,9 @@ uint_t sleep(uint_t time)
 	spinlock_ackquire(&multi_threading_lock);
 	struct cpu_info * cur_cpu = get_cur_cpu();
 	cur_cpu->current_thread->exc_state = THREAD_BLCKD;
-#ifdef ARCH_X86
-	if(!are_there_still_threads(cur_cpu))
-	{
-		cur_cpu->is_no_thread = 1;
-	}
-#endif
 	SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
 	cur_cpu->current_thread=NULL;
+	cur_cpu->current_thread_index = 0;
 	spinlock_release(&multi_threading_lock);
 	return 0;
 }
@@ -180,10 +167,7 @@ void wakeup(uint_t t_id)
 	if(!this_thread)
 		return;
 	this_thread->exc_state = THREAD_ACTIVE;
-#ifdef ARCH_X86
-	struct cpu_info * cur_cpu = get_cpu( t_id);
-	cur_cpu->is_no_thread = 0;
-#endif
+	
 	spinlock_release(&multi_threading_lock);
 }
 struct cpu_state* dispatch_thread(struct cpu_state* cpu)
@@ -192,26 +176,24 @@ struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 	uintptr_t next_context = 0x0;
 	struct cpu_info * this_cpu = get_cur_cpu();
 	
-	/*
-	* Wenn schon ein Task laeuft, Zustand sichern. Wenn nicht, springen wir
-	* gerade zum ersten Mal in einen Task. Diesen Prozessorzustand brauchen
-	* wir spaeter nicht wieder.
-	*/
-	/*
-	* Naechsten Task auswaehlen. Wenn alle durch sind, geht es von vorne los
-	*/
 retry:
-#ifdef ARCH_X86_64
 	if(!are_there_still_threads(this_cpu))
+	{
+#ifdef ARCH_X86
+		memcpy((void*)(((uintptr_t)this_cpu->stack)+STDRD_STACKSIZ-sizeof(struct cpu_state)-0x8),(void*)&(this_cpu->idle_state), sizeof(struct cpu_state));
+		return (struct cpu_state*)(((uintptr_t)this_cpu->stack)+STDRD_STACKSIZ-sizeof(struct cpu_state)-0x8);
+#else
 		return &(this_cpu->idle_state);
 #endif
-#ifdef ARCH_X86
-	spinlock_ackquire(&this_cpu->is_no_thread);
-	spinlock_release(&this_cpu->is_no_thread);
-#endif
+	}
 	spinlock_ackquire(&multi_threading_lock);
-	
+	if(!are_there_still_threads(this_cpu))
+	{
+		spinlock_release(&multi_threading_lock);
+		goto retry;
+	}
 	struct thread * first_thread = (struct thread *)alist_get_by_index(&this_cpu->thread_list, 0);
+	struct thread * current_thread = NULL;
 	do if (this_cpu->current_thread == NULL)
 		{
 			if(!are_there_still_threads(this_cpu))
@@ -220,32 +202,31 @@ retry:
 				goto retry;
 			}
 			curcontext= &startup_context;
-			next_context = virt_to_phys(curcontext,(uintptr_t)(first_thread->proc->context->highest_paging));
-			
-			this_cpu->current_thread = first_thread;
+			current_thread = first_thread;
+			while(current_thread->exc_state== THREAD_BLCKD)
+			{
+				this_cpu->current_thread_index++;
+				current_thread = alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index);
+			}
+			next_context = virt_to_phys(curcontext,(uintptr_t)(current_thread->proc->context->highest_paging));
+			this_cpu->current_thread = current_thread;
 		}
 		else 
 		{
-			
 			curcontext= this_cpu->current_thread->proc->context;
 			
 			*this_cpu->current_thread->state = *cpu;
 			
 			do if(this_cpu->current_thread_index +1 < alist_get_entry_n(&this_cpu->thread_list))
-				{
-					next_context = virt_to_phys(curcontext,(uintptr_t)(uintptr_t)((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index+1))->proc->context->highest_paging);
 					this_cpu->current_thread_index ++;
-				}
 				else
-				{
-					next_context = virt_to_phys(curcontext,(uintptr_t)(first_thread->proc->context->highest_paging));
 					this_cpu->current_thread_index = 0;
-				}
 			while(((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index))->exc_state ==THREAD_BLCKD);
+			next_context = virt_to_phys(curcontext,(uintptr_t)(uintptr_t)((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index))->proc->context->highest_paging);
 			this_cpu->current_thread = alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index);
 		}
 	while(move_if_it_make_sense(this_cpu,this_cpu->current_thread)!=this_cpu);
-	/* Prozessorzustand des neuen Tasks aktivieren */
+	
 	cpu = this_cpu->current_thread->state;
 	this_cpu->cur_proc = this_cpu->current_thread->proc;
 	

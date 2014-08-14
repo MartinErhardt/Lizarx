@@ -40,7 +40,7 @@
 #define BITMAP_SIZE 	32768
 #define PAGE_SIZE 	4096 // page size in bytes
 
-#define BSP_STACK 			0x104000
+#define BSP_STACK 			0x105000-STDRD_STACKSIZ
 #define TRAMPOLINE 			0x007000
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 

@@ -7,7 +7,7 @@ clean:
 	rm  $(OBJS_OPTI) $(OBJS_UNOPTI) $(OBJS_LOADER)
 
 ASFLAGS =  -nostdinc -ffreestanding -I inc/HAL/x86_64 -I inc/HAL/x86_common
-CFLAGS = -Wall -Werror -g -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I inc/HAL/x86_64 -I inc/HAL/x86_common -DARCH_X86_64=x86_64 -DARCH=x86_64
+CFLAGS = -Wall -Werror -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I inc/HAL/x86_64 -I inc/HAL/x86_common -DARCH_X86_64=x86_64 -DARCH=x86_64
 C64FLAGS = -mno-red-zone  -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow
 SRCS_OPTI = boot/init.c \
 	mm/vheap.c \

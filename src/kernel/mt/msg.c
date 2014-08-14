@@ -36,27 +36,27 @@ uint_t       msgget(key_t key, int flag)
 	spinlock_release(&msq_lock);
 	return buf->id;
 }
-ssize_t   msgrcv(uint_t msqid, void * ptr, size_t size, long type, int flag)
+unsigned long   msgrcv(uint_t msqid, void * ptr, size_t size, long type, int flag)
 {
 	spinlock_ackquire(&msq_lock);
 	struct msqid_ds * msqid_ = alist_get_by_entry(&msqid_list, 0,msqid);
 	if(!msqid_)
 	{
 		spinlock_release(&msq_lock);
-		return -1;
+		return 0;
 	}
 	
 	uint_t* message_block = msqid_->first_message;
 	if(size > *(message_block+1))
 	{
 		spinlock_release(&msq_lock);
-		return -1;
+		return 0;
 	}
 	memcpy(ptr, (void *)(message_block+2), size);
 	msqid_->first_message = (uint_t *) (*message_block);
 	kfree((void*)message_block);
 	spinlock_release(&msq_lock);
-	return 0;
+	return 1;
 }
 int       msgsnd(uint_t msqid, const void * ptr, size_t size, int flag) // FIXME check if it is mapped
 {

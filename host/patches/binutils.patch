@@ -1,0 +1,89 @@
+--- ../binutils-2.23.1/ld/Makefile.in	2012-09-04 08:53:47.000000000 -0400
++++ ./ld/Makefile.in	2013-01-26 23:36:20.067628311 -0500
+@@ -2693,6 +2693,9 @@ eelf_i386_fbsd.c: $(srcdir)/emulparams/elf_i386_fbsd.sh \
+   $(srcdir)/emulparams/elf_i386.sh \
+   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+ 	${GENSCRIPTS} elf_i386_fbsd "$(tdir_elf_i386_fbsd)"
++elizarx_i386.c: $(srcdir)/emulparams/lizarx_i386.sh \
++  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
++	${GENSCRIPTS} lizarx_i386 "$(tdir_lizarx_i386)"
+ eelf_i386_ldso.c: $(srcdir)/emulparams/elf_i386_ldso.sh \
+   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+ 	${GENSCRIPTS} elf_i386_ldso "$(tdir_elf_i386_ldso)"
+@@ -3544,6 +3544,9 @@ eelf_k1om_fbsd.c: $(srcdir)/emulparams/e
+   $(srcdir)/emulparams/elf_k1om.sh \
+   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+ 	${GENSCRIPTS} elf_k1om_fbsd "$(tdir_elf_k1om_fbsd)"
++elizarx_x86_64.c: $(srcdir)/emulparams/lizarx_x86_64.sh \
++  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
++	${GENSCRIPTS} lizarx_x86_64 "$(tdir_lizarx_x86_64)"
+ eelf_x86_64.c: $(srcdir)/emulparams/elf_x86_64.sh \
+   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+ 	${GENSCRIPTS} elf_x86_64 "$(tdir_elf_x86_64)"
+--- ./gas/configure.orig.tgt	2014-07-21 19:34:00.395475221 +0200
++++ ./gas/configure.tgt	2014-07-21 19:52:21.501865290 +0200
+@@ -228,6 +228,7 @@ case ${generic_target} in
+   i386-*-linux*aout*)			fmt=aout em=linux ;;
+   i386-*-linux*oldld)			fmt=aout em=linux ;;
+   i386-*-linux*coff*)			fmt=coff em=linux ;;
++  i386-*-lizarx*)			fmt=elf ;;
+   i386-*-linux-*)			fmt=elf em=linux
+     case ${cpu}-${os} in
+       x86_64*-linux-gnux32)		arch=x86_64:32 ;;
+--- ./bfd/config.orig.bfd	2014-07-21 19:34:00.398808554 +0200
++++ ./bfd/config.bfd	2014-07-21 19:50:35.645278493 +0200
+@@ -619,6 +619,11 @@ case "${targ}" in
+     targ_selvecs=bfd_elf32_i386_vec
+     targ_underscore=yes
+     ;;
++  i[3-7]86-*-lizarx*)
++    targ_defvec=bfd_elf32_i386_vec
++    targ_selvecs=
++    targ64_selvecs=bfd_elf64_x86_64_vec
++    ;;
+   i[3-7]86-*-linux-*)
+     targ_defvec=bfd_elf32_i386_vec
+     targ_selvecs="i386linux_vec i386pei_vec"
+@@ -662,6 +667,11 @@ case "${targ}" in
+     targ_selvecs="bfd_elf32_i386_vec i386netbsd_vec i386coff_vec i386pei_vec x86_64pei_vec bfd_elf64_l1om_vec bfd_elf64_k1om_vec"
+     want64=true
+     ;;
++  x86_64-*-lizarx*)
++    targ_defvec=bfd_elf64_x86_64_vec
++    targ_selvecs=bfd_elf32_i386_vec
++    want64=true
++    ;;
+   x86_64-*-linux-*)
+     targ_defvec=bfd_elf64_x86_64_vec
+     targ_selvecs="bfd_elf32_i386_vec bfd_elf32_x86_64_vec i386linux_vec i386pei_vec x86_64pei_vec bfd_elf64_l1om_vec bfd_elf64_k1om_vec"
+--- ./config.orig.sub	2014-07-21 19:34:00.398808554 +0200
++++ ./config.sub	2014-07-21 19:40:16.275433942 +0200
+@@ -1356,7 +1356,7 @@ case $os in
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+-	      | -aos* | -aros* \
++	      | -aos* | -aros* | -lizarx* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
+--- ./ld/configure.orig.tgt	2014-07-21 19:34:00.398808554 +0200
++++ ./ld/configure.tgt	2014-07-21 20:48:23.512986336 +0200
+@@ -234,6 +234,8 @@ i[3-7]86-*-linux-*)	targ_emul=elf_i386
+ 			targ64_extra_libpath=elf_x86_64
+ 			targ_extra_libpath=elf32_x86_64
+ 			tdir_i386linux=${targ_alias}aout ;;
++i[3-7]86-*-lizarx*)
++			targ_emul=lizarx_i386 ;;
+ x86_64-*-linux-gnux32)	targ_emul=elf32_x86_64
+ 			targ_extra_emuls="elf_x86_64 elf_i386 i386linux elf_l1om elf_k1om"
+ 			targ_extra_libpath="elf_i386 elf_x86_64 elf_l1om elf_k1om"
+@@ -244,6 +249,8 @@ x86_64-*-linux-*)	targ_emul=elf_x86_64
+ 			targ_extra_libpath="elf_i386 elf32_x86_64 elf_l1om elf_k1om"
+ 			tdir_i386linux=`echo ${targ_alias}aout | sed -e 's/x86_64/i386/'`
+ 			tdir_elf_i386=`echo ${targ_alias} | sed -e 's/x86_64/i386/'` ;;
++x86_64-*-lizarx*)
++			targ_emul=lizarx_x86_64 ;;
+ i[3-7]86-*-sysv[45]*)	targ_emul=elf_i386 ;;
+ i[3-7]86-*-solaris2*)	targ_emul=elf_i386_sol2
+                         targ_extra_emuls="elf_i386_ldso elf_i386 elf_x86_64_sol2 elf_x86_64 elf_l1om elf_k1om"

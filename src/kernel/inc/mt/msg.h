@@ -36,7 +36,7 @@ alist_t msqid_list;
 
 int       msgctl(int msqid, int cmd, struct msqid_ds * buf);
 uint_t       msgget(key_t key, int flag);
-ssize_t   msgrcv(uint_t id, void * ptr, size_t size, long type, int flag);
+unsigned long   msgrcv(uint_t id, void * ptr, size_t size, long type, int flag);
 int       msgsnd(uint_t id, const void * ptr, size_t size, int flag);
 
 #endif

@@ -164,8 +164,8 @@ cont:
 	pmm_mark_used( DIV_PAGE_SIZE(TMP_PAGEBUF) 			);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	
 	pmm_mark_used( DIV_PAGE_SIZE(TRAMPOLINE)			);// Trampoline space
-	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK)				);// That's our Stack which is still the MB Loader
-	pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) -1 			);// That's our Stack which is still the MB Loader
+	for (i = 0; i<DIV_PAGE_SIZE(STDRD_STACKSIZ); i++)
+		pmm_mark_used( DIV_PAGE_SIZE(BSP_STACK) +i);		  // That's our Stack which is still the MB Loader
 #ifdef ARCH_X86_64
 	
 	pmm_mark_used( DIV_PAGE_SIZE(INIT_PAGE_TBL_ADDR)		);

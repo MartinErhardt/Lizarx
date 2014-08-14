@@ -36,7 +36,6 @@ int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_p
 		cur_stack_frame = (struct stack_frame*) start_base_ptr;
 	else
 		return -1;
-	
 	while((cur_stack_frame->base_ptr != 0)&&(vmm_is_alloced_glob(curcontext, (uintptr_t)cur_stack_frame->base_ptr/PAGE_SIZE)))
 	{
 		last_func=get_last_function(elf,cur_stack_frame->return_addr);

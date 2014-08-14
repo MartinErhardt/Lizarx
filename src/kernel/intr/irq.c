@@ -39,17 +39,10 @@ struct cpu_state* handle_irq(struct cpu_state* cpu)
 	}
 #ifdef ARCH_X86
 	if (cpu->INFO_INTR >= 0x28) 
-	{
-		// EOI an Slave-PIC
-		OUTB(0xa0, 0x20);
-	}
+		OUTB(0xa0, 0x20)
 	else if(cpu->INFO_INTR==0x21)
-	{
 		kbc_handler(0x21);
-	}
 #endif
-		
-	// EOI an Master-PIC
 	OUTB(0x20, 0x20)
 
 	return cpu;

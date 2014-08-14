@@ -28,14 +28,6 @@
 #include <cpu.h>
 #include <mm/pmm.h>
 
-#define TRAMPOLINE_ENTRY_FUNC_SIZE 	0x100
-#define TRAMPOLINE_GDT_SIZE		0x20
-#define TRAMPOLINE_GDTR_SIZE		0x8
-#define TRAMPOLINE_GDT64_SIZE		0x20
-#define TRAMPOLINE_GDTR64_SIZE		0x8
-#define TRAMPOLINE_PMODE_SIZE		0x100
-#define TRAMPOLINE_LMODE_SIZE		0x50
-
 #define LAPIC_TIMER_PERIODIC                            0x00020000
 #define LAPIC_MASKED                                    0x00010000
 
@@ -44,6 +36,8 @@
 uintptr_t local_apic_virt=0x0;
 static void local_apic_init_timer();
 uint32_t tmp;
+//void break_point();
+//void break_point(){kprintf("hi");};
 void local_apic_init(uintptr_t local_apic_addr_phys)
 {
 	// read apic id
@@ -65,11 +59,20 @@ void local_apic_init(uintptr_t local_apic_addr_phys)
 	//
 	apic_ready=1;
 }
+uint8_t get_real_apic_id()
+{
+	return (mmio_read32(local_apic_virt, LOCAL_APIC_ID_REG)>>24);
+}
 struct cpu_info * get_cur_cpu()
 {
 	if(local_apic_virt==0x0) return &bsp_info;
 	uint8_t apic_id = (mmio_read32(local_apic_virt,LOCAL_APIC_ID_REG)>>24);
-	return (struct cpu_info *) alist_get_by_entry8(&cpu_list, GET_OFF(&bsp_info, &(bsp_info.apic_id)), apic_id);
+	struct cpu_info * ret = (struct cpu_info *) alist_get_by_entry8(&cpu_list, GET_OFF(&bsp_info, &(bsp_info.apic_id)), apic_id);
+//	kprintf("ret: 0x%p id: 0x%x\n",ret, apic_id);
+	//if(!ret){
+	//	break_point();
+	//}
+	return ret;
 }
 void startup_APs()
 {
@@ -77,16 +80,18 @@ void startup_APs()
 	uint8_t vector = TRAMPOLINE/PAGE_SIZE;
 
 	memcpy((void*)trampoline_stack_virt, &trampoline_entry_func, TRAMPOLINE_ENTRY_FUNC_SIZE);
-	memcpy((void*)(trampoline_stack_virt+TRAMPOLINE_ENTRY_FUNC_SIZE), &gdt, TRAMPOLINE_GDT_SIZE);
-	memcpy((void*)(trampoline_stack_virt+TRAMPOLINE_ENTRY_FUNC_SIZE+TRAMPOLINE_GDT_SIZE), &gdtr,TRAMPOLINE_GDTR_SIZE);
+	memcpy((void*)TRAMPOLINE_GDT, &gdt, TRAMPOLINE_GDT_SIZE);
+	memcpy((void*)TRAMPOLINE_GDTR, &gdtr,TRAMPOLINE_GDTR_SIZE);
 #ifdef ARCH_X86_64
-	memcpy((void*)(trampoline_stack_virt+TRAMPOLINE_ENTRY_FUNC_SIZE+TRAMPOLINE_GDT_SIZE+TRAMPOLINE_GDTR_SIZE), &gdt64, TRAMPOLINE_GDT64_SIZE);
-	memcpy((void*)(trampoline_stack_virt+TRAMPOLINE_ENTRY_FUNC_SIZE+TRAMPOLINE_GDT_SIZE+TRAMPOLINE_GDTR_SIZE+TRAMPOLINE_GDT64_SIZE), &gdtr64, TRAMPOLINE_GDTR64_SIZE);
-	memcpy((void*)(trampoline_stack_virt+TRAMPOLINE_ENTRY_FUNC_SIZE+TRAMPOLINE_GDT_SIZE+TRAMPOLINE_GDTR_SIZE+TRAMPOLINE_GDT64_SIZE+TRAMPOLINE_GDTR64_SIZE), &lmode, TRAMPOLINE_LMODE_SIZE);
+	memcpy((void*)TRAMPOLINE_GDT64, &gdt64, TRAMPOLINE_GDT64_SIZE);
+	memcpy((void*)TRAMPOLINE_GDTR64, &gdtr64, TRAMPOLINE_GDTR64_SIZE);
+	memcpy((void*)TRAMPOLINE_LMODE, &lmode, TRAMPOLINE_LMODE_SIZE);
+	memcpy((void*)TRAMPOLINE_VBEINFO, &VbeInfoBlock, 0x20);
 #endif
-	memcpy(((void*)trampoline_stack_virt+TRAMPOLINE_ENTRY_FUNC_SIZE+TRAMPOLINE_GDT_SIZE+TRAMPOLINE_GDTR_SIZE+TRAMPOLINE_GDT64_SIZE+TRAMPOLINE_GDTR64_SIZE+TRAMPOLINE_LMODE_SIZE), &pmode, TRAMPOLINE_PMODE_SIZE);
+	memcpy((void*)TRAMPOLINE_PMODE, &pmode, TRAMPOLINE_PMODE_SIZE);
+	
 	all_APs_booted = LOCK_USED;
-	*((lock_t *)0x7208) = LOCK_FREE;
+	*((lock_t *)TRAMPOLINE_LOCK) = LOCK_FREE;
 	
 	local_apic_ipi_all_excluding_self(IPI_DELIVERY_MODE_INIT,vector,1);
 	
