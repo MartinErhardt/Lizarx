@@ -1,3 +1,2 @@
- 
 all:
 	$(MAKE) -C VFS

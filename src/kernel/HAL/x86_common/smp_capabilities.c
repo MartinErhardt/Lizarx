@@ -55,14 +55,11 @@ uintptr_t check_mp()
 	uintptr_t cf_tbl_entry = ((uintptr_t) cf_tbl_header) + sizeof(struct config_table_header);
 	uint32_t i;
 	for(i=0;i<cf_tbl_header->entry_count;i++)
-	{
 		switch(*((uint8_t *)cf_tbl_entry))
 		{
 			case(ENTRY_TYPE_PROCESSOR):
 				if((((struct processor_entry*) cf_tbl_entry)->cpu_flags) & 0x01)
-				{
 					cores_from_tables++;
-				}
 				cf_tbl_entry+=sizeof(struct processor_entry);
 				break;
 			case(ENTRY_TYPE_BUS):
@@ -79,7 +76,6 @@ uintptr_t check_mp()
 				break;
 			default:break;
 		}
-	}
 	kprintf("CPU Cores: %d \n",cores_from_tables);
 	return (uintptr_t)cf_tbl_header->local_apic_ptr;
 }

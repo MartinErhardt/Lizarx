@@ -1,3 +1,19 @@
+/*  <src-path>/src/usr/hlib/dbg.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/LICENSE for more info
+ *  Copyright (C) 2013, 2014  martin.erhardt98@googlemail.com
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #define SYS_WRITE 0
 #define VGA_BLACK 0x0 
 #define VGA_BLUE 0x1
@@ -18,15 +34,18 @@
 
 #include"dbg.h"
 #include<asm_inline.h>
-
-void uprintf(const char* fmt, ...)
+static void uprintfstrcol_scr(unsigned char font, const char* fmt);
+void uprintf(const char* fmt)
 {
 	uprintfstrcol_scr(VGA_WHITE,fmt);
 }
-void uprintfstrcol_scr(unsigned char font, const char* fmt)
+
+static void uprintfstrcol_scr(unsigned char font, const char* fmt)
 {
-	asm volatile( "nop" :: "d" (font));
-	asm volatile( "nop" :: "b" ((unsigned long)fmt));
+	SET_ARG1(((unsigned long) fmt));
+#ifndef PIC
+	SET_ARG2(font);
+#endif
 	//asm volatile( "nop" :: "c" (sizeof("sghs")));
 	
 	SYSCALL(SYS_WRITE);
@@ -47,4 +66,8 @@ char * itoa(unsigned int n, unsigned int base)
 	while((n /= base) > 0);
 	new_str[15] = '\0';
 	return (char*)(new_str+(i+1));
-}
+}/*
+void hlib_printf(const char* fmt)
+{
+	uprintf(fmt);
+}*/

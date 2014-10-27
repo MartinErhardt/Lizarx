@@ -1,19 +1,18 @@
-/*   <src-path>/src/kernel/intr/syscall.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
- * 
- *   Copyright (C) 2013  martin.erhardt98@googlemail.com
+/*  <src-path>/src/kernel/intr/syscall.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/LICENSE for more info
+ *  Copyright (C) 2013, 2014  martin.erhardt98@googlemail.com
  *
- *  Lizarx is free software: you can redistribute it and/or modify
+ *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  Lizarx is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU LESSER General Public License
- *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include<cpu.h>
 #include<dbg/console.h>
@@ -31,28 +30,37 @@
 #include<mt/proc.h>
 #include<mt/sched.h>
 #include <intr/err.h>
-#include <mm/shm.h>
-#include <mt/msg.h>
+#include <ipc/shm.h>
+#include <ipc/msg.h>
 #include<local_apic.h>
-
+#include<ipc/sem.h>
+struct sys_msg
+{
+	int id;
+	void* ptr;
+	size_t size;
+};
+struct sys_semop
+{
+	int id;
+	struct sem_buf* sops;
+	size_t nsops;
+};
 struct cpu_state* handle_syscall(struct cpu_state* cpu)
 {
 	char* copybuf_ptr;
-	uint8_t font;
 	size_t bm_size;
 	vmm_context* curcontext;
+	struct sys_msg*args;
+	struct sys_semop* args_sem;
+	int ret=0;
 	if (err_ocurred)
 		cpu_halt();
 	switch(cpu->REG_FUNCRET)
 	{
-		case(SYS_DRAW):
-			
-			copybuf_ptr =(void*)cpu->REG_DATA1;
-			font = (uint8_t)cpu->REG_DATA0;
-			kprintfcol_scr((font>>4),font,copybuf_ptr);
-			
-		//	kprintf("virt_to_phys at 0x%x",virt_to_phys(get_cur_context(),cpu->rbp&0xfffff000));
-		//	kprintf("rbp at 0x%x",cpu->rbp);
+		case(SYS_DRAW)://FIXME REMOVE THIS
+			copybuf_ptr =(void*)cpu->REG_DATA0;
+			kprintf(copybuf_ptr);
 			break;
 		case(SYS_INFO): break;
 		case(SYS_GETTID):break;
@@ -66,29 +74,21 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 		case(SYS_ERROR):break;
 		case(SYS_GET_BOOTMOD):
 			bm_size= modules_glob[cpu->REG_DATA0].mod_end-modules_glob[cpu->REG_DATA0].mod_start;
-			
-			cpu->REG_FUNCRET=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
-			cpu->REG_DATA0=bm_size;
+			cpu->REG_DATA0=(uintptr_t)cpyout((void*) (uintptr_t)modules_glob[cpu->REG_DATA0].mod_start, bm_size);
+			cpu->REG_DATA1=bm_size;
 			break;
 		case(SYS_VMM_MALLOC):
 			curcontext=get_cur_context_glob();
 			cpu->REG_DATA0=(uintptr_t)uvmm_malloc(curcontext,cpu->REG_DATA0);
-			
 			break;
 		case(SYS_VMM_REALLOC):
-			
 			curcontext=get_cur_context_glob();
-			
 			if((vmm_realloc(curcontext,((void*)cpu->REG_DATA0),cpu->REG_DATA1,FLGCOMBAT_USER))<0)
 				kprintf("error reallocating");
 			break;
 		case(SYS_EXIT):
 			exit(get_cur_cpu()->current_thread->proc);
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
-			asm volatile("int $28"); //FIXME
-#endif
-			cpu = schedule(cpu);
-			
+			cpu =  schedule(cpu);
 			break;
 		case(SYS_SHMGET):
 			cpu->REG_DATA0 = shmget(0, cpu->REG_DATA0, 0);
@@ -100,28 +100,33 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			cpu->REG_DATA0 = msgget(0, 0);
 			break;
 		case(SYS_MSGSND):
-			cpu->REG_DATA0 = msgsnd(cpu->REG_DATA1>>16, (void*)cpu->REG_DATA0, cpu->REG_DATA1, 0);
+			args=(struct sys_msg*)cpu->REG_DATA0;//FIXME Do security tests
+			cpu->REG_DATA0 = msgsnd(args->id, args->ptr, args->size, 0);
 			break;
 		case(SYS_MSGRCV):
-			cpu->REG_DATA0 = msgrcv(cpu->REG_DATA1>>16, (void*)cpu->REG_DATA0, cpu->REG_DATA1, 0, 0);
-			//if(cpu->REG_DATA0)
-			//      kprintf("hi");
+			args=(struct sys_msg*)cpu->REG_DATA0;//FIXME Do security tests
+			cpu->REG_DATA0 = msgrcv(args->id, args->ptr, args->size, 0, 0);
 			break;
 		case(SYS_SLEEP):
-			//kprintf("sleep");
 			*(get_cur_cpu()->current_thread->state) = *cpu;
 			sleep(0);
-#if defined(ARCH_X86) || defined(ARCH_X86_64)
-			asm volatile("int $28");
-#endif
+			cpu = schedule(cpu);
 			break;
 		case(SYS_WAKEUP):
-			//kprintf("wakeup");
 			wakeup(cpu->REG_DATA0);
+			break;
+		case(SYS_SEMGET):
+			cpu->REG_DATA0=semget(0,cpu->REG_DATA0,0);
+			break;
+		case(SYS_SEMOP):
+			*(get_cur_cpu()->current_thread->state) = *cpu;
+			args_sem=(struct sys_semop*)cpu->REG_DATA0;//FIXME Do security tests
+			if((ret=semop(args_sem->id, args_sem->sops, args_sem->nsops))<0)
+				cpu=schedule(cpu);
+			else cpu->REG_DATA0=(uint_t)ret;
 			break;
 		default:break;
 	}
-	
 	return cpu;
 }
 #ifdef ARCH_X86_64

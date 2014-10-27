@@ -1,19 +1,18 @@
-/*   <src-path>/src/kernel/boot/init.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
- * 
- *   Copyright (C) 2013  martin.erhardt98@googlemail.com
+/*  <src-path>/src/kernel/boot/init.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/LICENSE for more info
+ *  Copyright (C) 2013, 2014  martin.erhardt98@googlemail.com
  *
- *  Lizarx is free software: you can redistribute it and/or modify
+ *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  Lizarx is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU LESSER General Public License
- *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <dbg/console.h>
 #include <idt.h>
@@ -40,7 +39,8 @@
 #include <libOS/list.h>
 #include <intr/err.h>
 #include <drv/hwtime/hwtime.h>
-
+#include <ipc/sem.h>
+#include <ipc/msg.h>
 uint32_t cores_booted			= 1; 
 
 /* / \
@@ -59,12 +59,16 @@ void init(struct multiboot_info * mb_info)
 	process_system_lock		= LOCK_FREE;
 	heap_lock			= LOCK_FREE;
 	invld_lock			= LOCK_FREE;
+	sem_atomic			= LOCK_FREE;
+	msq_lock			= LOCK_FREE;
 	err_ocurred 			= 0;
 	all_APs_booted			= LOCK_USED;
 	to_invalidate_first		= NULL;
 	//struct tm* time_is		= NULL;
-	memset(&proc_list, 0, sizeof(struct alist_st));
-	memset(&cpu_list, 0, sizeof(struct alist_st));
+	memset(&proc_list, 0, sizeof(alist_t));
+	memset(&cpu_list, 0, sizeof(alist_t));
+	memset(&sem_groups, 0, sizeof(alist_t));
+	memset(&msqid_list,0, sizeof(alist_t));
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob			= modules;
 	
@@ -98,12 +102,11 @@ void init(struct multiboot_info * mb_info)
 	}
 #endif
 	bsp_info.stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
-	
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
 		kprintf("FAILED No Programs found\n");
 	else
-		for(i=1;i<mb_info->mbs_mods_count;i++)// first boot mod is kernel itself
+		for(i=2;i<4;i++)// first boot mod is kernel itself
 			if(init_elf((void*) (uintptr_t)modules[i].mod_start))
 				kprintf("FAILED with mod: %d",i);
 	kprintf(" SUCCESS\n");
@@ -116,7 +119,7 @@ void init(struct multiboot_info * mb_info)
 	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-sizeof(struct cpu_state)-0x10;
 #endif
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
-	//that's for testing purposes
+	//kprintf("console at 0x%p", &console_lock);
 	/*time_is = get_time();
 	time_t timer = mktime(time_is);
 	kprintf("UNIX time is  %d \n",timer);
@@ -140,7 +143,7 @@ void AP_init()
 #ifdef ARCH_X86_64
 	asm volatile ("mov %rax, %rsp" );
 #endif
-	//memset((void*)stack, 0, STDRD_STACKSIZ);
+//	memset((void*)stack, 0, STDRD_STACKSIZ);
 	local_apic_init_AP();
 	cpu_caps(stack);
 	init_gdt_AP();

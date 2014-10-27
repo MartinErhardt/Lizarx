@@ -3,10 +3,9 @@ OBJS = $(addsuffix .o,$(basename $(SRCS)))
 
 ASFLAGS = 
 CFLAGS =  -Werror -Wall -fno-rtti -fno-exceptions 
-LD_FLAGS=$(LIBDIR)/crt0.o -lc
 tst1.elf: $(OBJS)
-	$(LD_CROSS) -o $@ $^ $(LD_FLAGS)
+	$(CPPC_CROSS) -o $@ $^ -L../hlib -lhelper 
 	rm $(OBJS)
 
 %.o: %.c
-	$(CPPC_CROSS) $(CFLAGS) -c -o $@ $^
+	$(CPPC_CROSS) $(CFLAGS) -I ../arch/$(ARCH2) -I ../hlib  -c -o $@ $^

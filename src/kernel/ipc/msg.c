@@ -1,32 +1,30 @@
-/*   <src-path>/src/kernel/mt/inc/msg.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
- * 
- *   Copyright (C) 2013  martin.erhardt98@googlemail.com
+/*  <src-path>/src/kernel/ipc/msg.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/LICENSE for more info
+ *  Copyright (C) 2013, 2014  martin.erhardt98@googlemail.com
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *   You should have received a copy of the GNU General Public License along
- *   with this program; if not, write to the Free Software Foundation, Inc.,
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include<stdint.h>
-#include<mt/msg.h>
+#include<ipc/msg.h>
 #include<libOS/list.h>
 #include<mm/vheap.h>
 #include<dbg/console.h>
-
+#include<ipc/ipc.h>
 int       msgctl(int msqid, int cmd, struct msqid_ds * buf)
 {
 	return -1;
 }
-uint_t       msgget(key_t key, int flag)
+int       msgget(key_t key, int flag)
 {
 	spinlock_ackquire(&msq_lock);
 	struct msqid_ds * buf 	= kmalloc(sizeof(struct msqid_ds));
@@ -36,7 +34,7 @@ uint_t       msgget(key_t key, int flag)
 	spinlock_release(&msq_lock);
 	return buf->id;
 }
-unsigned long   msgrcv(uint_t msqid, void * ptr, size_t size, long type, int flag)
+int   msgrcv(int msqid, void * ptr, size_t size, long type, int flag)
 {
 	spinlock_ackquire(&msq_lock);
 	struct msqid_ds * msqid_ = alist_get_by_entry(&msqid_list, 0,msqid);
@@ -58,7 +56,7 @@ unsigned long   msgrcv(uint_t msqid, void * ptr, size_t size, long type, int fla
 	spinlock_release(&msq_lock);
 	return 1;
 }
-int       msgsnd(uint_t msqid, const void * ptr, size_t size, int flag) // FIXME check if it is mapped
+int       msgsnd(int msqid, const void * ptr, size_t size, int flag) // FIXME check if it is mapped
 {
 	spinlock_ackquire(&msq_lock);
 	struct msqid_ds * msqid_ = alist_get_by_entry(&msqid_list, 0,msqid);
@@ -79,9 +77,7 @@ int       msgsnd(uint_t msqid, const void * ptr, size_t size, int flag) // FIXME
 		return 0;
 	}
 	while(*cur_msqid_msg)
-	{
 		cur_msqid_msg = (uint_t *) *cur_msqid_msg;
-	}
 	*cur_msqid_msg = (uintptr_t) message_block;
 	
 	spinlock_release(&msq_lock);

@@ -1,19 +1,18 @@
-/*   <src-path>/src/kernel/drv/vga-txt_graphics is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
- * 
- *   Copyright (C) 2013  martin.erhardt98@googlemail.com
+/*  <src-path>/src/kernel/vga-txt_graphics/vram.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/LICENSE for more info
+ *  Copyright (C) 2013, 2014  martin.erhardt98@googlemail.com
  *
- *  Lizarx is free software: you can redistribute it and/or modify
+ *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  Lizarx is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU LESSER General Public License
- *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdint.h>
 #include <string.h>
@@ -66,11 +65,6 @@ void kput(uint8_t chr, atrbyt font)
 	uint16_t* adr=0;
 	if((curx>=VIDEO_X)&&(cury<(VIDEO_Y-1)))// Test
 		newline();
-	if(chr =='\n')
-	{
-		newline();
-		return;
-	}
 	if((scr_enb==TRUE)&&(cury==VIDEO_Y )){
 		scroll(1);
 		cury--;
@@ -80,6 +74,11 @@ void kput(uint8_t chr, atrbyt font)
 	{
 		scroll(1);
 		curx=0;
+	}
+	if(chr =='\n')
+	{
+		newline();
+		return;
 	}
 	if(chr == '\t')
 	{
@@ -172,10 +171,15 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 {
 	const char* s;
 	uint_t n;
-	//const char a= 'a';
-	//const char b= 'b';
+	/*const char a= 'a';
+	const char b= 'b';
+	const char c= 'c';
+	const char d= 'd';
+	const char e= 'd';*/
 	kprintf_res = 0;
+	//OUTB(0x3f8, a);
 	spinlock_ackquire(&console_lock);
+	//OUTB(0x3f8, b);
 	//OUTB(0x3f8, a );
 	while (*fmt) {
 		// serial console(only QEMU)
@@ -206,22 +210,24 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 				case '\0':
 					goto out;
 				default:
+			//		OUTB(0x3f8, e);
 					kput('%',font);
 					kput(*fmt,font);
 					break;
 			}
 		} 
 		else 
-		{
 			kput(*fmt,font);
-		}
+		//OUTB(0x3f8, e);
 		fmt++;
 	}
 
 out:
 	va_end(appar);
-	drawcurs();
+	//drawcurs();
+	//OUTB(0x3f8, c);
 	spinlock_release(&console_lock);
+	//OUTB(0x3f8, d);
 	//OUTB(0x3f8, b );
 	return kprintf_res;
 }

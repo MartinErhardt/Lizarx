@@ -24,12 +24,12 @@ SRCS_OPTI = mm/vmm.c \
 	HAL/x86_common/smp_capabilities.c \
 	HAL/x86_common/cpuid.c \
 	lib/libOS/find.c \
-	lib/libOS/lock.c \
 	lib/libOS/list.c \
 	lib/libOS/mmio.c \
-	mm/shm.c \
-	mt/msg.c
-SRCS_UNOPTI = lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c mm/pmm.c
+	ipc/shm.c \
+	ipc/msg.c \
+	ipc/sem.c
+SRCS_UNOPTI = lib/libOS/lock.c lib/stdlib.c lib/string.c drv/vga-txt_graphics/vram.c mm/pmm.c
 
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
 OBJS_UNOPTI = $(addsuffix .o,$(basename $(SRCS_UNOPTI)))

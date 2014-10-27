@@ -1,4 +1,3 @@
-
 default 0
 #timeout 0
  
@@ -9,7 +8,8 @@ title lizarx86_64
 kernel /boot/LM_Loader    # Edit it to the filename of your kernel.
 
 module /boot/kernel
+module /boot/tmpfs.mod
 module /boot/vfs.mod
 module /boot/vfs_test.mod
-
+module /initrd.tar
 boot

@@ -7,7 +7,10 @@
 
 
 #include <sys/types.h>
-
+#ifdef _D_NAME_MAX
+#undefine _D_NAME_MAX
+#endif
+#define _D_NAME_MAX 255
 
 typedef struct dirent {
 	dev_t			d_dev;		/* device */
@@ -15,7 +18,7 @@ typedef struct dirent {
 	ino_t			d_ino;		/* inode number */
 	ino_t			d_pino;		/* parent inode (only for queries) */
 	unsigned short	d_reclen;	/* length of this record, not the name */
-	char			d_name[1];	/* name of the entry (null byte terminated) */
+	char			d_name[_D_NAME_MAX+1];	/* name of the entry (null byte terminated) */
 } dirent_t;
 
 /*struct __DIR {

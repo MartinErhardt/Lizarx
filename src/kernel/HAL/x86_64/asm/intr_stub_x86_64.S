@@ -1,4 +1,4 @@
-/*   <src-path>/src/kernel/HAL/x86/asm/intr_stub.S is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
+/*   <src-path>/src/kernel/HAL/x86_64/asm/intr_stub_x86_64.S is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/COPYRIGHT.txt for more info
  * 
  *   Copyright (C) 2013  martin.erhardt98@googlemail.com
  *
@@ -247,5 +247,5 @@ syscall_stub:
 	add $0x18, %rsp
 	
 	pop %rsp
-	sti
+	//sti
 	sysretq

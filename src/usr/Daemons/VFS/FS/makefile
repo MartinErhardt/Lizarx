@@ -1,3 +1,4 @@
 all: tmpfs
-tmpfs: $(MAKE) -C tmpFS
-
+tmpfs:
+	$(MAKE) -C tmpFS
+.PHONY: all tmpfs

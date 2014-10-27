@@ -1,0 +1,15 @@
+MULTILIB_OPTIONS = m64
+MULTILIB_DIRNAMES = 64
+MULTILIB_OSDIRNAMES = ../lib
+
+LIBGCC = stmp-multilib
+INSTALL_LIBGCC = install-multilib
+
+EXTRA_MULTILIB_PARTS=crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o 
+
+# Compile crtbeginS.o and crtendS.o with pic.
+CRTSTUFF_T_CFLAGS += -fPIC
+CRTSTUFF_T_CFLAGS_S = $(CRTSTUFF_T_CFLAGS) -fPIC
+
+# Compile libgcc2.a with pic.
+TARGET_LIBGCC2_CFLAGS = -fPIC

@@ -1,19 +1,18 @@
-/*   <src-path>/src/kernel/mt/threads.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv2 look at <src-path>/COPYRIGHT.txt for more info
- * 
- *   Copyright (C) 2013  martin.erhardt98@googlemail.com
+/*  <src-path>/src/kernel/mt/threads.c is a source file of Lizarx an unixoid Operating System, which is licensed under GPLv3 look at <src-path>/LICENSE for more info
+ *  Copyright (C) 2013, 2014  martin.erhardt98@googlemail.com
  *
- *  Lizarx is free software: you can redistribute it and/or modify
+ *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  Lizarx is distributed in the hope that it will be useful,
+ *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU LESSER General Public License
- *  along with Lizarx.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include<stdint.h>
 #include<mt/threads.h>
@@ -36,8 +35,8 @@ int32_t create_thread(void* entry, struct proc * in_proc)
 	
 	struct thread* new_t	= (struct thread*)kmalloc(sizeof(struct thread));
 	struct cpu_state * new_state	= (struct cpu_state*)kmalloc(sizeof(struct cpu_state));
-	uint8_t* user_stack	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ);
-	
+	uint8_t* user_stack	= uvmm_malloc(in_proc->context, STDRD_STACKSIZ+PAGE_SIZE);
+	make_guard_page(((uintptr_t)user_stack)+STDRD_STACKSIZ,in_proc->context);
 	if(in_proc==NULL)
 	{
 		kprintf("couldn't get pid");
@@ -131,15 +130,22 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 }
 void kill_thread(struct thread * to_kill, struct proc * in_proc)
 {
+
 	struct cpu_info * this_cpu = get_cur_cpu();
+
 	//spinlock_ackquire(&multi_threading_lock);
 	alist_remove(&this_cpu->thread_list, to_kill);
+
 	SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
+
 	this_cpu->current_thread = NULL;
+
 	this_cpu->current_thread_index = 0;
 	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
+
 	kfree(to_kill->state);
 	kfree(to_kill);
+
 	//spinlock_release(&multi_threading_lock);
 	
 }
@@ -167,7 +173,6 @@ void wakeup(uint_t t_id)
 	if(!this_thread)
 		return;
 	this_thread->exc_state = THREAD_ACTIVE;
-	
 	spinlock_release(&multi_threading_lock);
 }
 struct cpu_state* dispatch_thread(struct cpu_state* cpu)
@@ -217,11 +222,11 @@ retry:
 			
 			*this_cpu->current_thread->state = *cpu;
 			
-			do if(this_cpu->current_thread_index +1 < alist_get_entry_n(&this_cpu->thread_list))
+			do
+			{
 					this_cpu->current_thread_index ++;
-				else
-					this_cpu->current_thread_index = 0;
-			while(((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index))->exc_state ==THREAD_BLCKD);
+					this_cpu->current_thread_index %= alist_get_entry_n(&this_cpu->thread_list);
+			}while(((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index))->exc_state ==THREAD_BLCKD);
 			next_context = virt_to_phys(curcontext,(uintptr_t)(uintptr_t)((struct thread *)alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index))->proc->context->highest_paging);
 			this_cpu->current_thread = alist_get_by_index(&this_cpu->thread_list, this_cpu->current_thread_index);
 		}

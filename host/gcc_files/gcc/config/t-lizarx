@@ -1,0 +1,2 @@
+ 
+SHLIB_MAPFILES = $(srcdir)/libgcc-std.ver $(srcdir)/config/i386/libgcc-glibc.ver

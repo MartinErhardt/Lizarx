@@ -1,4 +1,3 @@
-
 .PHONY: all
 
 all: kernel LM_Loader clean
@@ -31,18 +30,19 @@ SRCS_OPTI = boot/init.c \
 	HAL/x86_common/local_apic.c \
 	HAL/x86_common/cpuid.c \
 	lib/libOS/find.c \
-	lib/libOS/lock.c \
 	lib/libOS/mmio.c \
-	drv/vga-txt_graphics/vram.c \
 	lib/libOS/list.c \
+	lib/libOS/lock.c \
 	lib/string.c \
-	mm/shm.c \
-	mt/msg.c
+	ipc/shm.c \
+	ipc/msg.c \
+	ipc/sem.c
 SRCS_UNOPTI = lib/stdlib.c \
 	mm/pmm.c \
 	mm/vmm.c \
 	HAL/x86_common/smp_capabilities.c \
-	HAL/x86_64/asm/trampoline.S
+	HAL/x86_64/asm/trampoline.S\
+	drv/vga-txt_graphics/vram.c 
 OBJS_OPTI = $(addsuffix .o,$(basename $(SRCS_OPTI)))
 OBJS_UNOPTI = $(addsuffix .o,$(basename $(SRCS_UNOPTI)))
 

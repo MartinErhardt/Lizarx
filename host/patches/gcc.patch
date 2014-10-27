@@ -1,14 +1,16 @@
 --- ./libgcc/config.orig.host	2014-07-24 17:03:10.995622048 +0200
 +++ ./libgcc/config.host	2014-07-25 16:32:10.787213984 +0200
-@@ -1207,6 +1207,12 @@ vax-*-netbsdelf*)
+@@ -1207,6 +1207,14 @@ vax-*-netbsdelf*)
  	;;
  vax-*-openbsd*)
  	;;
 +i[3-7]86-*-lizarx*)
-+	extra_parts="crtbegin.o crtend.o"
++	extra_parts="$extra_parts crtbegin.o crtbeginS.o crtbeginT.o crtend.o  crtendS.o"
 +	tmake_file="$tmake_file i386/t-crtstuff"
 +	;;
 +x86_64-*-lizarx*)
++	extra_parts="$extra_parts crtbegin.o crtbeginS.o crtbeginT.o crtend.o crtendS.o"
++	tmake_file="${tmake_file} t-crtstuff-pic t-libgcc-pic i386/t-crtpc i386/t-crtfm i386/t-crtstuff t-dfprules"
 +	;;
  xstormy16-*-elf)
  	tmake_file="stormy16/t-stormy16 t-fdpbit"
