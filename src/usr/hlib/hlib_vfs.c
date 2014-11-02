@@ -27,10 +27,11 @@
 #include"multiboot_modules.h"
 int my_queue;
 Sem* my_sem;
+#define FD_FREED 1
 #define FAIL_BADF {errno=EBADF; return -1;}
 #define CHECK_FD if(ids->alist_get_entry_n()<=fd) FAIL_BADF \
 	struct fs_idds * my_id;\
-	if ((my_id=ids->alist_get_by_index(fd))==(struct fs_idds*)5) FAIL_BADF
+	if ((my_id=ids->alist_get_by_index(fd))==(struct fs_idds*)FD_FREED) FAIL_BADF
 AList<struct fs_idds>* ids;
 void init_ipc()
 {
@@ -74,7 +75,7 @@ int hlib_open(const char*path ,int oflag)
 int hlib_close(int fd)
 {
 	CHECK_FD
-	ids->alist_set(fd, (struct fs_idds*)5);
+	ids->alist_set(fd, (struct fs_idds*)FD_FREED);
 	free(my_id);
 	//hlib_msgsnd(0,my_id->stat.name, sizeof(struct VFS_msg));
 	return 0;
