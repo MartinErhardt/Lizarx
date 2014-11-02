@@ -42,6 +42,7 @@ int hlib_open(const char*path ,int oflag)
 {
 	struct VFS_msg my_buf;
 	int ret[2];
+	size_t pathlen=strlen(path);
 	struct fs_idds * new_id = (struct fs_idds*)malloc(sizeof(struct fs_idds));
 	new_id->read_sem=new Sem();
 	new_id->write_sem=new Sem();
@@ -49,12 +50,13 @@ int hlib_open(const char*path ,int oflag)
 	new_id->read_sem->up();// initialize semaphore with 1
 	new_id->write_sem->up();// initialize semaphore with 1
 	my_buf.type=VFS_OPEN;
+	my_buf.pathlen=pathlen;
 	my_buf.message_queue_id=my_queue;
 	my_buf.read_sem=new_id->read_sem->sem_id;
 	my_buf.write_sem=new_id->write_sem->sem_id;
 	my_buf.sync_sem=my_sem->sem_id;
 	my_buf.pid=get_pid_hlib();
-	strcpy((char*)&(my_buf.path),path);
+	hlib_msgsnd(my_queue,(void*)path, pathlen);
 	hlib_msgsnd(0,&my_buf, sizeof(struct VFS_msg));
 	my_sem->down();
 	hlib_msgrcv(my_queue, &ret,sizeof(int)*2);

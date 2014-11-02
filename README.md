@@ -8,13 +8,12 @@ The OS will also use dynamic linked shared objects to minimize Overhead between 
 
 ### Usage
 
+```
 ./build.sh # builds Lizarx with toolchain(use this, when building the first time)
-
 ./build.sh --no-toolchain # builds Lizarx without toolchain(use this, when you made small changes outside the toolchain )
-
 ./build.sh --arch-x86_64 # builds Lizarx with toolchain for x86_64 target(use this, when building the first time)
-
 ./build.sh --no-toolchain --arch-x86_64 # builds Lizarx without toolchain for x86_64 target(use this, when you made small changes outside the toolchain )
+```
 
 ### Features
 

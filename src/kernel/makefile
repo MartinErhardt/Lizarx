@@ -9,7 +9,6 @@ ASFLAGS =  -nostdinc -ffreestanding -I inc/HAL/x86_64 -I inc/HAL/x86_common
 CFLAGS = -Wall -Werror -fno-stack-protector -fno-builtin -nostdinc -ffreestanding -I inc -I lib -I inc/HAL/x86_64 -I inc/HAL/x86_common -DARCH_X86_64=x86_64 -DARCH=x86_64
 C64FLAGS = -mno-red-zone  -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow
 SRCS_OPTI = boot/init.c \
-	mm/vheap.c \
 	mt/elf.c \
 	mt/sched.c \
 	mt/proc.c \
@@ -39,6 +38,7 @@ SRCS_OPTI = boot/init.c \
 	ipc/sem.c
 SRCS_UNOPTI = lib/stdlib.c \
 	mm/pmm.c \
+	mm/vheap.c \
 	mm/vmm.c \
 	HAL/x86_common/smp_capabilities.c \
 	HAL/x86_64/asm/trampoline.S\

@@ -43,6 +43,8 @@ int   semop(int id, struct sem_buf * sops, size_t nsops)
 	//FIXME Do security checks here
 	int i,j;
 	uint_t tid;
+	if(id <0) 
+		return -1;
 	spinlock_ackquire(&sem_atomic);
 	struct sem_group* my_group=alist_get_by_index(&sem_groups,id);
 	for(i=0;i<nsops;i++)

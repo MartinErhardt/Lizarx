@@ -1,9 +1,6 @@
 # don't version backups
 *.bak
-*.swn
-*.swo
-*.swp
-*.swm
+*.sw[hmnopw]
 *.kate-swp
 
 *.directory

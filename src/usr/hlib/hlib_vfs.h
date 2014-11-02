@@ -30,7 +30,7 @@ struct VFS_msg
 	int seq;
 	size_t fur_size;
 	off_t off;
-	char path[256];
+	size_t pathlen;
 };
 struct file_header
 {

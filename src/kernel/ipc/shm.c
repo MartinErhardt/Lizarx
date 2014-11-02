@@ -39,13 +39,13 @@ int shmget(key_t key, size_t size, int shmflg)
 	buf->virt_in_kernel 	= 0;
 	buf->size 		= size;
 	spinlock_release(&shm_lock);
-	
+
 	return buf->id;
 }
 void *shmat(int shmid, const void *shmaddr, int shmflg)
 {
 	spinlock_release(&shm_lock);
-	struct shmid_ds * id = alist_get_by_entry(&shmid_list, 0,shmid);
+	struct shmid_ds * id = alist_get_by_entry_s(&shmid_list, 0,shmid);
 	if(!id)
 		return NULL;
 	if(!id->virt_in_kernel)

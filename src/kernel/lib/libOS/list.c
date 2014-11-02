@@ -70,6 +70,17 @@ void * alist_get_by_entry(alist_t * list, uint_t off, uint_t val)
 	} while(list);
 	return NULL;
 }
+void * alist_get_by_entry_s(alist_t * list, uint_t off, int val)
+{
+	int i;
+	do{
+		for(i=0;i<ENTRYS_PER_ARRAY;i++)
+			if(list->pointer[i] && *((int*)(((uintptr_t)list->pointer[i])+off)) == val)
+				return list->pointer[i];
+		list = list->next;
+	} while(list);
+	return NULL;
+}
 void alist_add(alist_t * list, void * to_add)
 {
 	int i;

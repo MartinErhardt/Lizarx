@@ -41,6 +41,7 @@
 #include <drv/hwtime/hwtime.h>
 #include <ipc/sem.h>
 #include <ipc/msg.h>
+#include <ipc/shm.h>
 uint32_t cores_booted			= 1; 
 
 /* / \
@@ -69,6 +70,7 @@ void init(struct multiboot_info * mb_info)
 	memset(&cpu_list, 0, sizeof(alist_t));
 	memset(&sem_groups, 0, sizeof(alist_t));
 	memset(&msqid_list,0, sizeof(alist_t));
+	memset(&shmid_list,0, sizeof(alist_t));
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	modules_glob			= modules;
 	

@@ -37,7 +37,8 @@ int       msgget(key_t key, int flag)
 int   msgrcv(int msqid, void * ptr, size_t size, long type, int flag)
 {
 	spinlock_ackquire(&msq_lock);
-	struct msqid_ds * msqid_ = alist_get_by_entry(&msqid_list, 0,msqid);
+
+	struct msqid_ds * msqid_ = alist_get_by_entry_s(&msqid_list, 0,msqid);
 	if(!msqid_)
 	{
 		spinlock_release(&msq_lock);
@@ -46,11 +47,12 @@ int   msgrcv(int msqid, void * ptr, size_t size, long type, int flag)
 	
 	uint_t* message_block = msqid_->first_message;
 	if(size > *(message_block+1))
-	{
+	{	
 		spinlock_release(&msq_lock);
 		return 0;
 	}
 	memcpy(ptr, (void *)(message_block+2), size);
+
 	msqid_->first_message = (uint_t *) (*message_block);
 	kfree((void*)message_block);
 	spinlock_release(&msq_lock);
@@ -59,7 +61,7 @@ int   msgrcv(int msqid, void * ptr, size_t size, long type, int flag)
 int       msgsnd(int msqid, const void * ptr, size_t size, int flag) // FIXME check if it is mapped
 {
 	spinlock_ackquire(&msq_lock);
-	struct msqid_ds * msqid_ = alist_get_by_entry(&msqid_list, 0,msqid);
+	struct msqid_ds * msqid_ = alist_get_by_entry_s(&msqid_list, 0,msqid);
 	if(!msqid_)
 	{
 		spinlock_release(&msq_lock);
@@ -79,7 +81,6 @@ int       msgsnd(int msqid, const void * ptr, size_t size, int flag) // FIXME ch
 	while(*cur_msqid_msg)
 		cur_msqid_msg = (uint_t *) *cur_msqid_msg;
 	*cur_msqid_msg = (uintptr_t) message_block;
-	
 	spinlock_release(&msq_lock);
 	return 0;
 }

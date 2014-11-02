@@ -33,7 +33,7 @@ struct heap_block
 	size_t size;
 };
 //BUG If HEAP_INIT_SIZE = PAGE_SIZE
-#define HEAP_INIT_SIZE PAGE_SIZE*5
+#define HEAP_INIT_SIZE PAGE_SIZE*2
 void vheap_init()
 {
 	kprintf("[VHEAP] I: vheap_init ... ");
@@ -60,18 +60,15 @@ retry:
 			
 			if(cur->size-size>sizeof(struct heap_block))
 			{
-				
 				struct heap_block * free=(struct heap_block *)( ((uintptr_t)cur) + ( cur->size-(size+sizeof(struct heap_block)) ) );
-				
 				free->free = 0;
 				free->next = first;
 				free->size = size+sizeof(struct heap_block);
 				
 				first      = free;
-				
 				cur->size -= (size+sizeof(struct heap_block));
 				spinlock_release(&heap_lock);
-				
+
 				return (void*)(((uintptr_t)free)+sizeof(struct heap_block));
 			} 
 			else
@@ -83,10 +80,7 @@ retry:
 			
 		}
 		else
-		{
-			
 			cur = cur->next;
-		}
 	}
 	kprintf("[VHEAP]  E: kmalloc cannnot find free_space \n");
 	vheap_enlarge(PAGE_SIZE);
@@ -104,17 +98,15 @@ void kfree(void* ptr)
 {
 	spinlock_ackquire(&heap_lock);
 	struct heap_block* cur =first;
-	while(cur!=NULL)
+	while(cur)
 	{
-		//kprintf("cur at0x%p",&cur);	
-		if( (uintptr_t)cur+sizeof(struct heap_block)==(uintptr_t)ptr && !cur->free )
+		if( (void*)(cur+1)==ptr && !cur->free )
 		{
 			cur->free = 1;
 			spinlock_release(&heap_lock);
 			return;
 		}
-		else
-			cur=cur->next;
+		cur=cur->next;
 	}
 	spinlock_release(&heap_lock);
 	return;

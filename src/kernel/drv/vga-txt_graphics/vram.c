@@ -171,6 +171,7 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 {
 	const char* s;
 	uint_t n;
+	uint_t *  p;
 	/*const char a= 'a';
 	const char b= 'b';
 	const char c= 'c';
@@ -201,8 +202,8 @@ unsigned int kprintfstrcol_scr(atrbyt font, const char* fmt, va_list appar)
 					break;
 				case 'x':
 				case 'p':
-					n = va_arg(appar, uint_t);
-					kprintn_scr(n, 16,font);
+					p = va_arg(appar, uint_t*);
+					kprintn_scr((unsigned long)p, 16,font);
 					break;
 				case '%':
 					kput('%',font);

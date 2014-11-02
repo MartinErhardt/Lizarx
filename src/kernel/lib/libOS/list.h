@@ -34,6 +34,7 @@ void * alist_get_by_index(alist_t * list, uint_t index);
 int_t alist_get_index(alist_t * list, void * entry);
 void * alist_get_by_entry8(alist_t * list, uint_t off, uint8_t val);
 void * alist_get_by_entry(alist_t * list, uint_t off, uint_t val);
+void * alist_get_by_entry_s(alist_t * list, uint_t off, int val);
 void alist_add(alist_t * list, void * entry);
 int alist_remove(alist_t * list, void * entry);
 uint_t alist_get_entry_n(alist_t * list);

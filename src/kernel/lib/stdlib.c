@@ -22,22 +22,18 @@
  **/
 char * itoa(unsigned long n, unsigned int base)
 {
-	static char new_str[16];
-	unsigned int i = 14;
+	static char new_str[17];
+	unsigned int i = 15;
 	
 	do
 	{
 		unsigned int cur_digit = n % base;
 		if (cur_digit < 10)
-		{
 			new_str[i--] = cur_digit + '0';
-		}
 		else
-		{
 			new_str[i--] = (cur_digit - 10) + 'a';
-		}
 	}
 	while((n /= base) > 0);
-	new_str[15] = '\0';
+	new_str[16] = '\0';
 	return (char*)(new_str+(i+1));
 }

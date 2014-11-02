@@ -71,31 +71,48 @@ void VFS::init()
 //	uprintf("\n");
 //	uprintf(license_txt);
 }
+//etc/third_level/hostname
 void VFS::loop()
 {
 	uprintf("[VFS] I: init VFS ...");
 	int id = hlib_msgget();
 	int i;
+	char*path;
 	uprintf("SUCCESS\n");
 	struct open_file_info* new_open=NULL;
 	struct stat* to_open;
 	struct file_header my_header;
 	int reply[2];
 	hlib_wakeup(2);
+	int tries;
 	unsigned long*io_buf=NULL;
 	while(1)
 		if(hlib_msgrcv(id, &buf, sizeof(struct VFS_msg)))
+		{
+			path = (char*)malloc(buf.pathlen);
+			*path='\0';
+			do hlib_msgrcv(buf.message_queue_id, path, buf.pathlen);
+			while(!*path && (tries++)<10);
+			//TODO CHECK WITH msync here!
+			if(path[buf.pathlen])
+			{
+				uprintf("path not null terminated");
+				continue;
+			}
 			switch(buf.type)
 			{
 				case(VFS_OPEN):
-					uprintf("VFS OPEN!");
+					uprintf("VFS OPEN! path");
+					uprintf(path);
+					uprintf(itoa(buf.pathlen,10));
 					vfs_err=0;
 					for(i=0;i<open_files->alist_get_entry_n();i++)
-						if(!strcmp(open_files->alist_get_by_index(i)->path, buf.path))
+						if(!strcmp(open_files->alist_get_by_index(i)->path, path))
 							new_open=open_files->alist_get_by_index(i);
 					if(!new_open)// in any other cases the file has been opened and is allready in open_files
 					{
-						to_open = open((const char*)buf.path);
+						to_open = open((const char*)path);
+
 						if(!to_open)
 							goto fin;
 						new_open=(struct open_file_info*)malloc(to_open->st_size);
@@ -109,7 +126,7 @@ void VFS::loop()
 						my_header.read_sem=buf.read_sem;
 						my_header.write_sem=buf.write_sem;
 						*((struct file_header*)((unsigned long)new_open->addr))=my_header;
-						pread(buf.path, (char*)(((unsigned long)new_open->addr)+sizeof(struct file_header)),to_open->st_size, 0);
+						pread(path, (char*)(((unsigned long)new_open->addr)+sizeof(struct file_header)),to_open->st_size, 0);
 						reply[0] = new_open->shmid;
 						reply[1]= 0;
 					}
@@ -132,7 +149,7 @@ fin:
 				case(VFS_WRITE):
 					io_buf=(unsigned long*)malloc(buf.fur_size);
 					hlib_msgrcv(buf.message_queue_id, io_buf,buf.fur_size);
-					pwrite(buf.path,(char*)io_buf,buf.fur_size,buf.off);//FIXME Buffer overflow
+					pwrite(path,(char*)io_buf,buf.fur_size,buf.off);//FIXME Buffer overflow
 					hlib_wakeup(buf.pid);
 					free(io_buf);
 					break;
@@ -140,12 +157,15 @@ fin:
 					uprintf("VFS read size: 0x");
 					uprintf(itoa(buf.fur_size,16));
 					io_buf=(unsigned long*)malloc(buf.fur_size);
-					pread(buf.path, (char*)io_buf,buf.fur_size, buf.off);// FIXME Buffer overflow	
+					pread(path, (char*)io_buf,buf.fur_size, buf.off);// FIXME Buffer overflow	
 					hlib_msgsnd(buf.message_queue_id,io_buf,buf.fur_size);
 					hlib_wakeup(buf.pid);
 					free(io_buf);
 				default: break;
 			}
+			//free(path);
+			while(1);
+		}
 }
 FS * VFS::get_FS_by_type(const char * type)
 {
