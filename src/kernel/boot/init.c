@@ -42,6 +42,7 @@
 #include <ipc/sem.h>
 #include <ipc/msg.h>
 #include <ipc/shm.h>
+#include <hw_structs.h>
 uint32_t cores_booted			= 1; 
 
 /* / \
@@ -65,7 +66,6 @@ void init(struct multiboot_info * mb_info)
 	err_ocurred 			= 0;
 	all_APs_booted			= LOCK_USED;
 	to_invalidate_first		= NULL;
-	//struct tm* time_is		= NULL;
 	memset(&proc_list, 0, sizeof(alist_t));
 	memset(&cpu_list, 0, sizeof(alist_t));
 	memset(&sem_groups, 0, sizeof(alist_t));
@@ -82,11 +82,14 @@ void init(struct multiboot_info * mb_info)
 	setcurs(23,1);
 	kprintf("... SUCCESS\n");
 #endif
-	kprintf("[INIT] I: init started\n");
 	
+	kprintf("[INIT] I: init started\n");
+
+	pmm_init_mmap(mb_info);
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();
+
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	
@@ -103,6 +106,7 @@ void init(struct multiboot_info * mb_info)
 			startup_APs();
 	}
 #endif
+
 	bsp_info.stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
@@ -163,7 +167,6 @@ void AP_init()
 		spinlock_release(&all_APs_booted);
 	else
 		spinlock_release(((lock_t *)TRAMPOLINE_LOCK));
-	
 	ENABLE_INTR
 	
 	while(1);

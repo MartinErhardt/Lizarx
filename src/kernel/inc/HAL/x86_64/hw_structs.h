@@ -18,7 +18,9 @@
 #define X86_HW_STRUCTS_H
 
 #include<mm/pmm.h>
-
+//uintptr_t trampoline;
+uintptr_t easy_map_tbl;
+uintptr_t bsp_stack;
 struct tss_t
 {
     uint32_t reserved;

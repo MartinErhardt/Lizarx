@@ -41,13 +41,18 @@
 #define MSR_LSTAR		0xc0000082
 #define MSR_EFER		0xC0000080
 //-------------------------------------------------------------------------memory-map--------------------------------------------------------------
-#define GDT_X86_64			0x114000
-#define INIT_PAGE_TBL_ADDR		0x113000
-#define INIT_PAGEDIR_TBL_ADDR		0x112000
-#define INIT_PAGEDIRPTR_TBL_ADDR	0x111000
-#define INIT_PAGEMAPLEVEL4_TBL_ADDR	0x110000
-#define BSP_STACK 			0x105000-STDRD_STACKSIZ
-#define TRAMPOLINE 			0x007000
+//#define INIT_PAGE_TBL_ADDR		0x113000
+//#define INIT_PAGEDIR_TBL_ADDR		0x112000
+//#define INIT_PAGEDIRPTR_TBL_ADDR	0x111000
+//#define INIT_PAGEMAPLEVEL4_TBL_ADDR	0x110000
+//#define BSP_STACK 			0x105000-STDRD_STACKSIZ
+//uintptr_t static_data;
+//#define BSP_STACK_ static_data;
+//#define INIT_PAGE_TBL_ADDR 0x113000
+//#define INIT_PAGEDIR_TBL_ADDR INIT_PAGE_TBL_ADDR-0x1000
+//#define INIT_PAGEDIRPTR_TBL_ADDR INIT_PAGEDIR_TBL_ADDR-0x1000
+//#define INIT_PAGEMAPLEVEL4_TBL_ADDR INIT_PAGEDIRPTR_TBL_ADDR-0x1000
+#define TRAMPOLINE 			0x8000
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
 #define IDT_SIZE		256

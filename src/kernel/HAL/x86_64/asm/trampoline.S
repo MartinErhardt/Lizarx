@@ -25,8 +25,8 @@
 #define TRAMPOLINE_LMODE_SIZE		0x50
 
 // WARNING compare to src/kernel/inc/HAL/x86_64/macros.h
-
-#define TRAMPOLINE			0x7000 
+.extern trampoline
+#define TRAMPOLINE			0x8000
 #define TRAMPOLINE_GDT			TRAMPOLINE+TRAMPOLINE_ENTRY_FUNC_SIZE
 #define TRAMPOLINE_GDTR			TRAMPOLINE_GDT+TRAMPOLINE_GDT_SIZE
 #define TRAMPOLINE_GDT64		TRAMPOLINE_GDTR+TRAMPOLINE_GDTR_SIZE
@@ -43,7 +43,7 @@
 .global trampoline_entry_func
 trampoline_entry_func:
 	cli
-	mov $0x7f00, %ax
+	mov $(TRAMPOLINE+0xf00), %ax
 	mov %ax, %sp
 	
 	call vesa_setup

@@ -36,8 +36,11 @@ void init_LM(struct multiboot_info * mb_info)
 	init_gdt();
 	kprintf("[LM_loader] I: init_LM ...");
 	load_kernel((struct elf_header*)(modules[0].mod_start));
+	pmm_init_mmap(mb_info);
 	init_easymap();
-	asm volatile("nop":: "a"(BSP_STACK+STDRD_STACKSIZ-0x10));
+	asm volatile("nop" :: "c" (easy_map_tbl));
+	asm volatile("mov %%eax, %%edi" : : "a" ((uint32_t)mb_info));
+	asm volatile("nop":: "a"(bsp_stack+STDRD_STACKSIZ-0x10));
 	asm volatile("mov %eax , %esp;");
 	asm volatile
 	(
@@ -74,7 +77,7 @@ void init_LM(struct multiboot_info * mb_info)
 		/* 
 		 * load Pagemap level4 address into cr3 so that we can problemless enable Paging later 
 		 */
-		"mov $0x110000, %eax;"
+		"mov %ecx, %eax;"
 		"mov %eax, %cr3;"
 		/*
 		 * here EFER.NXE was set, if I outcommented it.
@@ -87,6 +90,7 @@ void init_LM(struct multiboot_info * mb_info)
 		"or $0x00000001, %eax ;"
 		"wrmsr ;"
 		*/
+
 		
 		/*
 		 * Here we actually enable Long mode in the MSR(Machine specific Register) 
@@ -94,15 +98,14 @@ void init_LM(struct multiboot_info * mb_info)
 		"mov $0xC0000080, %ecx ;"
 		"rdmsr ;"
 		"or $0x00000100, %eax ;"
-		"wrmsr ;");
-	asm volatile("mov %%eax, %%edi" : : "a" ((uint32_t)mb_info));
-	asm volatile(
+		"wrmsr ;"
 		/*
 		 * now we are going to enable Paging(from now on we are in Long mode)
 		 */
 		"mov %cr0, %eax;"
 		"or $0x80000000, %eax ;"
 		"mov %eax, %cr0;"
+
 		/* 
 		 * But we need to jump inside a Long mode code segment to start executing AMD64 code
 		 */

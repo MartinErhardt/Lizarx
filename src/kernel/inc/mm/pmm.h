@@ -24,9 +24,9 @@
 
 lock_t pmm_lock;
 
+void pmm_init_mmap(struct multiboot_info * mb_info);
 void pmm_init(struct multiboot_info* mb_info);
-uint_t pmm_malloc_4k(void);
-uint_t pmm_malloc(uint_t pages);
+uint_t pmm_malloc_4k();
 bool pmm_realloc(uint_t index, uint_t pages);
 
 void pmm_free(uint_t page, uint_t n);

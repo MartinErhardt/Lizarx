@@ -13,7 +13,7 @@ then
 fi
 if [ "$1" == "--dbg" ]
 then
-	( $QEMU -cdrom $ISO -smp 2 -cpu core2duo -s -S ../harddrive.img)&gdb64
+	( $QEMU -cdrom $ISO -smp 2 -cpu core2duo -s -S ../harddrive.img)&gdb
 else
 	$QEMU -cdrom $ISO -smp 4 -d int #-curses
 fi

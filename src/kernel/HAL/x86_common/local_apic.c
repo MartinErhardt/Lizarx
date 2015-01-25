@@ -22,6 +22,7 @@
 #include <mm/vmm.h>
 #include <boot/init.h>
 #include <macros.h>
+#include <hw_structs.h>
 #include <asm_inline.h>
 #include <libOS/mmio.h>
 #include <libOS/lock.h>

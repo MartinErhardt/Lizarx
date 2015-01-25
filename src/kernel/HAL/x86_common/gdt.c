@@ -37,7 +37,11 @@
 struct gdt_entry gdtable[GDT_SIZE];//gdt entries
 #endif
 #ifdef ARCH_X86_64
-struct gdt_entry * gdtable=(struct gdt_entry *)GDT_X86_64;
+#ifndef LOADER
+struct gdt_entry gdtable[GDT_SIZE+2];
+#else
+struct gdt_entry * gdtable=(struct gdt_entry *)GDTABLE;
+#endif
 #endif
 
 void gdt_set_entry(struct gdt_entry * gdttable_tofill,uint8_t i,uint32_t limit,uint32_t base,uint8_t accessbyte,uint8_t flags) // fill in an entry in the gdttable
@@ -65,6 +69,7 @@ void init_gdt(void)
 	};
 	kprintf("[GDT] I: init_gdt...");
 	memset(&tss,0x00000000, sizeof(struct tss_t));
+	memset(gdtable, 0x0, gdtp.limit+1);
 	// We are going to fill in the structs in gdtable
 	gdt_set_entry(gdtable,0, 0, 0, 0,0);
 	gdt_set_entry(gdtable,KERNEL_CODE_SEG_N, 0xfffff,0, GDT_ACCESS_SEGMENT |GDT_ACCESS_CODESEG | GDT_ACCESS_PRESENT,GDT_FLAG_32_BIT | GDT_FLAG_4KUNIT);	// kernel code seg

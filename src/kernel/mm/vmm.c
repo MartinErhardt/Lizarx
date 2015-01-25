@@ -97,9 +97,7 @@ vmm_context vmm_init(void)
 	startup_context = vmm_crcontext();
 
 	SET_CONTEXT((uintptr_t)startup_context.highest_paging)
-
 	ENABLE_PAGING
-
 	paging_activated=TRUE;
 	kprintf("SUCCESS\n");
 	return startup_context;
@@ -131,7 +129,6 @@ vmm_context vmm_crcontext()
 
 	memset((void*)new_context.mm_tree,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
 	memset((void*)new_context.highest_paging,0x00000000,PAGE_SIZE);// clear the PgDIR to avoid invalid values
-
 	/*
 	 * I loop through the paging hierarchy. This is possible, because in X86_64 a page map level 4 entry is similar to a pagedirectorypointertable entry, a pagedirectorytable entry and a pagletable entry.
 	 * In X86 a paging directory table entry is similar to a pagetable entry.
