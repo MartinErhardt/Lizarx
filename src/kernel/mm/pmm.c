@@ -35,13 +35,12 @@
 #define PMM_USED 0
 #define PMM_FREE 1
 
-#define PMM_STACK_SIZE 1000
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
-#define EASYMAPTBL_SIZ 0x4000
+#define EASYMAPTBL_SIZ (0x1000 *515)
 #define ALIGNED_BASE(BASE) BASE % 0x1000 ? ( BASE +0x1000- BASE %0x1000) : BASE
-
-uint_t pmm_stack[0x200000];
-uint_t * pmm_stack_ptr = &pmm_stack[0];
+#define STACKSIZE 0xFFFFF*2
+uint_t pmm_stack[STACKSIZE];
+uint_t * pmm_stack_ptr = NULL;
 #ifndef LOADER
 static uint32_t physbitmap[BITMAP_SIZE];
 extern const void kernel_start;
@@ -61,17 +60,17 @@ void pmm_init_mmap(struct multiboot_info * mb_info)
                 if (mmap->type == 1)
                 {
 #ifdef LOADER
-                        if( mmap->base <0x1000)
+                        if( mmap->base <0x200000)
 			{
-				if (mmap->base+mmap->length<=0x1000)
+				if (mmap->base+mmap->length<=0x200000)
 				{
 					mmap->type=0;
 					continue;
 				}
 				else
 				{
-					mmap->length= mmap->base+mmap->length-0x1000;
-					mmap->base=0x1000;
+					mmap->length= mmap->base+mmap->length-0x200000;
+					mmap->base=0x200000;
 				}
 			}
 #endif
@@ -87,12 +86,13 @@ void pmm_init_mmap(struct multiboot_info * mb_info)
 				}
                         }*/
 #ifdef ARCH_X86_64
-			if( ((mmap->base+mmap->length)&0xfffff000)-(ALIGNED_BASE(mmap->base))>=EASYMAPTBL_SIZ+STDRD_STACKSIZ && !easy_map_tbl)
+			if( ((mmap->base+mmap->length)&0xfffff000)-(ALIGNED_BASE(mmap->base))>=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000 && !easy_map_tbl)
 			{
 				easy_map_tbl=mmap->base&0xfffff000;
 				bsp_stack=easy_map_tbl+EASYMAPTBL_SIZ;
+				pmm_stack_ptr=((uint_t*)(easy_map_tbl+EASYMAPTBL_SIZ+STDRD_STACKSIZ));
 #ifndef LOADER
-				mmap->base+=EASYMAPTBL_SIZ+STDRD_STACKSIZ;
+				mmap->base+=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000;
 				mmap->base= ALIGNED_BASE(mmap->base);
 #endif
                         }
@@ -109,11 +109,11 @@ void pmm_init(struct multiboot_info * mb_info)
 	struct multiboot_mmap* mmap_end = (void*)
 	    ((uintptr_t) (mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length));
 	uintptr_t end_addr;
+	uint_t * pmm_stack_ptr_init=pmm_stack_ptr;
 	int i;
 	kprintf("[PMM] I: pmm_init ... ");
 	/* by default everything is free */
 	memset(&physbitmap, 0xffffffff, sizeof(physbitmap));
-	pmm_stack_ptr = &pmm_stack[PMM_STACK_SIZE];
 	/*
 	* Here we look in the memory map for free space
 	*/
@@ -151,17 +151,10 @@ void pmm_init(struct multiboot_info * mb_info)
 	for (i = 0; i<DIV_PAGE_SIZE(STDRD_STACKSIZ); i++)
 		pmm_mark_used( DIV_PAGE_SIZE(bsp_stack) +i);		  // That's our Stack which is still the MB Loader
 	//pmm_mark_used(DIV_PAGE_SIZE(trampoline));
-	pmm_mark_used(DIV_PAGE_SIZE(easy_map_tbl));
-	pmm_mark_used(DIV_PAGE_SIZE(easy_map_tbl)+1);
-#ifdef ARCH_X86_64
-	pmm_mark_used(DIV_PAGE_SIZE(easy_map_tbl)+2);
-	pmm_mark_used(DIV_PAGE_SIZE(easy_map_tbl)+3);
-#endif
 	pmm_mark_used(0xb8);
-	pmm_mark_used(0xf0);
+	for(i=0;i<0xf;i++)
+		pmm_mark_used(0xf0+i);
 	addr=0;
-	i=0;
-	pmm_stack_ptr = &pmm_stack[0];
 
 	while (mmap < mmap_end) 
 	{
@@ -173,21 +166,25 @@ void pmm_init(struct multiboot_info * mb_info)
 			 */
 			addr = ALIGNED_BASE(mmap->base);
 			end_addr = addr +( mmap->length & 0xfffff000);
+			//kprintf("addr: 0x%x", addr);
+			//kprintf("endaddr: 0x%x", end_addr);
+			//for(i=0;i<0x1fffff;i++);
 			while(addr<end_addr)
 			{
+				//kprintf("bmpend:0x%x", (uintptr_t)&physbitmap[BITMAP_SIZE-1]);
+				//kprintf("current:0x%x", (uintptr_t)&physbitmap[(addr/0x1000) /32]);
 				if(physbitmap[(addr/0x1000) /32] & (1<<((addr/0x1000) % 32)))
 				{
-					i++;
-					*pmm_stack_ptr=addr;
-					pmm_stack_ptr++;
+					*pmm_stack_ptr_init=addr;
+					pmm_stack_ptr_init++;
 				}
 				addr+=0x1000;
 			}
-
+			//kprintf("fin");
+			//for(i=0;i<0x1fffff;i++);
 		}
 		mmap++;
 	}
-	pmm_stack_ptr = &pmm_stack[0];
 	kprintf("SUCCESS\n");
 }
 

@@ -20,6 +20,6 @@
 #include<stdint.h>
 
 void init_easymap();
-void easymap(uint32_t ptr);
+
 
 #endif

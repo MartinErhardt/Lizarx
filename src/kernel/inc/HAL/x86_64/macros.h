@@ -52,7 +52,7 @@
 //#define INIT_PAGEDIR_TBL_ADDR INIT_PAGE_TBL_ADDR-0x1000
 //#define INIT_PAGEDIRPTR_TBL_ADDR INIT_PAGEDIR_TBL_ADDR-0x1000
 //#define INIT_PAGEMAPLEVEL4_TBL_ADDR INIT_PAGEDIRPTR_TBL_ADDR-0x1000
-#define TRAMPOLINE 			0x8000
+#define TRAMPOLINE 			0x7000
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
 #define IDT_SIZE		256
