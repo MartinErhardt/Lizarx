@@ -86,6 +86,7 @@ void init(struct multiboot_info * mb_info)
 	kprintf("[INIT] I: init started\n");
 
 	pmm_init_mmap(mb_info);
+
 	pmm_init(mb_info);
 	vmm_init();
 	vheap_init();

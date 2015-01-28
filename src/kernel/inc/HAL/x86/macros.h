@@ -25,6 +25,7 @@
 1	 0x2	 Long Mode bit
 0	 0x1	 Available Bit
 */
+#define EASYMAPTBL_SIZ 0
 #define GDT_FLAG_32_BIT  0x4
 
 #define KERNEL_CODE_SEG_N	1

@@ -38,6 +38,7 @@ void init_LM(struct multiboot_info * mb_info)
 	load_kernel((struct elf_header*)(modules[0].mod_start));
 	pmm_init_mmap(mb_info);
 	init_easymap();
+
 	asm volatile("nop" :: "c" (easy_map_tbl));
 	asm volatile("mov %%eax, %%edi" : : "a" ((uint32_t)mb_info));
 	asm volatile("nop":: "a"(bsp_stack+STDRD_STACKSIZ-0x10));

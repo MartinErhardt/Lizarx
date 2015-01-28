@@ -36,10 +36,8 @@
 #define PMM_FREE 1
 
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
-#define EASYMAPTBL_SIZ (0x1000 *515)
+
 #define ALIGNED_BASE(BASE) BASE % 0x1000 ? ( BASE +0x1000- BASE %0x1000) : BASE
-#define STACKSIZE 0xFFFFF*2
-uint_t pmm_stack[STACKSIZE];
 uint_t * pmm_stack_ptr = NULL;
 #ifndef LOADER
 static uint32_t physbitmap[BITMAP_SIZE];
@@ -49,17 +47,27 @@ static void pmm_mark_used(uint_t page);
 #endif
 void pmm_init_mmap(struct multiboot_info * mb_info)
 {
+	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	struct multiboot_mmap* mmap = (void *)((uintptr_t)(mb_info->mbs_mmap_addr));
 	struct multiboot_mmap* mmap_end = (void*)
 	    ((uintptr_t) (mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length));
-	//trampoline=0;
+	size_t mod_size=0;
+	int i;
+#if defined(LOADER) || defined(ARCH_X86)
+	size_t cur_mod_size=0;
+	uintptr_t current=0;
+#endif
 	bsp_stack=0;
+#ifdef ARCH_X86_64
 	easy_map_tbl=0;
-        while (mmap < mmap_end)
+#endif
+	for (i = 0; i < mb_info->mbs_mods_count; i++)
+		mod_size+=modules[i].mod_end-modules[i].mod_start;
+	while (mmap < mmap_end)
         {
                 if (mmap->type == 1)
                 {
-#ifdef LOADER
+#if defined(LOADER) || defined(ARCH_X86)
                         if( mmap->base <0x200000)
 			{
 				if (mmap->base+mmap->length<=0x200000)
@@ -85,22 +93,34 @@ void pmm_init_mmap(struct multiboot_info * mb_info)
 					mmap->base=ALIGNED_BASE(mmap->base);
 				}
                         }*/
-#ifdef ARCH_X86_64
-			if( ((mmap->base+mmap->length)&0xfffff000)-(ALIGNED_BASE(mmap->base))>=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000 && !easy_map_tbl)
+			if( ((mmap->base+mmap->length)&0xfffff000)-(ALIGNED_BASE(mmap->base))>=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000+mod_size && !bsp_stack)
 			{
-				easy_map_tbl=mmap->base&0xfffff000;
-				bsp_stack=easy_map_tbl+EASYMAPTBL_SIZ;
-				pmm_stack_ptr=((uint_t*)(easy_map_tbl+EASYMAPTBL_SIZ+STDRD_STACKSIZ));
+				bsp_stack=mmap->base&0xfffff000;
+#ifdef ARCH_X86_64
+				easy_map_tbl=bsp_stack+STDRD_STACKSIZ;
+#endif
+				pmm_stack_ptr=((uint_t*)(bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ));
 #ifndef LOADER
-				mmap->base+=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000;
+				mmap->base+=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000+mod_size;
 				mmap->base= ALIGNED_BASE(mmap->base);
 #endif
-                        }
+#if defined(LOADER) || defined(ARCH_X86)
+				current=bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000;
+				for (i = 0; i < mb_info->mbs_mods_count; i++)
+        			{
+					cur_mod_size=modules[i].mod_end-modules[i].mod_start;
+					memcpy((void*)current,(void*)((uintptr_t)modules[i].mod_start) ,cur_mod_size );
+                			modules[i].mod_start=current;
+					modules[i].mod_end=current+cur_mod_size;
+					current=modules[i].mod_end;
+       				}
 #endif
+
+                        }
 		}
                 mmap++;
         }
-	
+	//while(1);
 }
 #ifndef LOADER
 void pmm_init(struct multiboot_info * mb_info)
@@ -118,7 +138,6 @@ void pmm_init(struct multiboot_info * mb_info)
 	* Here we look in the memory map for free space
 	*/
 	uintptr_t addr = (uintptr_t) &kernel_start;
-	
 	while (addr <= (uintptr_t) &kernel_end) 
 	{
 		//kprintf("x%x",addr/PAGE_SIZE);
@@ -143,36 +162,24 @@ void pmm_init(struct multiboot_info * mb_info)
 		}
 	}
 
-	pmm_mark_used(0x0);//0x0000000 is reserved for NULL pointers
 	memset(0x00000000,0x00000000,PAGE_SIZE);
 	pmm_mark_used( DIV_PAGE_SIZE(TMP_PAGEBUF) 			);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	
 	pmm_mark_used( DIV_PAGE_SIZE(TRAMPOLINE)			);// Trampoline space
-	for (i = 0; i<DIV_PAGE_SIZE(STDRD_STACKSIZ); i++)
-		pmm_mark_used( DIV_PAGE_SIZE(bsp_stack) +i);		  // That's our Stack which is still the MB Loader
-	//pmm_mark_used(DIV_PAGE_SIZE(trampoline));
-	pmm_mark_used(0xb8);
-	for(i=0;i<0xf;i++)
-		pmm_mark_used(0xf0+i);
+	for (i = bsp_stack/0x1000; i<(bsp_stack/0x1000+517+0x1000); i++)
+		pmm_mark_used(i);		  // That's our Stack which is still the MB Loader
+	for(i=0;i<0x100;i++)
+		pmm_mark_used(i);
 	addr=0;
 
 	while (mmap < mmap_end) 
 	{
 		if (mmap->type == 1)
 		{
-			/* 
-			 * We and the addresses with 0xffffffff to prevent a buffer overflow
-			 * FIXME our Bitmap only covers a 32 bit address space
-			 */
 			addr = ALIGNED_BASE(mmap->base);
 			end_addr = addr +( mmap->length & 0xfffff000);
-			//kprintf("addr: 0x%x", addr);
-			//kprintf("endaddr: 0x%x", end_addr);
-			//for(i=0;i<0x1fffff;i++);
 			while(addr<end_addr)
 			{
-				//kprintf("bmpend:0x%x", (uintptr_t)&physbitmap[BITMAP_SIZE-1]);
-				//kprintf("current:0x%x", (uintptr_t)&physbitmap[(addr/0x1000) /32]);
 				if(physbitmap[(addr/0x1000) /32] & (1<<((addr/0x1000) % 32)))
 				{
 					*pmm_stack_ptr_init=addr;
@@ -180,8 +187,6 @@ void pmm_init(struct multiboot_info * mb_info)
 				}
 				addr+=0x1000;
 			}
-			//kprintf("fin");
-			//for(i=0;i<0x1fffff;i++);
 		}
 		mmap++;
 	}
@@ -194,7 +199,6 @@ uint_t pmm_malloc_4k()
 	uintptr_t to_ret=*pmm_stack_ptr;
 	pmm_stack_ptr++;
 	pmm_mark_used(to_ret/0x1000);
-//	kprintf("value: 0x%x", to_ret);
 	spinlock_release(&pmm_lock);
 	return to_ret/0x1000;
 }

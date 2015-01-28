@@ -23,6 +23,7 @@
 0	 0x1	 Available Bit
 */
 #define GDT_FLAG_32_BIT  0x2
+#define EASYMAPTBL_SIZ (0x1000 *515)
 
 #define STDRD_STACKSIZ 0x2000
 
