@@ -30,51 +30,50 @@
 #define FLGCOMBAT_USER  	FLG_IN_MEM | FLG_WRITECACHING | FLG_WRITABLE | FLG_USERACCESS
 
 #define TMP_PAGEBUF 0x1000
-
-#define KERNEL_SPACE	0x4000000 //= 67 MB
+#define TMP_PAGEBUF2 0x2000
+#define TMP_PAGEBUF3 0x3000
+#define TMP_PAGEBUF4 0x4000
 
 #define DIV_PAGE_SIZE(VAL) ((VAL)>>12)
 #define MUL_PAGE_SIZE(VAL) ((VAL)<<12)
 
 typedef struct vmm_paging_entry * highest_paging_struct;
+
 lock_t vmm_lock;
+struct stack_entry
+{
+	uintptr_t start;
+	uintptr_t end;
+};
 typedef struct
 {
 	highest_paging_struct highest_paging;
 	struct vmm_paging_entry * other_first_tables[PAGING_HIER_SIZE -1];
-	struct vmm_tree_master* mm_tree;
+	struct stack_entry * mm_stack;
+	struct stack_entry * mm_stack_ptr;
 } vmm_context;
 
 vmm_context startup_context;
 uint_t cores_invalidated;
-
 lock_t invld_lock;
 struct to_invalid * to_invalidate_first;
-
 void sync_addr_space();
-vmm_context vmm_init(void);
+void vmm_init(struct multiboot_info * mb_info);
 vmm_context vmm_crcontext();
-
 vmm_context * get_cur_context_glob();
+void vmm_map_range_glob(vmm_context*context,uintptr_t start, uintptr_t end,uint8_t flgs);
 void vmm_delcontext(vmm_context* to_del);
 void* kvmm_malloc(size_t size);
 void* uvmm_malloc(vmm_context* context,size_t size);
-int_t vmm_realloc(vmm_context* context,void* ptr, size_t size,uint8_t flgs);
 void vmm_free(vmm_context* context,void* to_free, size_t size);
 void kvmm_free(void* to_free,size_t size);//FIXME No Overflow check
-bool vmm_is_alloced_glob(vmm_context* context,uint_t page);
-void * vmm_malloc(vmm_context * context, size_t size, uintptr_t from, uintptr_t to, uint8_t flags);
-
+void uvmm_push_free_glob(vmm_context* context,uint_t page, size_t length);
+void * vmm_malloc(vmm_context * context, size_t size, bool kernel, uint8_t flags);
 void* cpyin(void* src,size_t siz);
 void* cpyout(void* src,size_t siz);
 uintptr_t vmm_share_to_user(uintptr_t in_kernel,size_t length);
-
 uintptr_t virt_to_phys(vmm_context* context,uintptr_t virt);
-
-uintptr_t vmm_find_freemem_glob(vmm_context* context,size_t size, uintptr_t from,uintptr_t to);
-void vmm_mark_used_inallcon_glob(uint_t page);
-void vmm_map_inallcon_glob(uintptr_t phys, uintptr_t virt, uint8_t flgs);
-
+void vmm_map_startup_glob(uintptr_t phys, uintptr_t virt, uint8_t flgs);
 void make_guard_page(uintptr_t at, vmm_context * context);
 #endif
 

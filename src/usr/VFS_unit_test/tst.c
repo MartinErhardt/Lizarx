@@ -30,14 +30,12 @@ int main(void)
 	//char haha_overwrite[20]="THIS IS OVERWRITTEN";
 	char blabla[9]="NOCALHOS";
 	SYSCALL(SYS_SLEEP);
-	init_ipc();
 
-	uprintf("and more ...");
-	//uprintf(&blabla[0]);
+	init_ipc();
+	uprintf("contents of /etc/third_level/hostname: \n");
 	int fd2=hlib_open("/etc/third_level/hostname", 0);
-	uprintf("here");
-	hlib_read(fd2, &blabla, 9);
+	hlib_read(fd2, &blabla, 26);
 	uprintf(&blabla[0]);
-	SYSCALL(12)
+	SYSCALL(11)
 	return 0;
 }

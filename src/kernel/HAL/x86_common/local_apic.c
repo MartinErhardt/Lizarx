@@ -42,11 +42,9 @@ uint32_t tmp;
 void local_apic_init(uintptr_t local_apic_addr_phys)
 {
 	// read apic id
-
-	uintptr_t local_apic_virt_infunc = vmm_find_freemem_glob(&startup_context, PAGE_SIZE, 0x0, KERNEL_SPACE);
-	vmm_map_inallcon_glob(local_apic_addr_phys,local_apic_virt_infunc, FLG_IN_MEM  | FLG_WRITABLE);
-	vmm_mark_used_inallcon_glob(local_apic_virt_infunc/PAGE_SIZE);
-	local_apic_virt = local_apic_virt_infunc;
+	// this location is by a chance of 100% free
+	vmm_map_startup_glob(local_apic_addr_phys,0x100000, FLG_IN_MEM  | FLG_WRITABLE);
+	local_apic_virt = 0x100000;
 	if((rdmsr(0x1b)&0x800)==0)
 		wrmsr(0x1b, 0x800);
 	/*if((mmio_read32(local_apic_virt,LOCAL_APIC_SIV_REG)&0x100)!=0)

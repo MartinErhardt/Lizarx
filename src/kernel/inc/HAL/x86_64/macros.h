@@ -36,10 +36,10 @@
 #define USER_DATA_SEG_N		7
 #define TSS_SEG_N		8
 
-#define BITMAP_SIZE 		32768
+#define BITMAP_SIZE 		8192
 #define PAGE_SIZE 		4096 // page size in bytes
-#define MSR_STAR		0xc0000081
-#define MSR_LSTAR		0xc0000082
+#define MSR_STAR		0xC0000081
+#define MSR_LSTAR		0xC0000082
 #define MSR_EFER		0xC0000080
 //-------------------------------------------------------------------------memory-map--------------------------------------------------------------
 //#define INIT_PAGE_TBL_ADDR		0x113000
@@ -54,6 +54,7 @@
 //#define INIT_PAGEDIRPTR_TBL_ADDR INIT_PAGEDIR_TBL_ADDR-0x1000
 //#define INIT_PAGEMAPLEVEL4_TBL_ADDR INIT_PAGEDIRPTR_TBL_ADDR-0x1000
 #define TRAMPOLINE 			0x7000
+#define KERNEL_SPACE	0x40000000 //= 67 MB
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
 #define IDT_SIZE		256

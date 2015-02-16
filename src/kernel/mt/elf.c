@@ -68,12 +68,12 @@ int32_t init_elf(void* image)
 	* FIXME Wir muessen eigentlich die Laenge vom Image pruefen, damit wir bei
 	* korrupten ELF-Dateien nicht ueber das Dateiende hinauslesen.
 	*/
-	
 	struct elf_header* header = image;
 	struct elf_program_header* ph;
 	int i;
+	uintptr_t process_start=0xffffffff;
+	uintptr_t process_end=0;
 	struct proc* new_proc = NULL; 
-	
 	vmm_context* curcontext = get_cur_context_glob();
 	
 	uintptr_t curpd_phys = virt_to_phys(curcontext, (uintptr_t)curcontext->highest_paging);
@@ -92,9 +92,20 @@ int32_t init_elf(void* image)
 /*#else
     #error lizarx build: No valid arch found in src/kernel/mt/threads.c*/
 #endif
+	ph = (struct elf_program_header*) (((char*) image) + header->ph_offset);
+  
 	if (header->i_version != ELF_VERSION_CURRENT)
 		kprintf("[ELF_LOADER] E: init_elf found version != ELF_VERSION_CURRENT!\n");
-	new_proc = create_proc();
+	for (i = 0; i < header->ph_entry_count; i++, ph++) 
+	{
+		if (ph->type != ELF_PROGRAM_TYPE_LOAD)
+			continue;
+		if(ph->virt_addr<process_start)
+			process_start=ph->virt_addr;
+		if(ph->virt_addr+ph->mem_size>process_end)
+			process_end=ph->virt_addr+ph->mem_size;
+	}
+	new_proc = create_proc(process_start, process_end);
 	
 	/*
 	* Alle Program Header durchgehen und den Speicher an die passende Stelle
@@ -111,9 +122,6 @@ int32_t init_elf(void* image)
 			continue;
 		if(ph->virt_addr<KERNEL_SPACE)
 			kprintf("[ELF_LOADER] E: init_elf an elf want to be loaded at %x ; That's in Kernelspace!\n",ph->virt_addr);
-		if(vmm_realloc(new_proc->context,(void*)ph->virt_addr,ph->mem_size,FLGCOMBAT_USER)<0)
-			kprintf("[ELF_LOADER] W: init_elf couldn't realloc for PH!\n");//it is only a warning yet ,coz the header could be in the same Page and that's not tested yet
-		
 		SET_CONTEXT(virt_to_phys(curcontext, (uintptr_t)new_proc->context->highest_paging));
 		memset(dest, 0x00000000, ph->mem_size);
 		memcpy(dest, src, ph->file_size);

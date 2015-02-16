@@ -30,8 +30,9 @@ void cpu_caps(uintptr_t stack)
 	//uint8_t * cpuid_support = (uint8_t *) 0x7200;
 	struct cpu_info * this_cpu = &bsp_info;
 	if(bsp_filled)
+	{
 		this_cpu = kmalloc(sizeof(struct cpu_info));
-	else
+	}else
 		bsp_filled=1;
 	memset((void*)this_cpu, 0x00, sizeof(struct cpu_info));
 	alist_add(&cpu_list, (void*) this_cpu);

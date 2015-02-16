@@ -81,11 +81,6 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			curcontext=get_cur_context_glob();
 			cpu->REG_DATA0=(uintptr_t)uvmm_malloc(curcontext,cpu->REG_DATA0);
 			break;
-		case(SYS_VMM_REALLOC):
-			curcontext=get_cur_context_glob();
-			if((vmm_realloc(curcontext,((void*)cpu->REG_DATA0),cpu->REG_DATA1,FLGCOMBAT_USER))<0)
-				kprintf("error reallocating");
-			break;
 		case(SYS_EXIT):
 			exit(get_cur_cpu()->current_thread->proc);
 			cpu =  schedule(cpu);
@@ -94,6 +89,7 @@ struct cpu_state* handle_syscall(struct cpu_state* cpu)
 			cpu->REG_DATA0 = shmget(0, cpu->REG_DATA0, 0);
 			break;
 		case(SYS_SHMAT):
+			//kprintf("shmat");while(1);
 			cpu->REG_DATA0 = (uintptr_t)shmat(cpu->REG_DATA0, 0, 0);
 			break;
 		case(SYS_MSGGET):

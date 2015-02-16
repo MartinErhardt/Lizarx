@@ -36,8 +36,8 @@
 #define PMM_FREE 1
 
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
-
-#define ALIGNED_BASE(BASE) BASE % 0x1000 ? ( BASE +0x1000- BASE %0x1000) : BASE
+#define PMM_STACK_SIZ		0x1000000	
+#define ALIGNED_BASE(BASE) ((BASE + 0x1000-1) & (~(0x1000-1)))
 uint_t * pmm_stack_ptr = NULL;
 #ifndef LOADER
 static uint32_t physbitmap[BITMAP_SIZE];
@@ -45,19 +45,19 @@ extern const void kernel_start;
 extern const void kernel_end;
 static void pmm_mark_used(uint_t page);
 #endif
+static uint_t mod_size;
 void pmm_init_mmap(struct multiboot_info * mb_info)
 {
 	struct multiboot_module * modules = (struct multiboot_module *) ((uintptr_t)(mb_info->mbs_mods_addr) & 0xffffffff);
 	struct multiboot_mmap* mmap = (void *)((uintptr_t)(mb_info->mbs_mmap_addr));
 	struct multiboot_mmap* mmap_end = (void*)
 	    ((uintptr_t) (mb_info->mbs_mmap_addr + mb_info->mbs_mmap_length));
-	size_t mod_size=0;
+	mod_size=0;
 	int i;
 #if defined(LOADER) || defined(ARCH_X86)
 	size_t cur_mod_size=0;
 	uintptr_t current=0;
 #endif
-	bsp_stack=0;
 #ifdef ARCH_X86_64
 	easy_map_tbl=0;
 #endif
@@ -93,7 +93,7 @@ void pmm_init_mmap(struct multiboot_info * mb_info)
 					mmap->base=ALIGNED_BASE(mmap->base);
 				}
                         }*/
-			if( ((mmap->base+mmap->length)&0xfffff000)-(ALIGNED_BASE(mmap->base))>=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000+mod_size && !bsp_stack)
+			if( ((mmap->base+mmap->length)&0xfffff000)-(ALIGNED_BASE(mmap->base))>=EASYMAPTBL_SIZ+STDRD_STACKSIZ+PMM_STACK_SIZ+ALIGNED_BASE(mod_size)+(PAGING_HIER_SIZE+1)*0x1000 && !bsp_stack)
 			{
 				bsp_stack=mmap->base&0xfffff000;
 #ifdef ARCH_X86_64
@@ -101,11 +101,12 @@ void pmm_init_mmap(struct multiboot_info * mb_info)
 #endif
 				pmm_stack_ptr=((uint_t*)(bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ));
 #ifndef LOADER
-				mmap->base+=EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000+mod_size;
 				mmap->base= ALIGNED_BASE(mmap->base);
+				mmap->base+=EASYMAPTBL_SIZ+STDRD_STACKSIZ+PMM_STACK_SIZ+ALIGNED_BASE(mod_size)+(PAGING_HIER_SIZE+2)*0x1000;
+				startup_tables=bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ+PMM_STACK_SIZ+ALIGNED_BASE(mod_size);
 #endif
 #if defined(LOADER) || defined(ARCH_X86)
-				current=bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ+0x1000000;
+				current=bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ+PMM_STACK_SIZ;
 				for (i = 0; i < mb_info->mbs_mods_count; i++)
         			{
 					cur_mod_size=modules[i].mod_end-modules[i].mod_start;
@@ -120,7 +121,6 @@ void pmm_init_mmap(struct multiboot_info * mb_info)
 		}
                 mmap++;
         }
-	//while(1);
 }
 #ifndef LOADER
 void pmm_init(struct multiboot_info * mb_info)
@@ -166,12 +166,14 @@ void pmm_init(struct multiboot_info * mb_info)
 	pmm_mark_used( DIV_PAGE_SIZE(TMP_PAGEBUF) 			);//0x1000 is reserved,because that's,where we tmp map our pagetables to
 	
 	pmm_mark_used( DIV_PAGE_SIZE(TRAMPOLINE)			);// Trampoline space
-	for (i = bsp_stack/0x1000; i<(bsp_stack/0x1000+517+0x1000); i++)
+	for (i = bsp_stack/0x1000; i<(bsp_stack+EASYMAPTBL_SIZ+STDRD_STACKSIZ+PMM_STACK_SIZ+ALIGNED_BASE(mod_size))/PAGE_SIZE+PAGING_HIER_SIZE+2; i++)
 		pmm_mark_used(i);		  // That's our Stack which is still the MB Loader
+	kprintf("now i is 0x%x", i);
+	kprintf("mod_size is 0x%x",ALIGNED_BASE(mod_size));
 	for(i=0;i<0x100;i++)
 		pmm_mark_used(i);
 	addr=0;
-
+	
 	while (mmap < mmap_end) 
 	{
 		if (mmap->type == 1)
@@ -180,11 +182,8 @@ void pmm_init(struct multiboot_info * mb_info)
 			end_addr = addr +( mmap->length & 0xfffff000);
 			while(addr<end_addr)
 			{
-				if(physbitmap[(addr/0x1000) /32] & (1<<((addr/0x1000) % 32)))
-				{
-					*pmm_stack_ptr_init=addr;
-					pmm_stack_ptr_init++;
-				}
+				*pmm_stack_ptr_init=addr;
+				pmm_stack_ptr_init++;
 				addr+=0x1000;
 			}
 		}
@@ -198,7 +197,6 @@ uint_t pmm_malloc_4k()
 	spinlock_ackquire(&pmm_lock);
 	uintptr_t to_ret=*pmm_stack_ptr;
 	pmm_stack_ptr++;
-	pmm_mark_used(to_ret/0x1000);
 	spinlock_release(&pmm_lock);
 	return to_ret/0x1000;
 }
@@ -233,5 +231,11 @@ bool pmm_is_alloced_glob(uint_t page)
 static void pmm_mark_used(uint_t page)
 {
 	physbitmap[page /32 ] &= ~(1 << (page % 32));
+}
+void pmm_mark_used_glob(uint_t page)
+{
+	spinlock_ackquire(&pmm_lock);
+	physbitmap[page /32 ] &= ~(1 << (page % 32));
+	spinlock_release(&pmm_lock);
 }
 #endif

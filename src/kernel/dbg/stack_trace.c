@@ -23,6 +23,7 @@
 
 int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_ptr)
 {
+#if 0
 	struct stack_frame * cur_stack_frame;
 	uintptr_t* last_func;
 	kprintf("kernel stack_trace(last recent call first):\n");
@@ -44,4 +45,8 @@ int get_stack_trace(void* elf, uintptr_t start_base_ptr, uintptr_t start_instr_p
 		cur_stack_frame = cur_stack_frame->base_ptr;
 	}
 	return 0;
+#else
+	kprintf("[DBG] E: get_stack_trace says: feature disabled implement msync!");
+#endif
+	return -1;
 }

@@ -120,11 +120,10 @@ static void vheap_enlarge(size_t size)
 	size_t size_we_have_to_enlarge 	= MUL_PAGE_SIZE( DIV_PAGE_SIZE(size) +1 );
 	kprintf("[VHEAP] I: vheap_enlarge is enlarging heap by 0x%x\n", size_we_have_to_enlarge);
 	struct heap_block *new_heap_sp	= (struct heap_block *)kvmm_malloc( size_we_have_to_enlarge );
+	while(1);
 	memset(new_heap_sp,0x00000000,size_we_have_to_enlarge);
 	new_heap_sp->next		= first;
 	new_heap_sp->free		= 1;
 	new_heap_sp->size		= size_we_have_to_enlarge;
-	
 	first				= new_heap_sp;
-	
 }

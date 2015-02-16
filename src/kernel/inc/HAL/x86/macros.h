@@ -37,11 +37,12 @@
 #define USER_DATA_SEG_N		7
 #define TSS_SEG_N		8
 
-#define BITMAP_SIZE 	32768
+#define BITMAP_SIZE 	8192
 #define PAGE_SIZE 	4096 // page size in bytes
 
 #define BSP_STACK 			0x105000-STDRD_STACKSIZ
 #define TRAMPOLINE 			0x007000
+#define KERNEL_SPACE	0x400000
 //-------------------------------------------------------------------------IDT---------------------------------------------------------------------
 
 #define IDT_SIZE 256

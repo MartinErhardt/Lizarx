@@ -130,24 +130,13 @@ struct cpu_info * move_if_it_make_sense(struct cpu_info * this_cpu,struct thread
 }
 void kill_thread(struct thread * to_kill, struct proc * in_proc)
 {
-
 	struct cpu_info * this_cpu = get_cur_cpu();
-
-	//spinlock_ackquire(&multi_threading_lock);
 	alist_remove(&this_cpu->thread_list, to_kill);
-
 	SET_CONTEXT(virt_to_phys(&startup_context,(uintptr_t)(startup_context.highest_paging)))
-
 	this_cpu->current_thread = NULL;
-
 	this_cpu->current_thread_index = 0;
-	//vmm_free(in_proc->context, to_kill->user_stack, STDRD_STACKSIZ);
-
 	kfree(to_kill->state);
 	kfree(to_kill);
-
-	//spinlock_release(&multi_threading_lock);
-	
 }
 static bool are_there_still_threads(struct cpu_info * this_cpu)
 {
@@ -171,9 +160,13 @@ void wakeup(uint_t t_id)
 	spinlock_ackquire(&multi_threading_lock);
 	struct thread * this_thread = get_thread( t_id);
 	if(!this_thread)
+	{
+		kprintf("this'd have been a deadlock");
+		spinlock_release(&multi_threading_lock);
 		return;
-	this_thread->exc_state = THREAD_ACTIVE;
+	}this_thread->exc_state = THREAD_ACTIVE;
 	spinlock_release(&multi_threading_lock);
+
 }
 struct cpu_state* dispatch_thread(struct cpu_state* cpu)
 {

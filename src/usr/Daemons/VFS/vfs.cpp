@@ -99,6 +99,7 @@ void VFS::loop()
 				uprintf("path not null terminated");
 				continue;
 			}
+
 			switch(buf.type)
 			{
 				case(VFS_OPEN):
@@ -110,28 +111,23 @@ void VFS::loop()
 						if(!strcmp(open_files->alist_get_by_index(i)->path, path))
 							new_open=open_files->alist_get_by_index(i);
 					if(!new_open)// in any other cases the file has been opened and is allready in open_files
-					{
-						to_open = open((const char*)path);
-
-						if(!to_open)
-							goto fin;
-						new_open=(struct open_file_info*)malloc(to_open->st_size);
-						new_open->shmid=hlib_shmget(to_open->st_size);
-						new_open->addr=hlib_shmat(new_open->shmid);
-						new_open->read_sem=new Sem(buf.read_sem);
-						new_open->write_sem=new Sem(buf.write_sem);
-						new_open->ref_counter=1;
-						open_files->alist_add(new_open);
-						my_header.stat=*to_open;
-						my_header.read_sem=buf.read_sem;
-						my_header.write_sem=buf.write_sem;
-						*((struct file_header*)((unsigned long)new_open->addr))=my_header;
-						pread(path, (char*)(((unsigned long)new_open->addr)+sizeof(struct file_header)),to_open->st_size, 0);
-						reply[0] = new_open->shmid;
-						reply[1]= 0;
-					}
+						if(to_open=open((const char*)path))
+						{
+							new_open=(struct open_file_info*)malloc(to_open->st_size);
+							new_open->shmid=hlib_shmget(to_open->st_size);
+							new_open->addr=hlib_shmat(new_open->shmid);
+							new_open->read_sem=new Sem(buf.read_sem);
+							new_open->write_sem=new Sem(buf.write_sem);
+							new_open->ref_counter=1;
+							open_files->alist_add(new_open);
+							my_header.stat=*to_open;
+							my_header.read_sem=buf.read_sem;
+							my_header.write_sem=buf.write_sem;
+							*((struct file_header*)((unsigned long)new_open->addr))=my_header;
+							pread(path, (char*)(((unsigned long)new_open->addr)+sizeof(struct file_header)),to_open->st_size, 0);
+						}
 					else new_open->ref_counter ++;
-fin:
+
 					if(vfs_err)
 					{
 						reply[0]=0;

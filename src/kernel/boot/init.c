@@ -50,10 +50,11 @@ uint32_t cores_booted			= 1;
 */
 void init(struct multiboot_info * mb_info)
 {
+
 	// initialize global variables
 	uint32_t i;
 	startup_context.highest_paging	= 0;
-	startup_context.mm_tree		= 0;
+	startup_context.mm_stack	= 0;
 	apic_ready			= LOCK_FREE;
 	to_flush			= 0;
 	cores_from_tables		= 0;
@@ -88,9 +89,8 @@ void init(struct multiboot_info * mb_info)
 	pmm_init_mmap(mb_info);
 
 	pmm_init(mb_info);
-	vmm_init();
+	vmm_init(mb_info);
 	vheap_init();
-
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	init_idt();
 	
@@ -100,14 +100,13 @@ void init(struct multiboot_info * mb_info)
 	{
 		
 		local_apic_init(apic_support_);
-		
 		cores_booted=1;
 		cpu_caps((uintptr_t)bsp_info.stack);
+
 		if(cores_from_tables - 1)
 			startup_APs();
 	}
 #endif
-
 	bsp_info.stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
 	kprintf("[INIT] I: init loads Bootmods...");
 	if(mb_info->mbs_mods_count ==0)
@@ -126,6 +125,7 @@ void init(struct multiboot_info * mb_info)
 	tss.esp0 = bsp_info.stack+STDRD_STACKSIZ-sizeof(struct cpu_state)-0x10;
 #endif
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
+
 	//kprintf("console at 0x%p", &console_lock);
 	/*time_is = get_time();
 	time_t timer = mktime(time_is);
@@ -140,8 +140,8 @@ void init(struct multiboot_info * mb_info)
 void AP_init()
 {
 	spinlock_ackquire(((lock_t *)TRAMPOLINE_LOCK));
-	//local_apic_init_AP();
 	uintptr_t stack = ((uintptr_t)kvmm_malloc(STDRD_STACKSIZ));
+	memset((void*)stack, 0x0, STDRD_STACKSIZ);
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 	asm volatile("nop":: "a"(stack+ STDRD_STACKSIZ-sizeof(struct cpu_state)-0x10));
 #ifdef ARCH_X86
@@ -150,26 +150,23 @@ void AP_init()
 #ifdef ARCH_X86_64
 	asm volatile ("mov %rax, %rsp" );
 #endif
-//	memset((void*)stack, 0, STDRD_STACKSIZ);
 	local_apic_init_AP();
 	cpu_caps(stack);
 	init_gdt_AP();
 	init_idt_AP();
+
 #ifdef ARCH_X86_64
 	init_SYSCALL();
 #endif
 #endif
 	cores_booted++;
 	all_cores_mask |= (1<<(get_cur_cpu()->apic_id) );
-	//
 	local_apic_eoi();
-	
 	if(cores_booted == cores_from_tables)
 		spinlock_release(&all_APs_booted);
 	else
 		spinlock_release(((lock_t *)TRAMPOLINE_LOCK));
 	ENABLE_INTR
-	
 	while(1);
 }
 

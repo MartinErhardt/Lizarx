@@ -37,7 +37,7 @@ struct proc {
 alist_t proc_list;
 struct proc* first_proc;
 uint8_t process_system_lock;
-struct proc* create_proc();
+struct proc* create_proc(uintptr_t program_start, uintptr_t program_end);
 struct proc* get_proc(uint_t p_id);
 uint_t get_pid();
 void exit(struct proc* to_exit);

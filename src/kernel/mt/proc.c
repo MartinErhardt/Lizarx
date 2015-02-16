@@ -26,12 +26,15 @@
 uint_t num_proc = 0;
 uint_t pid_counter = 0;
 
-struct proc* create_proc()
+struct proc* create_proc(uintptr_t program_start, uintptr_t program_end)
 {
 	vmm_context *new_con	= kmalloc(sizeof(vmm_context));
 	struct proc* new_proc	= kmalloc(sizeof(struct proc));
 	struct user* new_user	= kmalloc(sizeof(struct user));
 	*new_con		= vmm_crcontext();
+	uvmm_push_free_glob(new_con, KERNEL_SPACE, program_start-KERNEL_SPACE);
+	uvmm_push_free_glob(new_con, program_end, 0xffffe000);
+	vmm_map_range_glob(new_con,program_start,program_end,FLGCOMBAT_USER);
 	spinlock_ackquire(&process_system_lock);
 	num_proc		++;
 	pid_counter		++;
@@ -49,7 +52,6 @@ void exit(struct proc* to_exit)
 	spinlock_ackquire(&process_system_lock);
 	spinlock_ackquire(&multi_threading_lock);
 	struct thread * cur_thread = to_exit->first_thread;
-	
 	num_proc--;
 	while(cur_thread)
 	{
@@ -57,14 +59,11 @@ void exit(struct proc* to_exit)
 		cur_thread = cur_thread->next_in_proc;
 	}
 	alist_remove(&proc_list, to_exit);
-	spinlock_ackquire(&vmm_lock);
 	vmm_delcontext(to_exit->context);
 	kfree(to_exit->context);
 	kfree(to_exit);
 	spinlock_release(&multi_threading_lock);
 	spinlock_release(&process_system_lock);
-	spinlock_release(&vmm_lock);
-
 }
 struct proc * get_proc(uint_t p_id)
 {

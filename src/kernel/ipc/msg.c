@@ -45,7 +45,7 @@ int   msgrcv(int msqid, void * ptr, size_t size, long type, int flag)
 		return 0;
 	}
 	uint_t* message_block = msqid_->first_message;
-	if(!message_block || size > *(message_block+1))
+	if(!message_block || size != *(message_block+1))
 	{	
 		spinlock_release(&msq_lock);
 		return 0;

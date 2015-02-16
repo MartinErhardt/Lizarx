@@ -43,7 +43,7 @@ int hlib_open(const char*path ,int oflag)
 {
 	struct VFS_msg my_buf;
 	int ret[2];
-	size_t pathlen=strlen(path);
+	size_t pathlen=strlen(path)+1;
 	struct fs_idds * new_id = (struct fs_idds*)malloc(sizeof(struct fs_idds));
 	new_id->read_sem=new Sem();
 	new_id->write_sem=new Sem();

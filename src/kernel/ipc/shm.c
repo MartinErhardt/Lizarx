@@ -44,10 +44,13 @@ int shmget(key_t key, size_t size, int shmflg)
 }
 void *shmat(int shmid, const void *shmaddr, int shmflg)
 {
-	spinlock_release(&shm_lock);
+	spinlock_ackquire(&shm_lock);
 	struct shmid_ds * id = alist_get_by_entry_s(&shmid_list, 0,shmid);
 	if(!id)
+	{
+		spinlock_release(&shm_lock);
 		return NULL;
+	}
 	if(!id->virt_in_kernel)
 		id->virt_in_kernel = (uintptr_t) kvmm_malloc(id->size);
 	uintptr_t virt_in_proc =vmm_share_to_user(id->virt_in_kernel, id->size);
