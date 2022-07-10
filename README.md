@@ -1,6 +1,8 @@
 Lizarx
 ======
+## VERY OLD - CURRENTLY DYSFUNCTIONAL!!!
 
+This is a very old project of mine inadvertently developed by the first principle of undefined behaviour not being a bug, but a feature. Needless to say it didn't work then on higher optimization settings and it certainly does not now.
 ### Short description
 
 > Lizarx will be an portable Unix-like Microkernel. 
@@ -30,7 +32,5 @@ The OS will also use dynamic linked shared objects to minimize Overhead between 
 - [x] basic SMP support(including SMP scheduling)
 - [x] SYSCALL/SYSRET syscall(x86_64 only)
 - [X] some very basic IPC(message queues, shared memory)
-- [X] VFS in C++
-- [X] tmpFS (should be a shared library of the VFS)
 - [ ] unix like shell in C++ with OO semantics
 - [ ] don't know yet :D
